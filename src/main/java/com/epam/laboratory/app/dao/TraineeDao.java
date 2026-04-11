@@ -6,5 +6,5 @@ public interface TraineeDao {
     Trainee save(Trainee trainee);
     Trainee findById(long id);
     Trainee update(Trainee trainee);
-    void delete(long id);
+    void delete(Trainee trainee);
 }

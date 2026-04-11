@@ -24,7 +24,7 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public void delete(long id) {
+    public void delete(Trainee trainee) {
         // todo
     }
 }
