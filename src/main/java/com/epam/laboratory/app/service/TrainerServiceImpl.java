@@ -2,6 +2,7 @@ package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.dao.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.exception.NoSuchEntityException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class TrainerServiceImpl implements TrainerService {
 
     @Override
     public Trainer selectTrainer(Long id) {
-        return trainerDao.findById(id);
+        return trainerDao.findById(id)
+                .orElseThrow(() -> new NoSuchEntityException("Trainer with id " + id + " not found"));
     }
 }
