@@ -40,7 +40,7 @@ class PasswordGeneratorTest {
 
         // then
         assertThat(actualResult).isNotNull();
-        IntStream.range(0, actualResult.length())
-                .forEach(i -> assertThat(actualResult.charAt(i)).isBetween('!', '~'));
+        actualResult.codePoints()
+                .forEach(codePoint -> assertThat((char) codePoint).isBetween('!', '~'));
     }
 }
