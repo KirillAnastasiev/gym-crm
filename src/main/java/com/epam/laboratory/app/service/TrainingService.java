@@ -1,6 +1,8 @@
 package com.epam.laboratory.app.service;
 
+import com.epam.laboratory.app.domain.Training;
+
 public interface TrainingService {
-    TrainingService creteTrainingService(TrainingService trainingService);
-    TrainingService selectTrainingService(Long id);
+    Training creteTraining(Training training);
+    Training selectTraining(Long id);
 }

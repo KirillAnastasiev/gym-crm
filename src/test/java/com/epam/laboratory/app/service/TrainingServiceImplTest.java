@@ -1,14 +1,25 @@
 package com.epam.laboratory.app.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.epam.laboratory.app.dao.TrainingDao;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class TrainingServiceImplTest {
+    @Mock
+    private TrainingDao trainingDao;
 
-    @org.junit.jupiter.api.Test
-    void creteTrainingService() {
+    @InjectMocks
+    private TrainingServiceImpl trainingServiceImpl;
+
+    @Test
+    void testCreteTrainingService() {
     }
 
-    @org.junit.jupiter.api.Test
-    void selectTrainingService() {
+    @Test
+    void testSelectTraining() {
     }
 }
