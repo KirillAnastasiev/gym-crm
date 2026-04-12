@@ -23,11 +23,11 @@ class PasswordGeneratorTest {
     @DisplayName("Test of the method generatePassword - should generate password with length 10")
     void testGeneratedPasswordLength() {
         // when
-        String password = passwordGenerator.generatePassword();
+        var actualResult = passwordGenerator.generatePassword();
 
         // then
-        assertThat(password).isNotNull();
-        assertThat(password.length()).isEqualTo(10);
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.length()).isEqualTo(10);
     }
 
     @RepeatedTest(value = 20,
@@ -36,11 +36,11 @@ class PasswordGeneratorTest {
     @DisplayName("Test of the method generatePassword - should generate password with only visible ASCII characters")
     public void testGeneratedPasswordValidCharacters() {
         // when
-        String password = passwordGenerator.generatePassword();
+        var actualResult = passwordGenerator.generatePassword();
 
         // then
-        assertThat(password).isNotNull();
-        IntStream.range(0, password.length())
-                .forEach(i -> assertThat(password.charAt(i)).isBetween('!', '~'));
+        assertThat(actualResult).isNotNull();
+        IntStream.range(0, actualResult.length())
+                .forEach(i -> assertThat(actualResult.charAt(i)).isBetween('!', '~'));
     }
 }
