@@ -1,0 +1,39 @@
+package com.epam.laboratory.app.util;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.RepeatedTest;
+
+import java.util.stream.IntStream;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+
+class PasswordGeneratorTest {
+
+    @RepeatedTest(value = 20,
+                  name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
+                  failureThreshold = 1)
+    @DisplayName("Test of the method generatePassword - should generate password with length 10")
+    void testGeneratedPasswordLength() {
+        // when
+        String password = PasswordGenerator.generatePassword();
+
+        // then
+        assertThat(password).isNotNull();
+        assertThat(password.length()).isEqualTo(10);
+    }
+
+    @RepeatedTest(value = 20,
+                  name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
+                  failureThreshold = 1)
+    @DisplayName("Test of the method generatePassword - should generate password with only visible ASCII characters")
+    public void testGeneratedPasswordValidCharacters() {
+        // when
+        String password = PasswordGenerator.generatePassword();
+
+        // then
+        assertThat(password).isNotNull();
+        IntStream.range(0, password.length())
+                .forEach(i -> assertThat(password.charAt(i)).isBetween('!', '~'));
+    }
+}
