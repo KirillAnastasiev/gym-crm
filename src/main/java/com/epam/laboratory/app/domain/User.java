@@ -10,6 +10,8 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 public abstract class User {
+    private Long id;
+
     private String firstName;
 
     private String lastName;

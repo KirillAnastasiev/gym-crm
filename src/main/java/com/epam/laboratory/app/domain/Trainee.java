@@ -13,5 +13,6 @@ import java.time.LocalDate;
 @ToString(callSuper = true)
 public class Trainee extends User {
     private LocalDate dateOfBirth;
+
     private String address;
 }

@@ -13,10 +13,17 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @ToString
 public class Training {
+    private Long id;
+
     private Trainee trainee;
+
     private Trainer trainer;
+
     private String trainingName;
+
     private TrainingType trainingType;
+
     private LocalDateTime trainingDate;
+
     private Duration trainingDuration;
 }
