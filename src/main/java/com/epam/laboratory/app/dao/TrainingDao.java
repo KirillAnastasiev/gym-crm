@@ -2,7 +2,9 @@ package com.epam.laboratory.app.dao;
 
 import com.epam.laboratory.app.service.TrainingService;
 
+import java.util.Optional;
+
 public interface TrainingDao {
     TrainingService save(TrainingService trainingService);
-    TrainingService findById(long id);
+    Optional<TrainingService> findById(long id);
 }

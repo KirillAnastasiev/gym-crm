@@ -3,6 +3,8 @@ package com.epam.laboratory.app.dao;
 import com.epam.laboratory.app.domain.Trainee;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class TraineeDaoImpl implements TraineeDao {
     @Override
@@ -12,7 +14,7 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public Trainee findById(long id) {
+    public Optional<Trainee> findById(long id) {
         // todo
         return null;
     }
