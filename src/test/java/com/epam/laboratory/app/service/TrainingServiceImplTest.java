@@ -87,14 +87,15 @@ public class TrainingServiceImplTest {
     }
 
     private Training createTestTraining() {
-        return Training.builder()
-                .id(1L)
-                .trainee(new Trainee())
-                .trainer(new Trainer())
-                .trainingName("Test Training")
-                .trainingType(TrainingType.FITNESS)
-                .trainingDate(LocalDateTime.now())
-                .trainingDuration(ofHours(1))
-                .build();
+        var training = new Training();
+        training.setId(1L);
+        training.setTrainee(new Trainee());
+        training.setTrainer(new Trainer());
+        training.setTrainingName("Test Training");
+        training.setTrainingType(TrainingType.FITNESS);
+        training.setTrainingDate(LocalDateTime.now());
+        training.setTrainingDuration(ofHours(1));
+
+        return training;
     }
 }

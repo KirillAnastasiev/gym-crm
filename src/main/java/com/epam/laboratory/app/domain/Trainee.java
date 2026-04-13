@@ -6,7 +6,6 @@ import java.time.LocalDate;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = true)

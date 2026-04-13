@@ -9,16 +9,16 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 public abstract class User {
-    private Long id;
+    protected Long id;
 
-    private String firstName;
+    protected String firstName;
 
-    private String lastName;
+    protected String lastName;
 
-    private String username;
+    protected String username;
 
     @ToString.Exclude
-    private String password;
+    protected String password;
 
-    private boolean isActive;
+    protected boolean isActive;
 }
