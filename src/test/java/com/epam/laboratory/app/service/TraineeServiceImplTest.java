@@ -38,7 +38,6 @@ class TraineeServiceImplTest {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "generatedPassword";
-        trainee.setPassword(generatedPassword);
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
