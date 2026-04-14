@@ -13,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -120,19 +123,56 @@ class TraineeServiceImplTest {
     @DisplayName("Test of the method selectTrainee - failure execution, should throw NoSuchEntityException")
     public void testSelectTrainee_negative() {
         // given
-         given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
 
-         // when & then
-         assertThatThrownBy(() -> traineeService.selectTrainee("FirstName.LastName"))
-                  .isInstanceOf(NoSuchEntityException.class)
-                  .hasMessageContaining("Trainee with username FirstName.LastName not found");
+        // when & then
+        assertThatThrownBy(() -> traineeService.selectTrainee("FirstName.LastName"))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainee with username FirstName.LastName not found");
 
-         verify(traineeDao, times(1)).findByUsername(anyString());
-         verifyNoMoreInteractions(traineeDao);
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainees - should return collection of all trainees")
+    public void testSelectAllTrainees_positive() {
+        // given
+        given(traineeDao.findAll()).willReturn(List.of(new Trainee() {{ setId(1L); }}, new Trainee() {{ setId(2L); }}, new Trainee() {{ setId(3L);}}));
+
+        // when
+        var actualResult = traineeService.selectAllTrainees();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(3);
+        actualResult.forEach(trainee -> assertThat(trainee).isInstanceOf(Trainee.class));
+
+        verify(traineeDao, times(1)).findAll();
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainees - should return empty collection if there are no trainees")
+    public void testSelectAllTrainees_negative() {
+        // given
+        given(traineeDao.findAll()).willReturn(Collections.EMPTY_LIST);
+
+        // when
+        var actualResult = traineeService.selectAllTrainees();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(0);
+
+        verify(traineeDao, times(1)).findAll();
+        verifyNoMoreInteractions(traineeDao);
     }
 
     private Trainee createTestTrainee() {
-        var trainee =  new Trainee();
+        var trainee = new Trainee();
         trainee.setId(1L);
         trainee.setFirstName("FirstName");
         trainee.setLastName("LastName");

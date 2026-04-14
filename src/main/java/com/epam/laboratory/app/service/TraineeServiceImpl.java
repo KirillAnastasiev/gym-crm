@@ -7,6 +7,9 @@ import com.epam.laboratory.app.util.PasswordGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
@@ -35,5 +38,10 @@ public class TraineeServiceImpl implements TraineeService {
     public Trainee selectTrainee(String username) {
         return traineeDao.findByUsername(username)
                 .orElseThrow(() -> new NoSuchEntityException("Trainee with username " + username + " not found"));
+    }
+
+    @Override
+    public Collection<Trainee> selectAllTrainees() {
+        return traineeDao.findAll();
     }
 }
