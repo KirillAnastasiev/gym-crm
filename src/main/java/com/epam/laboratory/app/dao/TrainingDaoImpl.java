@@ -1,7 +1,7 @@
 package com.epam.laboratory.app.dao;
 
 import com.epam.laboratory.app.domain.Training;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -10,11 +10,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-@RequiredArgsConstructor
-public class TrainingDaoImpl implements TrainingDao {
+public class TrainingDaoImpl extends BaseDaoImpl<Training, Long> implements TrainingDao {
     private static final String KEY_PREFIX = "training:";
 
-    private final Map<String, Training> trainingMap;
+    @Autowired
+    public TrainingDaoImpl(Map<String, Object> storage) {
+        super(storage);
+    }
 
     @Override
     public Optional<Training> findById(Long id) {
@@ -46,12 +48,4 @@ public class TrainingDaoImpl implements TrainingDao {
         return null;
     }
 
-    private long calculateNextId() {
-        return trainingMap.values()
-                .stream()
-                .map(Training::getId)
-                .mapToLong(Long::longValue)
-                .max()
-                .orElse(0L) + 1;
-    }
 }
