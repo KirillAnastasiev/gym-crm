@@ -11,7 +11,7 @@ class PasswordGeneratorTest {
     private PasswordGenerator passwordGenerator;
 
     @BeforeEach
-    public void init() {
+    public void setUp() {
         passwordGenerator = new PasswordGenerator();
     }
 
