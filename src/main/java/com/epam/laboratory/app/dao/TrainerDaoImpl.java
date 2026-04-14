@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class TrainerDaoImpl extends BaseDaoImpl<Trainer> implements TrainerDao {
+public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
 
     @Autowired
     public TrainerDaoImpl(Storage storage) {

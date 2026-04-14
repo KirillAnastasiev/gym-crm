@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
-public abstract class BaseDaoImpl<T> implements BaseDao<T, Long> {
+public abstract class AbstractDao<T> implements BaseDao<T, Long> {
     protected final Storage storage;
 
     @SuppressWarnings("unchecked")
@@ -44,13 +44,11 @@ public abstract class BaseDaoImpl<T> implements BaseDao<T, Long> {
 
     private long computeNextId(String keyPrefix) {
         List<String> keys = getKeysByPrefix(keyPrefix);
-        long nextId =  keys.stream()
+        return keys.stream()
                 .map(key -> key.substring(keyPrefix.length() + 1))
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(0L) + 1;
-
-        return  nextId;
     }
 
     private String getKeyPrefix(Class<T> clazz) {

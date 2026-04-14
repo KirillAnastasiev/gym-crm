@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public class TraineeDaoImpl extends BaseDaoImpl<Trainee> implements TraineeDao {
+public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
 
     @Autowired
     public TraineeDaoImpl(Storage storage) {
