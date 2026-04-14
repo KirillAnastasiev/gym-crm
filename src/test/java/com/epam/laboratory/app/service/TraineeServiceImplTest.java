@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -95,22 +96,23 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainee - successful execution, should return trainee by id")
+    @DisplayName("Test of the method selectTrainee - successful execution, should return trainee by username")
     public void testSelectTrainee_positive() {
         // given
         var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
 
-        given(traineeDao.findById(anyString())).willReturn(java.util.Optional.of(trainee));
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
 
         // when
-        var actualResult = traineeService.selectTrainee("trainee:1");
+        var actualResult = traineeService.selectTrainee("FirstName.LastName");
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
+        assertThat(actualResult.getUsername()).isEqualTo("FirstName.LastName");
 
-        verify(traineeDao, times(1)).findById(anyString());
+        verify(traineeDao, times(1)).findByUsername(anyString());
         verifyNoMoreInteractions(traineeDao);
     }
 
@@ -118,14 +120,14 @@ class TraineeServiceImplTest {
     @DisplayName("Test of the method selectTrainee - failure execution, should throw NoSuchEntityException")
     public void testSelectTrainee_negative() {
         // given
-         given(traineeDao.findById(anyString())).willReturn(java.util.Optional.empty());
+         given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
 
          // when & then
-         assertThatThrownBy(() -> traineeService.selectTrainee("trainee:1"))
+         assertThatThrownBy(() -> traineeService.selectTrainee("FirstName.LastName"))
                   .isInstanceOf(NoSuchEntityException.class)
-                  .hasMessageContaining("Trainee not found");
+                  .hasMessageContaining("Trainee with username FirstName.LastName not found");
 
-         verify(traineeDao, times(1)).findById(anyString());
+         verify(traineeDao, times(1)).findByUsername(anyString());
          verifyNoMoreInteractions(traineeDao);
     }
 
@@ -134,7 +136,6 @@ class TraineeServiceImplTest {
         trainee.setId(1L);
         trainee.setFirstName("FirstName");
         trainee.setLastName("LastName");
-        trainee.setUsername("FirstName.LastName");
         trainee.setDateOfBirth(LocalDate.now());
         trainee.setActive(true);
 

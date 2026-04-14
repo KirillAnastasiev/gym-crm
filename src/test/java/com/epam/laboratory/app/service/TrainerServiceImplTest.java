@@ -12,6 +12,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -74,22 +76,23 @@ public class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainer - successful execution, should return trainer by id")
+    @DisplayName("Test of the method selectTrainer - successful execution, should return trainer by username")
     public void testSelectTrainer_positive() {
         // given
         var trainer = createTrainer();
+        trainer.setUsername("FirstName.LastName");
 
-        given(trainerDao.findById(anyString())).willReturn(java.util.Optional.of(trainer));
+        given(trainerDao.findByUsername(anyString())).willReturn(Optional.of(trainer));
 
         // when
-        var actualResult = trainerService.selectTrainer("trainer:1");
+        var actualResult = trainerService.selectTrainer("FirstName.LastName");
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
+        assertThat(actualResult.getUsername()).isEqualTo("FirstName.LastName");
 
-        verify(trainerDao, times(1)).findById(anyString());
+        verify(trainerDao, times(1)).findByUsername(anyString());
         verifyNoMoreInteractions(trainerDao);
     }
 
@@ -97,14 +100,14 @@ public class TrainerServiceImplTest {
     @DisplayName("Test of the method selectTrainer - failure execution, should throw NoSuchEntityException")
     public void testSelectTrainer_negative() {
         // given
-        given(trainerDao.findById(anyString())).willReturn(java.util.Optional.empty());
+        given(trainerDao.findByUsername(anyString())).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> trainerService.selectTrainer("trainer:1"))
+        assertThatThrownBy(() -> trainerService.selectTrainer("FirstName.LastName"))
                 .isInstanceOf(com.epam.laboratory.app.exception.NoSuchEntityException.class)
-                .hasMessageContaining("Trainer not found");
+                .hasMessageContaining("Trainer with username FirstName.LastName not found");
 
-        verify(trainerDao, times(1)).findById(anyString());
+        verify(trainerDao, times(1)).findByUsername(anyString());
         verifyNoMoreInteractions(trainerDao);
     }
 

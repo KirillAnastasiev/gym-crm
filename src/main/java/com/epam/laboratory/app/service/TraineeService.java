@@ -6,5 +6,5 @@ public interface TraineeService {
     Trainee createTrainee(Trainee trainee);
     Trainee updateTrainee(Trainee trainee);
     void deleteTrainee(Trainee trainee);
-    Trainee selectTrainee(String id);
+    Trainee selectTrainee(String username);
 }

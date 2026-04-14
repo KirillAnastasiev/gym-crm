@@ -52,22 +52,22 @@ public class TrainingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTraining - successful execution, should return training by id")
+    @DisplayName("Test of the method selectTraining - successful execution, should return training by training name")
     public void testSelectTraining_positive() {
         // given
         var training = createTestTraining();
 
-        given(trainingDao.findById(anyString())).willReturn(Optional.of(training));
+        given(trainingDao.findByTrainingName(anyString())).willReturn(Optional.of(training));
 
         // when
-        var actualResult = trainingServiceImpl.selectTraining("training:1");
+        var actualResult = trainingServiceImpl.selectTraining("Test Training");
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(training);
 
-        verify(trainingDao, times(1)).findById(anyString());
+        verify(trainingDao, times(1)).findByTrainingName(anyString());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -75,14 +75,14 @@ public class TrainingServiceImplTest {
     @DisplayName("Test of the method selectTraining - failure execution, should throw NoSuchEntityException")
     public void testSelectTraining_negative() {
         // given
-        given(trainingDao.findById(anyString())).willReturn(Optional.empty());
+        given(trainingDao.findByTrainingName(anyString())).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> trainingServiceImpl.selectTraining("training:1"))
+        assertThatThrownBy(() -> trainingServiceImpl.selectTraining("Test Training"))
                  .isInstanceOf(NoSuchEntityException.class)
-                 .hasMessageContaining("Training not found");
+                 .hasMessageContaining("Training with training name Test Training not found");
 
-        verify(trainingDao, times(1)).findById(anyString());
+        verify(trainingDao, times(1)).findByTrainingName(anyString());
         verifyNoMoreInteractions(trainingDao);
     }
 
