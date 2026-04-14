@@ -12,6 +12,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -76,6 +79,22 @@ public class TrainerServiceImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method deleteTrainer - should delete trainer")
+    public void testDeleteTrainer() {
+        // given
+        var trainer = createTrainer();
+
+        doNothing().when(trainerDao).delete(any(Trainer.class));
+
+        // when
+        trainerService.deleteTrainer(trainer);
+
+        // then
+        verify(trainerDao, times(1)).delete(any(Trainer.class));
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+    @Test
     @DisplayName("Test of the method selectTrainer - successful execution, should return trainer by username")
     public void testSelectTrainer_positive() {
         // given
@@ -108,6 +127,43 @@ public class TrainerServiceImplTest {
                 .hasMessageContaining("Trainer with username FirstName.LastName not found");
 
         verify(trainerDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainers - successful execution, should return collection of trainers")
+    public void testSelectAllTrainers_positive() {
+        // given
+        given(trainerDao.findAll()).willReturn(List.of(new Trainer() {{ setId(1L); }}, new Trainer() {{ setId(2L); }}));
+
+        // when
+        var actualResult = trainerService.selectAllTrainees();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(2);
+        actualResult.forEach(trainer -> assertThat(trainer).isInstanceOf(Trainer.class));
+
+        verify(trainerDao, times(1)).findAll();
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainers - should return empty collection if there are no trainers")
+    public void testSelectAllTrainers_negative() {
+        // given
+        given(trainerDao.findAll()).willReturn(Collections.EMPTY_LIST);
+
+        // when
+        var actualResult = trainerService.selectAllTrainees();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(0);
+
+        verify(trainerDao, times(1)).findAll();
         verifyNoMoreInteractions(trainerDao);
     }
 
