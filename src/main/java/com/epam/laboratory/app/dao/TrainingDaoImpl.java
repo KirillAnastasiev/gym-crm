@@ -28,10 +28,7 @@ public class TrainingDaoImpl implements TrainingDao {
 
     @Override
     public Training save(Training training) {
-        long id = calculateNextId();
-        training.setId(id);
-        trainingMap.put(KEY_PREFIX + id, training);
-        return training;
+        return null;
     }
 
     @Override
