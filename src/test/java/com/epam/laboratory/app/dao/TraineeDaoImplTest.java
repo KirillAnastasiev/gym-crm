@@ -33,6 +33,7 @@ class TraineeDaoImplTest {
         var trainee = createTestTrainee();
         trainee.setId(1L);
         String key = "trainee:1";
+
         given(storage.get(key)).willReturn(trainee);
 
         // when
@@ -52,6 +53,7 @@ class TraineeDaoImplTest {
     public void testFindById_negative() {
         // given
         String key = "trainee:1";
+
         given(storage.get(key)).willReturn(null);
 
         // when
@@ -73,6 +75,7 @@ class TraineeDaoImplTest {
         var trainee2 = createTestTrainee();
         trainee1.setId(1L);
         trainee2.setId(2L);
+
         given(storage.values()).willReturn(List.of(trainee1, trainee2));
 
         // when
@@ -110,6 +113,7 @@ class TraineeDaoImplTest {
     public void testSave() {
         // given
         var trainee = createTestTrainee();
+
         given(storage.keySet()).willReturn(Collections.emptySet());
 
         // when
@@ -132,6 +136,8 @@ class TraineeDaoImplTest {
         var trainee = createTestTrainee();
         trainee.setId(1L);
 
+        doNothing().when(storage).put(anyString(), any(Trainee.class));
+
         // when
         var actualResult = traineeDao.update(trainee);
 
@@ -140,6 +146,23 @@ class TraineeDaoImplTest {
         assertThat(actualResult).isEqualTo(trainee);
 
         verify(storage, times(1)).put(anyString(), any(Trainee.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method delete - should delete trainee")
+    public void testDelete() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setId(1L);
+
+        doNothing().when(storage).remove(anyString());
+
+        // when
+        traineeDao.delete(trainee);
+
+        // then
+        verify(storage, times(1)).remove(anyString());
         verifyNoMoreInteractions(storage);
     }
 

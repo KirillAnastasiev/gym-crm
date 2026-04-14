@@ -43,6 +43,11 @@ public abstract class AbstractDao<T> implements BaseDao<T, Long> {
         return entity;
     }
 
+    protected void  delete(Long id, Class<T> clazz) {
+        String key = getKey(id, clazz);
+        storage.remove(key);
+    }
+
     private List<String> getKeysByPrefix(String keyPrefix) {
         return storage.keySet().stream()
                 .filter(key -> key.startsWith(keyPrefix))
