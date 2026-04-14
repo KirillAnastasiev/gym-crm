@@ -8,8 +8,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 @Setter
@@ -39,6 +41,14 @@ public class Storage implements InitializingBean, DisposableBean {
 
     public int size() {
         return storage.size();
+    }
+
+    public Set<String> keySet() {
+        return storage.keySet();
+    }
+
+    public Collection<Object> values() {
+        return storage.values();
     }
 
     @Override
