@@ -5,28 +5,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class TraineeDaoImpl extends BaseDaoImpl<Trainee, Long> implements TraineeDao {
-    private static final String KEY_PREFIX = "trainee:";
 
     @Autowired
-    public TraineeDaoImpl(Map<String, Object> storage) {
+    public TraineeDaoImpl(Storage storage) {
         super(storage);
     }
 
     @Override
     public Optional<Trainee> findById(Long id) {
-        // todo
-        return null;
+        return findById(id, Trainee.class);
     }
 
     @Override
     public Collection<Trainee> findAll() {
-        return List.of();
+        // todo
+        return null;
     }
 
     @Override

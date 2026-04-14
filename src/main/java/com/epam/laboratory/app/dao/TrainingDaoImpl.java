@@ -5,46 +5,48 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class TrainingDaoImpl extends BaseDaoImpl<Training, Long> implements TrainingDao {
-    private static final String KEY_PREFIX = "training:";
 
     @Autowired
-    public TrainingDaoImpl(Map<String, Object> storage) {
+    public TrainingDaoImpl(Storage storage) {
         super(storage);
     }
 
     @Override
     public Optional<Training> findById(Long id) {
-        return Optional.empty();
+        // todo
+        return null;
     }
 
     @Override
     public Collection<Training> findAll() {
-        return List.of();
+        // todo
+        return null;
     }
 
     @Override
     public Training save(Training training) {
+        // todo
         return null;
     }
 
     @Override
     public Training update(Training entity) {
+        // todo
         return null;
     }
 
     @Override
     public void delete(Training entity) {
-
+        // todo
     }
 
     @Override
     public Optional<Training> findByTrainingName(String trainingName) {
+        // todo
         return null;
     }
 

@@ -6,15 +6,13 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Repository
 public class TrainerDaoImpl extends BaseDaoImpl<Trainer, Long> implements TrainerDao {
-    private static final String KEY_PREFIX = "trainer:";
 
     @Autowired
-    public TrainerDaoImpl(Map<String, Object> storage) {
+    public TrainerDaoImpl(Storage storage) {
         super(storage);
     }
 
@@ -47,6 +45,7 @@ public class TrainerDaoImpl extends BaseDaoImpl<Trainer, Long> implements Traine
 
     @Override
     public Optional<Trainer> findByUsername(String username) {
-        return Optional.empty();
+        // todo
+        return null;
     }
 }
