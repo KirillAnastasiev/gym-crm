@@ -1,6 +1,5 @@
 package com.epam.laboratory.app.dao;
 
-
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
@@ -73,6 +72,41 @@ public class TrainingDaoImplTest {
 
         verify(storage, times(1)).keySet();
         verify(storage, times(1)).put(anyLong(), any(Training.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findById - should return training when training with given id exists in storage")
+    public void testFindById_positive() {
+        // given
+        var training = createTestTraining();
+        training.setId(1L);
+        given(storage.get(anyLong())).willReturn(training);
+
+        // when
+        var actualResult = trainingDao.findById(1L);
+
+        // then
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult.get()).isEqualTo(training);
+
+        verify(storage, times(1)).get(anyLong());
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findById - should return empty optional when training with given id does not exist in storage")
+    public void testFindById_negative() {
+        // given
+        given(storage.get(anyLong())).willReturn(null);
+
+        // when
+        var actualResult = trainingDao.findById(1L);
+
+        // then
+        assertThat(actualResult).isNotPresent();
+
+        verify(storage, times(1)).get(anyLong());
         verifyNoMoreInteractions(storage);
     }
 

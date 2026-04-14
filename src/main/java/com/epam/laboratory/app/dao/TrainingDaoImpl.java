@@ -22,8 +22,7 @@ public class TrainingDaoImpl implements TrainingDao {
 
     @Override
     public Optional<Training> findById(long id) {
-        // todo
-        return null;
+        return Optional.ofNullable(trainingMap.get(id));
     }
 
     private long calculateNextId() {
