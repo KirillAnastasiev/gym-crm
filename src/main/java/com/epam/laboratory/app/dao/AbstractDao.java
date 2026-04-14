@@ -36,6 +36,13 @@ public abstract class AbstractDao<T> implements BaseDao<T, Long> {
         return id;
     }
 
+    protected T update(T entity, Long id, Class<T> clazz) {
+        String key = getKey(id, clazz);
+        storage.put(key, entity);
+
+        return entity;
+    }
+
     private List<String> getKeysByPrefix(String keyPrefix) {
         return storage.keySet().stream()
                 .filter(key -> key.startsWith(keyPrefix))

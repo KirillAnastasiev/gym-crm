@@ -125,6 +125,24 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method update - should update trainee and return it")
+    public void testUpdate() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setId(1L);
+
+        // when
+        var actualResult = traineeDao.update(trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+
+        verify(storage, times(1)).put(anyString(), any(Trainee.class));
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainee createTestTrainee() {
         Trainee trainee = new Trainee();
         trainee.setFirstName("FirstName");

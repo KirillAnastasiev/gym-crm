@@ -35,8 +35,7 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
 
     @Override
     public Trainee update(Trainee trainee) {
-        // todo
-        return null;
+        return update(trainee, trainee.getId(), Trainee.class);
     }
 
     @Override
