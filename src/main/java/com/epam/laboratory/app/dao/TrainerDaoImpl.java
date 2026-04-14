@@ -14,7 +14,7 @@ public class TrainerDaoImpl implements TrainerDao {
     }
 
     @Override
-    public Optional<Trainer> findById(long id) {
+    public Optional<Trainer> findById(String id) {
         // todo
         return null;
     }

@@ -17,8 +17,8 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
-    public Training selectTraining(Long id) {
+    public Training selectTraining(String id) {
         return trainingDao.findById(id)
-                .orElseThrow(() -> new NoSuchEntityException("Training with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchEntityException("Training not found"));
     }
 }

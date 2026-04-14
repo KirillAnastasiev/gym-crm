@@ -32,8 +32,8 @@ public class TraineeServiceImpl implements TraineeService {
     }
 
     @Override
-    public Trainee selectTrainee(Long id) {
+    public Trainee selectTrainee(String id) {
         return traineeDao.findById(id)
-                .orElseThrow(() -> new NoSuchEntityException("Trainee with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchEntityException("Trainee not found"));
     }
 }

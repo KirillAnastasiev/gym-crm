@@ -79,17 +79,17 @@ public class TrainerServiceImplTest {
         // given
         var trainer = createTrainer();
 
-        given(trainerDao.findById(anyLong())).willReturn(java.util.Optional.of(trainer));
+        given(trainerDao.findById(anyString())).willReturn(java.util.Optional.of(trainer));
 
         // when
-        var actualResult = trainerService.selectTrainer(1L);
+        var actualResult = trainerService.selectTrainer("trainer:1");
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
 
-        verify(trainerDao, times(1)).findById(anyLong());
+        verify(trainerDao, times(1)).findById(anyString());
         verifyNoMoreInteractions(trainerDao);
     }
 
@@ -97,14 +97,14 @@ public class TrainerServiceImplTest {
     @DisplayName("Test of the method selectTrainer - failure execution, should throw NoSuchEntityException")
     public void testSelectTrainer_negative() {
         // given
-        given(trainerDao.findById(anyLong())).willReturn(java.util.Optional.empty());
+        given(trainerDao.findById(anyString())).willReturn(java.util.Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> trainerService.selectTrainer(1L))
+        assertThatThrownBy(() -> trainerService.selectTrainer("trainer:1"))
                 .isInstanceOf(com.epam.laboratory.app.exception.NoSuchEntityException.class)
-                .hasMessageContaining("Trainer with id 1 not found");
+                .hasMessageContaining("Trainer not found");
 
-        verify(trainerDao, times(1)).findById(anyLong());
+        verify(trainerDao, times(1)).findById(anyString());
         verifyNoMoreInteractions(trainerDao);
     }
 

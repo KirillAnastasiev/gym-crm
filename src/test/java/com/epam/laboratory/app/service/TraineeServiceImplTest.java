@@ -100,17 +100,17 @@ class TraineeServiceImplTest {
         // given
         var trainee = createTestTrainee();
 
-        given(traineeDao.findById(anyLong())).willReturn(java.util.Optional.of(trainee));
+        given(traineeDao.findById(anyString())).willReturn(java.util.Optional.of(trainee));
 
         // when
-        var actualResult = traineeService.selectTrainee(1L);
+        var actualResult = traineeService.selectTrainee("trainee:1");
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
 
-        verify(traineeDao, times(1)).findById(anyLong());
+        verify(traineeDao, times(1)).findById(anyString());
         verifyNoMoreInteractions(traineeDao);
     }
 
@@ -118,14 +118,14 @@ class TraineeServiceImplTest {
     @DisplayName("Test of the method selectTrainee - failure execution, should throw NoSuchEntityException")
     public void testSelectTrainee_negative() {
         // given
-         given(traineeDao.findById(anyLong())).willReturn(java.util.Optional.empty());
+         given(traineeDao.findById(anyString())).willReturn(java.util.Optional.empty());
 
          // when & then
-         assertThatThrownBy(() -> traineeService.selectTrainee(1L))
+         assertThatThrownBy(() -> traineeService.selectTrainee("trainee:1"))
                   .isInstanceOf(NoSuchEntityException.class)
-                  .hasMessageContaining("Trainee with id 1 not found");
+                  .hasMessageContaining("Trainee not found");
 
-         verify(traineeDao, times(1)).findById(anyLong());
+         verify(traineeDao, times(1)).findById(anyString());
          verifyNoMoreInteractions(traineeDao);
     }
 

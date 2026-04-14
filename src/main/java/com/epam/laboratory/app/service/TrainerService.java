@@ -5,5 +5,5 @@ import com.epam.laboratory.app.domain.Trainer;
 public interface TrainerService {
     Trainer createTrainer(Trainer trainer);
     Trainer updateTrainer(Trainer trainer);
-    Trainer selectTrainer(Long id);
+    Trainer selectTrainer(String id);
 }

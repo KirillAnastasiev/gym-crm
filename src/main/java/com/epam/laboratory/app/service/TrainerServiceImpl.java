@@ -27,8 +27,8 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     @Override
-    public Trainer selectTrainer(Long id) {
+    public Trainer selectTrainer(String id) {
         return trainerDao.findById(id)
-                .orElseThrow(() -> new NoSuchEntityException("Trainer with id " + id + " not found"));
+                .orElseThrow(() -> new NoSuchEntityException("Trainer not found"));
     }
 }

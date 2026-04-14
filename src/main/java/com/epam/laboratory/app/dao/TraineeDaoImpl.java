@@ -14,7 +14,7 @@ public class TraineeDaoImpl implements TraineeDao {
     }
 
     @Override
-    public Optional<Trainee> findById(long id) {
+    public Optional<Trainee> findById(String id) {
         // todo
         return null;
     }

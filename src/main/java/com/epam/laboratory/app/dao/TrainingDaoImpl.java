@@ -10,23 +10,27 @@ import java.util.Optional;
 @Repository
 @RequiredArgsConstructor
 public class TrainingDaoImpl implements TrainingDao {
-    private final Map<Long, Training> trainingMap;
+    private static final String KEY_PREFIX = "training:";
+
+    private final Map<String, Training> trainingMap;
 
     @Override
     public Training save(Training training) {
         long id = calculateNextId();
         training.setId(id);
-        trainingMap.put(id, training);
+        trainingMap.put(KEY_PREFIX + id, training);
         return training;
     }
 
     @Override
-    public Optional<Training> findById(long id) {
+    public Optional<Training> findById(String id) {
         return Optional.ofNullable(trainingMap.get(id));
     }
 
     private long calculateNextId() {
-        return trainingMap.keySet().stream()
+        return trainingMap.values()
+                .stream()
+                .map(Training::getId)
                 .mapToLong(Long::longValue)
                 .max()
                 .orElse(0L) + 1;

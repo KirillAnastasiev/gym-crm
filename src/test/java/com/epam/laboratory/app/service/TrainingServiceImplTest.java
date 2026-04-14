@@ -57,17 +57,17 @@ public class TrainingServiceImplTest {
         // given
         var training = createTestTraining();
 
-        given(trainingDao.findById(anyLong())).willReturn(Optional.of(training));
+        given(trainingDao.findById(anyString())).willReturn(Optional.of(training));
 
         // when
-        var actualResult = trainingServiceImpl.selectTraining(1L);
+        var actualResult = trainingServiceImpl.selectTraining("training:1");
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(training);
 
-        verify(trainingDao, times(1)).findById(anyLong());
+        verify(trainingDao, times(1)).findById(anyString());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -75,14 +75,14 @@ public class TrainingServiceImplTest {
     @DisplayName("Test of the method selectTraining - failure execution, should throw NoSuchEntityException")
     public void testSelectTraining_negative() {
         // given
-        given(trainingDao.findById(anyLong())).willReturn(Optional.empty());
+        given(trainingDao.findById(anyString())).willReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> trainingServiceImpl.selectTraining(1L))
+        assertThatThrownBy(() -> trainingServiceImpl.selectTraining("training:1"))
                  .isInstanceOf(NoSuchEntityException.class)
-                 .hasMessageContaining("Training with id 1 not found");
+                 .hasMessageContaining("Training not found");
 
-        verify(trainingDao, times(1)).findById(anyLong());
+        verify(trainingDao, times(1)).findById(anyString());
         verifyNoMoreInteractions(trainingDao);
     }
 
