@@ -6,6 +6,8 @@ import com.epam.laboratory.app.exception.NoSuchEntityException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
 @Service
 @RequiredArgsConstructor
 public class TrainingServiceImpl implements TrainingService {
@@ -17,8 +19,23 @@ public class TrainingServiceImpl implements TrainingService {
     }
 
     @Override
+    public Training updateTraining(Training training) {
+        return trainingDao.update(training);
+    }
+
+    @Override
+    public void deleteTraining(Training training) {
+        trainingDao.delete(training);
+    }
+
+    @Override
     public Training selectTraining(String trainingName) {
         return trainingDao.findByTrainingName(trainingName)
                 .orElseThrow(() -> new NoSuchEntityException("Training with training name " + trainingName + " not found"));
+    }
+
+    @Override
+    public Collection<Training> selectAllTrainings() {
+        return trainingDao.findAll();
     }
 }

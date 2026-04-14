@@ -14,6 +14,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static java.time.Duration.*;
@@ -52,6 +55,43 @@ public class TrainingServiceImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method updateTraining - should update training")
+    public void testUpdateTraining() {
+        // given
+        var training = createTestTraining();
+        training.setTrainingName("Updated Training");
+
+        given(trainingDao.update(any(Training.class))).willReturn(training);
+
+        // when
+        var actualResult = trainingServiceImpl.updateTraining(training);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(training);
+        assertThat(actualResult.getTrainingName()).isEqualTo("Updated Training");
+
+        verify(trainingDao, times(1)).update(any(Training.class));
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method deleteTraining - should delete training")
+    public void testDeleteTraining() {
+        // given
+        var training = createTestTraining();
+
+        doNothing().when(trainingDao).delete(any(Training.class));
+
+        // when
+        trainingServiceImpl.deleteTraining(training);
+
+        // then
+        verify(trainingDao, times(1)).delete(any(Training.class));
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+    @Test
     @DisplayName("Test of the method selectTraining - successful execution, should return training by training name")
     public void testSelectTraining_positive() {
         // given
@@ -83,6 +123,43 @@ public class TrainingServiceImplTest {
                  .hasMessageContaining("Training with training name Test Training not found");
 
         verify(trainingDao, times(1)).findByTrainingName(anyString());
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainings - successful execution, should return collection of all trainings")
+    public void testSelectAllTrainings_positive() {
+        // given
+        given(trainingDao.findAll()).willReturn(List.of(new Training() {{ setId(1L); }}, new Training() {{ setId(2L); }}, new Training() {{ setId(3L);}}));
+
+        // when
+        var actualResult = trainingServiceImpl.selectAllTrainings();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(3);
+        actualResult.forEach(training -> assertThat(training).isInstanceOf(Training.class));
+
+        verify(trainingDao, times(1)).findAll();
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectAllTrainings - should return empty collection if there are no trainings")
+    public void testSelectAllTrainings_negative() {
+        // given
+        given(trainingDao.findAll()).willReturn(Collections.EMPTY_LIST);
+
+        // when
+        var actualResult = trainingServiceImpl.selectAllTrainings();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult.size()).isEqualTo(0);
+
+        verify(trainingDao, times(1)).findAll();
         verifyNoMoreInteractions(trainingDao);
     }
 
