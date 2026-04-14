@@ -9,8 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -36,6 +39,7 @@ class TraineeDaoImplTest {
         var actualResult = traineeDao.findById(1L);
 
         // then
+        assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
         assertThat(actualResult.get()).isEqualTo(trainee);
 
@@ -54,9 +58,50 @@ class TraineeDaoImplTest {
         var actualResult = traineeDao.findById(1L);
 
         // then
+        assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
         verify(storage, times(1)).get(anyString());
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return collection with trainees when there are trainees in storage")
+    public void testFindAll_positive() {
+        // given
+        var trainee1 = createTestTrainee();
+        var trainee2 = createTestTrainee();
+        trainee1.setId(1L);
+        trainee2.setId(2L);
+        given(storage.values()).willReturn(List.of(trainee1, trainee2));
+
+        // when
+        var actualResult = traineeDao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).containsExactly(trainee1, trainee2);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return empty collection when there are no trainees in storage")
+    public void testFindAll_negative() {
+        // given
+        given(storage.values()).willReturn(Collections.EMPTY_LIST);
+
+        // when
+        var actualResult = traineeDao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).values();
         verifyNoMoreInteractions(storage);
     }
 

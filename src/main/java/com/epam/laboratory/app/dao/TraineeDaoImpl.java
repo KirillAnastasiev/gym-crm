@@ -22,8 +22,7 @@ public class TraineeDaoImpl extends BaseDaoImpl<Trainee, Long> implements Traine
 
     @Override
     public Collection<Trainee> findAll() {
-        // todo
-        return null;
+        return findAll(Trainee.class);
     }
 
     @Override
