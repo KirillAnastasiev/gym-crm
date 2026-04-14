@@ -4,6 +4,8 @@ import com.epam.laboratory.app.domain.Training;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -15,6 +17,16 @@ public class TrainingDaoImpl implements TrainingDao {
     private final Map<String, Training> trainingMap;
 
     @Override
+    public Optional<Training> findById(Long id) {
+        return Optional.empty();
+    }
+
+    @Override
+    public Collection<Training> findAll() {
+        return List.of();
+    }
+
+    @Override
     public Training save(Training training) {
         long id = calculateNextId();
         training.setId(id);
@@ -23,8 +35,18 @@ public class TrainingDaoImpl implements TrainingDao {
     }
 
     @Override
-    public Optional<Training> findById(String id) {
-        return Optional.ofNullable(trainingMap.get(id));
+    public Training update(Training entity) {
+        return null;
+    }
+
+    @Override
+    public void delete(Training entity) {
+
+    }
+
+    @Override
+    public Optional<Training> findByTrainingName(String trainingName) {
+        return null;
     }
 
     private long calculateNextId() {
