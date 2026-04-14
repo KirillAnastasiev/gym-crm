@@ -105,6 +105,26 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method save - should save trainee and return it with generated id")
+    public void testSave() {
+        // given
+        var trainee = createTestTrainee();
+        given(storage.keySet()).willReturn(Collections.emptySet());
+
+        // when
+        var actualResult = traineeDao.save(trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isEqualTo(1L);
+        assertThat(actualResult).isEqualTo(trainee);
+
+        verify(storage, times(1)).keySet();
+        verify(storage, times(1)).put(anyString(), any(Trainee.class));
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainee createTestTrainee() {
         Trainee trainee = new Trainee();
         trainee.setFirstName("FirstName");

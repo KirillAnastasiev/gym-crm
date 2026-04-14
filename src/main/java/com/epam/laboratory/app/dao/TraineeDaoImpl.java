@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 @Repository
-public class TraineeDaoImpl extends BaseDaoImpl<Trainee, Long> implements TraineeDao {
+public class TraineeDaoImpl extends BaseDaoImpl<Trainee> implements TraineeDao {
 
     @Autowired
     public TraineeDaoImpl(Storage storage) {
@@ -27,8 +27,10 @@ public class TraineeDaoImpl extends BaseDaoImpl<Trainee, Long> implements Traine
 
     @Override
     public Trainee save(Trainee trainee) {
-        // todo
-        return null;
+        long id = save(trainee, Trainee.class);
+        trainee.setId(id);
+
+        return trainee;
     }
 
     @Override
