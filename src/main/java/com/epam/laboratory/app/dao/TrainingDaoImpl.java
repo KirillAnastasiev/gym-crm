@@ -22,8 +22,7 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
 
     @Override
     public Collection<Training> findAll() {
-        // todo
-        return null;
+        return findAll(Training.class);
     }
 
     @Override

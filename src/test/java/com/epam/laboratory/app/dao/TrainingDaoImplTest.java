@@ -12,6 +12,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 
 import static java.time.Duration.ofHours;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -62,6 +64,46 @@ class TrainingDaoImplTest {
         assertThat(actualResult).isEmpty();
 
         verify(storage, times(1)).get(anyString());
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return list of all trainings")
+    void testFindAll_positive() {
+        // given
+        var training1 = createTestTraining();
+        var training2 = createTestTraining();
+        training1.setId(1L);
+        training2.setId(2L);
+
+        given(storage.values()).willReturn(List.of(training1, training2));
+
+        // when
+        var actualResult = trainingDao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).hasSize(2);
+        assertThat(actualResult).contains(training1, training2);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return empty list when no trainings exist")
+    void testFindAll_negative() {
+        // given
+        given(storage.values()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainingDao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).values();
         verifyNoMoreInteractions(storage);
     }
 
