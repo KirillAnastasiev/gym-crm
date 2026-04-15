@@ -19,7 +19,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class TraineeDaoImplTest {
+public class TraineeDaoImplTest {
     @Mock
     private Storage storage;
 
