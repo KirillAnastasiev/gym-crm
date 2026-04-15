@@ -4,22 +4,23 @@ import com.epam.laboratory.app.dao.TraineeDao;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.util.PasswordGenerator;
+import com.epam.laboratory.app.util.UsernameHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
     private final TraineeDao traineeDao;
     private final PasswordGenerator passwordGenerator;
+    private final UsernameHelper usernameHelper;
 
     @Override
     public Trainee createTrainee(Trainee trainee) {
-        var password = passwordGenerator.generatePassword();
-        trainee.setPassword(password);
+        trainee.setPassword(getPassword());
+        trainee.setUsername(getUsername(trainee));
 
         return traineeDao.save(trainee);
     }
@@ -43,5 +44,20 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Collection<Trainee> selectAllTrainees() {
         return traineeDao.findAll();
+    }
+
+    private String getPassword() {
+        return passwordGenerator.generatePassword();
+    }
+
+    private String getUsername(Trainee trainee) {
+        var username = usernameHelper.generateUsername(trainee);
+        var isAlreadyExists = traineeDao.existsByUsername(username);
+        if (isAlreadyExists) {
+            long traineesCount = traineeDao.calculateTraineesWithFirstNameAndLastName(trainee.getFirstName(), trainee.getLastName());
+            username = usernameHelper.generateUsername(trainee, String.valueOf(traineesCount + 1));
+        }
+
+        return username;
     }
 }

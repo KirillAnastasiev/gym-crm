@@ -4,6 +4,7 @@ import com.epam.laboratory.app.dao.TraineeDao;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.util.PasswordGenerator;
+import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -33,17 +34,23 @@ class TraineeServiceImplTest {
     @Mock
     private PasswordGenerator passwordGenerator;
 
+    @Mock
+    private UsernameHelper usernameHelper;
+
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
     @Test
-    @DisplayName("Test of the method createTrainee - should create trainee with generated password")
-    void testCreateTrainee() {
+    @DisplayName("Test of the method createTrainee - should create trainee with unique username and return")
+    void testCreateTrainee_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
-        var generatedPassword = "generatedPassword";
+        var generatedPassword = "1234567890";
+        var generatedUsername = "FirstName.LastName";
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
+        given(traineeDao.existsByUsername(anyString())).willReturn(false);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -56,6 +63,44 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
 
         verify(passwordGenerator, times(1)).generatePassword();
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
+        verify(traineeDao, times(1)).existsByUsername(anyString());
+        verify(traineeDao, times(1)).save(any(Trainee.class));
+        verifyNoMoreInteractions(passwordGenerator);
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method createTrainee - should create trainee with non-unique username and return")
+    void testCreateTrainee_nonUniqueUsername() {
+        // given
+        var trainee = createTestTrainee();
+        var generatedPassword = "1234567890";
+        var generatedUsername = "FirstName.LastName";
+        var generatedUsernameWithSuffix = "FirstName.LastName2";
+
+        given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
+        given(traineeDao.existsByUsername(anyString())).willReturn(true);
+        given(traineeDao.calculateTraineesWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
+        given(usernameHelper.generateUsername(any(Trainee.class), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        var actualResult = traineeService.createTrainee(trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+        assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+
+        verify(passwordGenerator, times(1)).generatePassword();
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
+        verify(traineeDao, times(1)).existsByUsername(anyString());
+        verify(traineeDao, times(1)).calculateTraineesWithFirstNameAndLastName(anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), anyString());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
         verifyNoMoreInteractions(traineeDao);
