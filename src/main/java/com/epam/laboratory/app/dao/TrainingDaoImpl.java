@@ -45,8 +45,11 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
 
     @Override
     public Optional<Training> findByTrainingName(String trainingName) {
-        // todo
-        return null;
+        return storage.values()
+                .stream()
+                .filter(Training.class::isInstance)
+                .map(Training.class::cast)
+                .filter(training -> training.getTrainingName().equals(trainingName))
+                .findFirst();
     }
-
 }

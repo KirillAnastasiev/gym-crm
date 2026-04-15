@@ -166,6 +166,44 @@ class TrainingDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method findByTrainingName - should return training when training with given name exists")
+    void testFindByTrainingName_positive() {
+        // given
+        var training = createTestTraining();
+        training.setId(1L);
+
+        given(storage.values()).willReturn(List.of(training));
+
+        // when
+        var actualResult = trainingDao.findByTrainingName("Test Training");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(training);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByTrainingName - should return empty optional when training with given name does not exist")
+    void testFindByTrainingName_negative() {
+        // given
+        given(storage.values()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainingDao.findByTrainingName("Test Training");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
     private Training createTestTraining() {
         var training = new Training();
         training.setTrainingName("Test Training");
