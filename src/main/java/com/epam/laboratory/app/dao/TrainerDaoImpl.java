@@ -40,7 +40,7 @@ public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
 
     @Override
     public void delete(Trainer trainee) {
-        // todo
+        delete(trainee.getId(), Trainer.class);
     }
 
     @Override

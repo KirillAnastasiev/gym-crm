@@ -149,6 +149,23 @@ public class TrainerDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method delete - should delete trainer from storage")
+    public void testDelete() {
+        // given
+        var trainer = createTestTrainer();
+        trainer.setId(1L);
+
+        doNothing().when(storage).remove(anyString());
+
+        // when
+        trainerDao.delete(trainer);
+
+        // then
+        verify(storage, times(1)).remove(anyString());
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setFirstName("FirstName");
