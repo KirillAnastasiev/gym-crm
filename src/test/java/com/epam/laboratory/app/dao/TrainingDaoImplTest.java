@@ -149,6 +149,23 @@ class TrainingDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method delete - should delete existing training")
+    void testDelete() {
+        // given
+        var training = createTestTraining();
+        training.setId(1L);
+
+        doNothing().when(storage).remove(anyString());
+
+        // when
+        trainingDao.delete(training);
+
+        // then
+        verify(storage, times(1)).remove(anyString());
+        verifyNoMoreInteractions(storage);
+    }
+
     private Training createTestTraining() {
         var training = new Training();
         training.setTrainingName("Test Training");

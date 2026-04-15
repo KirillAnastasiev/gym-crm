@@ -39,8 +39,8 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
     }
 
     @Override
-    public void delete(Training entity) {
-        // todo
+    public void delete(Training training) {
+        delete(training.getId(), Training.class);
     }
 
     @Override
