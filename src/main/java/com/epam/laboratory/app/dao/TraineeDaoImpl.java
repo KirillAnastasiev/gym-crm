@@ -45,7 +45,11 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
 
     @Override
     public Optional<Trainee> findByUsername(String username) {
-        // todo
-        return null;
+        return storage.values()
+                .stream()
+                .filter(Trainee.class::isInstance)
+                .map(Trainee.class::cast)
+                .filter(trainee -> trainee.getUsername().equals(username))
+                .findFirst();
     }
 }

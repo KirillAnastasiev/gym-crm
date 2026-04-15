@@ -166,6 +166,48 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method findByUsername - should return trainee when trainee with given username exists")
+    public void testFindByUsername_positive() {
+        // given
+        var trainee1 = createTestTrainee();
+        var trainee2 = createTestTrainee();
+        trainee1.setId(1L);
+        trainee2.setId(2L);
+        trainee1.setUsername("FirstName.LastName");
+        trainee2.setUsername("FirstName.LastName2");
+
+        given(storage.values()).willReturn(List.of(trainee1));
+
+        // when
+        var actualResult = traineeDao.findByUsername("FirstName.LastName");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult.get()).isEqualTo(trainee1);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByUsername - should return empty optional when trainee with given username does not exist")
+    public void testFindByUsername_negative() {
+        // given
+        given(storage.values()).willReturn(Collections.EMPTY_LIST);
+
+        // when
+        var actualResult = traineeDao.findByUsername("FirstName.LastName");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainee createTestTrainee() {
         Trainee trainee = new Trainee();
         trainee.setFirstName("FirstName");
