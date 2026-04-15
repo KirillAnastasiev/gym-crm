@@ -10,17 +10,17 @@ import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-public class StorageTest {
+class StorageTest {
     private Storage storage;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         storage = new Storage();
     }
 
     @Test
     @DisplayName("Test of the method put - should put entity to storage map")
-    public void testPut() {
+    void testPut() {
         // given
         var storageMap = storage.getStorage();
         var trainee = createTestTrainee();
@@ -37,7 +37,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method get - should return entity from storage map by key")
-    public void testGet_positive() {
+    void testGet_positive() {
         // given
         var storageMap = storage.getStorage();
         var trainee = createTestTrainee();
@@ -53,7 +53,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method get - should return null if key is not present in storage map")
-    public void testGet_negative() {
+    void testGet_negative() {
         // when
         var actualResult = storage.get("trainee:1");
 
@@ -63,7 +63,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method remove - should remove entity from storage map by key")
-    public void testRemove() {
+    void testRemove() {
         // given
         var storageMap = storage.getStorage();
         var trainee = createTestTrainee();
@@ -79,7 +79,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method clear - should clear storage map")
-    public void testClear() {
+    void testClear() {
         // given
         var storageMap = storage.getStorage();
         var trainee1 = createTestTrainee();
@@ -97,7 +97,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method size - should return size of storage map")
-    public void testSizeOfEmptyStorage() {
+    void testSizeOfEmptyStorage() {
         // when
         var actualResult = storage.size();
 
@@ -107,7 +107,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method size - should return size of non-empty storage map")
-    public void testSizeOfNonEmptyStorage() {
+    void testSizeOfNonEmptyStorage() {
         // given
         var storageMap = storage.getStorage();
         var trainee1 = createTestTrainee();
@@ -124,7 +124,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method keySet - should return empty set if storage map is empty")
-    public void testKeySet_emptyStorage() {
+    void testKeySet_emptyStorage() {
         // when
         var actualResult = storage.keySet();
 
@@ -135,7 +135,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method keySet - should return set of keys from storage map")
-    public void testKeySet_nonEmptyStorage() {
+    void testKeySet_nonEmptyStorage() {
         // given
         var storageMap = storage.getStorage();
         var trainee1 = createTestTrainee();
@@ -153,7 +153,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method values - should return empty collection if storage map is empty")
-    public void testValues_emptyStorage() {
+    void testValues_emptyStorage() {
         // when
         var actualResult = storage.values();
 
@@ -164,7 +164,7 @@ public class StorageTest {
 
     @Test
     @DisplayName("Test of the method values - should return collection of values from storage map")
-    public void testValues_nonEmptyStorage() {
+    void testValues_nonEmptyStorage() {
         // given
         var storageMap = storage.getStorage();
         var trainee1 = createTestTrainee();

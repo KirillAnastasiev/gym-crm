@@ -18,8 +18,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -38,7 +38,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method createTrainee - should create trainee with generated password")
-    public void testCreateTrainee() {
+    void testCreateTrainee() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "generatedPassword";
@@ -63,7 +63,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method updateTrainee - should update trainee and return")
-    public void testUpdateTrainee() {
+    void testUpdateTrainee() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
@@ -84,7 +84,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method deleteTrainee - should delete trainee")
-    public void testDeleteTrainee() {
+    void testDeleteTrainee() {
         // given
         var trainee = createTestTrainee();
 
@@ -100,7 +100,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTrainee - successful execution, should return trainee by username")
-    public void testSelectTrainee_positive() {
+    void testSelectTrainee_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setUsername("FirstName.LastName");
@@ -121,7 +121,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTrainee - failure execution, should throw NoSuchEntityException")
-    public void testSelectTrainee_negative() {
+    void testSelectTrainee_negative() {
         // given
         given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
 
@@ -136,7 +136,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainees - should return collection of all trainees")
-    public void testSelectAllTrainees_positive() {
+    void testSelectAllTrainees_positive() {
         // given
         given(traineeDao.findAll()).willReturn(List.of(new Trainee() {{ setId(1L); }}, new Trainee() {{ setId(2L); }}, new Trainee() {{ setId(3L);}}));
 
@@ -146,7 +146,7 @@ class TraineeServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(3);
+        assertThat(actualResult).hasSize(3);
         actualResult.forEach(trainee -> assertThat(trainee).isInstanceOf(Trainee.class));
 
         verify(traineeDao, times(1)).findAll();
@@ -155,9 +155,9 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainees - should return empty collection if there are no trainees")
-    public void testSelectAllTrainees_negative() {
+    void testSelectAllTrainees_negative() {
         // given
-        given(traineeDao.findAll()).willReturn(Collections.EMPTY_LIST);
+        given(traineeDao.findAll()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = traineeService.selectAllTrainees();
@@ -165,7 +165,7 @@ class TraineeServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(0);
+        assertThat(actualResult).isEmpty();
 
         verify(traineeDao, times(1)).findAll();
         verifyNoMoreInteractions(traineeDao);

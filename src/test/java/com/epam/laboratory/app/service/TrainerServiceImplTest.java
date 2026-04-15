@@ -17,14 +17,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TrainerServiceImplTest {
+class TrainerServiceImplTest {
     @Mock
     private TrainerDao trainerDao;
 
@@ -36,7 +36,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method createTrainer - should create trainer with generated password")
-    public void testCreateTrainer() {
+    void testCreateTrainer() {
         // given
         var trainer = createTrainer();
         var password = "generatedPassword";
@@ -60,7 +60,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method updateTrainer - should update trainer and return")
-    public void testUpdateTrainer() {
+    void testUpdateTrainer() {
         // given
         var trainer = createTrainer();
 
@@ -80,7 +80,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method deleteTrainer - should delete trainer")
-    public void testDeleteTrainer() {
+    void testDeleteTrainer() {
         // given
         var trainer = createTrainer();
 
@@ -96,7 +96,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTrainer - successful execution, should return trainer by username")
-    public void testSelectTrainer_positive() {
+    void testSelectTrainer_positive() {
         // given
         var trainer = createTrainer();
         trainer.setUsername("FirstName.LastName");
@@ -117,7 +117,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTrainer - failure execution, should throw NoSuchEntityException")
-    public void testSelectTrainer_negative() {
+    void testSelectTrainer_negative() {
         // given
         given(trainerDao.findByUsername(anyString())).willReturn(Optional.empty());
 
@@ -132,7 +132,7 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainers - successful execution, should return collection of trainers")
-    public void testSelectAllTrainers_positive() {
+    void testSelectAllTrainers_positive() {
         // given
         given(trainerDao.findAll()).willReturn(List.of(new Trainer() {{ setId(1L); }}, new Trainer() {{ setId(2L); }}));
 
@@ -142,7 +142,7 @@ public class TrainerServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(2);
+        assertThat(actualResult).hasSize(2);
         actualResult.forEach(trainer -> assertThat(trainer).isInstanceOf(Trainer.class));
 
         verify(trainerDao, times(1)).findAll();
@@ -151,9 +151,9 @@ public class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainers - should return empty collection if there are no trainers")
-    public void testSelectAllTrainers_negative() {
+    void testSelectAllTrainers_negative() {
         // given
-        given(trainerDao.findAll()).willReturn(Collections.EMPTY_LIST);
+        given(trainerDao.findAll()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainerService.selectAllTrainees();
@@ -161,7 +161,7 @@ public class TrainerServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(0);
+        assertThat(actualResult).isEmpty();
 
         verify(trainerDao, times(1)).findAll();
         verifyNoMoreInteractions(trainerDao);

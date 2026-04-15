@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
-public class TrainerDaoImplTest {
+class TrainerDaoImplTest {
     @Mock
     private Storage storage;
 
@@ -27,7 +27,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findById - should return trainer when trainer with given id exists")
-    public void testFindById_positive() {
+    void testFindById_positive() {
         // given
         var trainer = createTestTrainer();
         trainer.setId(1L);
@@ -49,7 +49,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findById - should return empty optional when trainer with given id does not exist")
-    public void testFindById_negative() {
+    void testFindById_negative() {
         // given
         String key = "trainer:1";
 
@@ -68,7 +68,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findAll - should return list of trainers when trainers exist")
-    public void testFindAll_positive() {
+    void testFindAll_positive() {
         // given
         var trainer1 = createTestTrainer();
         trainer1.setId(1L);
@@ -91,7 +91,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findAll - should return empty list when there are no trainers in storage")
-    public void testFindAll_negative() {
+    void testFindAll_negative() {
         // given
         given(storage.values()).willReturn(Collections.emptyList());
 
@@ -108,7 +108,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method save - should save trainer and return it with generated id")
-    public void testSave() {
+    void testSave() {
         // given
         var trainer = createTestTrainer();
 
@@ -129,7 +129,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method update - should update trainer and return it")
-    public void testUpdate() {
+    void testUpdate() {
         // given
         var trainer = createTestTrainer();
         trainer.setUsername("FirstName.LastName");
@@ -151,7 +151,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method delete - should delete trainer from storage")
-    public void testDelete() {
+    void testDelete() {
         // given
         var trainer = createTestTrainer();
         trainer.setId(1L);
@@ -168,7 +168,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findByUsername - should return trainer when trainer with given username exists")
-    public void testFindByUsername_positive() {
+    void testFindByUsername_positive() {
         // given
         var trainer = createTestTrainer();
         String username = "FirstName.LastName";
@@ -190,7 +190,7 @@ public class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findByUsername - should return empty optional when trainer with given username does not exist")
-    public void testFindByUsername_negative() {
+    void testFindByUsername_negative() {
         // given
         String username = "FirstName.LastName";
 

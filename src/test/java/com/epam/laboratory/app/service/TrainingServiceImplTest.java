@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Optional;
 
 import static java.time.Duration.*;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TrainingServiceImplTest {
+class TrainingServiceImplTest {
     @Mock
     private TrainingDao trainingDao;
 
@@ -36,7 +36,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method creteTraining - should create training")
-    public void testCreteTraining() {
+    void testCreteTraining() {
         // given
         var training = createTestTraining();
 
@@ -56,7 +56,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method updateTraining - should update training")
-    public void testUpdateTraining() {
+    void testUpdateTraining() {
         // given
         var training = createTestTraining();
         training.setTrainingName("Updated Training");
@@ -77,7 +77,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method deleteTraining - should delete training")
-    public void testDeleteTraining() {
+    void testDeleteTraining() {
         // given
         var training = createTestTraining();
 
@@ -93,7 +93,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTraining - successful execution, should return training by training name")
-    public void testSelectTraining_positive() {
+    void testSelectTraining_positive() {
         // given
         var training = createTestTraining();
 
@@ -113,7 +113,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectTraining - failure execution, should throw NoSuchEntityException")
-    public void testSelectTraining_negative() {
+    void testSelectTraining_negative() {
         // given
         given(trainingDao.findByTrainingName(anyString())).willReturn(Optional.empty());
 
@@ -128,7 +128,7 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainings - successful execution, should return collection of all trainings")
-    public void testSelectAllTrainings_positive() {
+    void testSelectAllTrainings_positive() {
         // given
         given(trainingDao.findAll()).willReturn(List.of(new Training() {{ setId(1L); }}, new Training() {{ setId(2L); }}, new Training() {{ setId(3L);}}));
 
@@ -138,7 +138,7 @@ public class TrainingServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(3);
+        assertThat(actualResult).hasSize(3);
         actualResult.forEach(training -> assertThat(training).isInstanceOf(Training.class));
 
         verify(trainingDao, times(1)).findAll();
@@ -147,9 +147,9 @@ public class TrainingServiceImplTest {
 
     @Test
     @DisplayName("Test of the method selectAllTrainings - should return empty collection if there are no trainings")
-    public void testSelectAllTrainings_negative() {
+    void testSelectAllTrainings_negative() {
         // given
-        given(trainingDao.findAll()).willReturn(Collections.EMPTY_LIST);
+        given(trainingDao.findAll()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainingServiceImpl.selectAllTrainings();
@@ -157,7 +157,7 @@ public class TrainingServiceImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult.size()).isEqualTo(0);
+        assertThat(actualResult).isEmpty();
 
         verify(trainingDao, times(1)).findAll();
         verifyNoMoreInteractions(trainingDao);

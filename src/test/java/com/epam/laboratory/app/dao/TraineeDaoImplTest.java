@@ -19,7 +19,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class TraineeDaoImplTest {
+class TraineeDaoImplTest {
     @Mock
     private Storage storage;
 
@@ -28,7 +28,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findById - should return trainee when trainee with given id exists")
-    public void testFindById_positive() {
+    void testFindById_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setId(1L);
@@ -42,7 +42,7 @@ public class TraineeDaoImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
-        assertThat(actualResult.get()).isEqualTo(trainee);
+        assertThat(actualResult).contains(trainee);
 
         verify(storage, times(1)).get(anyString());
         verifyNoMoreInteractions(storage);
@@ -50,7 +50,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findById - should return empty optional when trainee with given id does not exist")
-    public void testFindById_negative() {
+    void testFindById_negative() {
         // given
         String key = "trainee:1";
 
@@ -69,7 +69,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findAll - should return collection with trainees when there are trainees in storage")
-    public void testFindAll_positive() {
+    void testFindAll_positive() {
         // given
         var trainee1 = createTestTrainee();
         var trainee2 = createTestTrainee();
@@ -92,9 +92,9 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findAll - should return empty collection when there are no trainees in storage")
-    public void testFindAll_negative() {
+    void testFindAll_negative() {
         // given
-        given(storage.values()).willReturn(Collections.EMPTY_LIST);
+        given(storage.values()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = traineeDao.findAll();
@@ -110,7 +110,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method save - should save trainee and return it with generated id")
-    public void testSave() {
+    void testSave() {
         // given
         var trainee = createTestTrainee();
 
@@ -131,7 +131,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method update - should update trainee and return it")
-    public void testUpdate() {
+    void testUpdate() {
         // given
         var trainee = createTestTrainee();
         trainee.setId(1L);
@@ -151,7 +151,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method delete - should delete trainee")
-    public void testDelete() {
+    void testDelete() {
         // given
         var trainee = createTestTrainee();
         trainee.setId(1L);
@@ -168,7 +168,7 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findByUsername - should return trainee when trainee with given username exists")
-    public void testFindByUsername_positive() {
+    void testFindByUsername_positive() {
         // given
         var trainee1 = createTestTrainee();
         var trainee2 = createTestTrainee();
@@ -185,7 +185,7 @@ public class TraineeDaoImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
-        assertThat(actualResult.get()).isEqualTo(trainee1);
+        assertThat(actualResult).contains(trainee1);
 
         verify(storage, times(1)).values();
         verifyNoMoreInteractions(storage);
@@ -193,9 +193,9 @@ public class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method findByUsername - should return empty optional when trainee with given username does not exist")
-    public void testFindByUsername_negative() {
+    void testFindByUsername_negative() {
         // given
-        given(storage.values()).willReturn(Collections.EMPTY_LIST);
+        given(storage.values()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = traineeDao.findByUsername("FirstName.LastName");

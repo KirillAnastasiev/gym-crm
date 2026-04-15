@@ -30,7 +30,7 @@ class UsernameHelperTest {
             "Hank, Rodriguez, Hank.Rodriguez"
     })
     @DisplayName("Test of the method generateUsername - should generate username in format 'firstName.lastName'")
-    public void testGenerateUsername(String firstName, String lastName, String expectedUsername) {
+    void testGenerateUsername(String firstName, String lastName, String expectedUsername) {
         // given
         var user = new User() {};
         user.setFirstName(firstName);
@@ -57,7 +57,7 @@ class UsernameHelperTest {
             "Hank, Rodriguez, 707, Hank.Rodriguez707"
     })
     @DisplayName("Test of the method generateUsername with suffix - should generate username in format 'firstName.lastNameSuffix'")
-    public void testGenerateUsernameWithSuffix(String firstName, String lastName, String suffix, String expectedUsername) {
+    void testGenerateUsernameWithSuffix(String firstName, String lastName, String suffix, String expectedUsername) {
         // given
         var user = new User() {};
         user.setFirstName(firstName);
