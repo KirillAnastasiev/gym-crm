@@ -45,7 +45,11 @@ public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
 
     @Override
     public Optional<Trainer> findByUsername(String username) {
-        // todo
-        return null;
+        return storage.values()
+                .stream()
+                .filter(Trainer.class::isInstance)
+                .map(Trainer.class::cast)
+                .filter(trainer -> trainer.getUsername().equals(username))
+                .findFirst();
     }
 }

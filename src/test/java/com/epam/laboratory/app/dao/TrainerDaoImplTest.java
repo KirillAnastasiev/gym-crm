@@ -166,6 +166,47 @@ public class TrainerDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method findByUsername - should return trainer when trainer with given username exists")
+    public void testFindByUsername_positive() {
+        // given
+        var trainer = createTestTrainer();
+        String username = "FirstName.LastName";
+        trainer.setUsername(username);
+
+        given(storage.values()).willReturn(Collections.singletonList(trainer));
+
+        // when
+        var actualResult = trainerDao.findByUsername(username);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(trainer);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByUsername - should return empty optional when trainer with given username does not exist")
+    public void testFindByUsername_negative() {
+        // given
+        String username = "FirstName.LastName";
+
+        given(storage.values()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainerDao.findByUsername(username);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setFirstName("FirstName");
