@@ -106,6 +106,28 @@ public class TrainerDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method save - should save trainer and return it with generated id")
+    public void testSave() {
+        // given
+        var trainer = createTestTrainer();
+        String key = "trainer:1";
+
+        given(storage.keySet()).willReturn(Collections.emptySet());
+
+        // when
+        var actualResult = trainerDao.save(trainer);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isEqualTo(1L);
+        assertThat(actualResult).isEqualTo(trainer);
+
+        verify(storage, times(1)).keySet();
+        verify(storage, times(1)).put(anyString(), any(Trainer.class));
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setFirstName("FirstName");
