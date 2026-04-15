@@ -127,6 +127,28 @@ public class TrainerDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method update - should update trainer and return it")
+    public void testUpdate() {
+        // given
+        var trainer = createTestTrainer();
+        trainer.setUsername("FirstName.LastName");
+        trainer.setSpecialization(TrainingType.YOGA);
+        trainer.setId(1L);
+
+        doNothing().when(storage).put(anyString(), any(Trainer.class));
+
+        // when
+        var actualResult = trainerDao.update(trainer);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainer);
+
+        verify(storage, times(1)).put(anyString(), any(Trainer.class));
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setFirstName("FirstName");

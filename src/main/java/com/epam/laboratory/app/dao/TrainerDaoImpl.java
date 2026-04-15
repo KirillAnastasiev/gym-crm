@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -35,9 +34,8 @@ public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
     }
 
     @Override
-    public Trainer update(Trainer trainee) {
-        // todo
-        return null;
+    public Trainer update(Trainer trainer) {
+        return update(trainer, trainer.getId(), Trainer.class);
     }
 
     @Override
