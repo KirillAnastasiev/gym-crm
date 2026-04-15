@@ -67,6 +67,7 @@ class TraineeServiceImplTest {
         verify(traineeDao, times(1)).existsByUsername(anyString());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
+        verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
     }
 
@@ -103,16 +104,20 @@ class TraineeServiceImplTest {
         verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), anyString());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
+        verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
     }
 
     @Test
-    @DisplayName("Test of the method updateTrainee - should update trainee and return")
-    void testUpdateTrainee() {
+    @DisplayName("Test of the method updateTrainee - should update trainee with unique username and return")
+    void testUpdateTrainee_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
+        var generatedUsername = "UpdatedFirstName.LastName";
 
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
+        given(traineeDao.existsByUsername(anyString())).willReturn(false);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -122,8 +127,45 @@ class TraineeServiceImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
+        verify(traineeDao, times(1)).existsByUsername(anyString());
         verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(usernameHelper);
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method updateTrainee - should update trainee with non-unique username and return")
+    void testUpdateTrainee_nonUniqueUsername() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setFirstName("UpdatedFirstName");
+        var generatedUsername = "UpdatedFirstName.LastName";
+        var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
+
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
+        given(traineeDao.existsByUsername(anyString())).willReturn(true);
+        given(traineeDao.calculateTraineesWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
+        given(usernameHelper.generateUsername(any(Trainee.class), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        var actualResult = traineeService.updateTrainee(trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+        assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
+        verify(traineeDao, times(1)).existsByUsername(anyString());
+        verify(traineeDao, times(1)).calculateTraineesWithFirstNameAndLastName(anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), anyString());
+        verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
     }
 

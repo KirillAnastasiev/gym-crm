@@ -27,6 +27,8 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Override
     public Trainee updateTrainee(Trainee trainee) {
+        trainee.setUsername(getUsername(trainee));
+
         return traineeDao.update(trainee);
     }
 
