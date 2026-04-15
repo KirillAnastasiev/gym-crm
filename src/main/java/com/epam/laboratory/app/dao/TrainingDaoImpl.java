@@ -27,8 +27,10 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
 
     @Override
     public Training save(Training training) {
-        // todo
-        return null;
+        long id = save(training, Training.class);
+        training.setId(id);
+
+        return training;
     }
 
     @Override

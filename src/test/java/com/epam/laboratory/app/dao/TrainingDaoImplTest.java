@@ -107,6 +107,27 @@ class TrainingDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method save - should save training and return it with generated id")
+    void testSave() {
+        // given
+        var training = createTestTraining();
+
+        given(storage.keySet()).willReturn(Collections.emptySet());
+
+        // when
+        var actualResult = trainingDao.save(training);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isEqualTo(1);
+        assertThat(actualResult).isEqualTo(training);
+
+        verify(storage, times(1)).keySet();
+        verify(storage, times(1)).put(anyString(), any(Training.class));
+        verifyNoMoreInteractions(storage);
+    }
+
     private Training createTestTraining() {
         var training = new Training();
         training.setTrainingName("Test Training");
