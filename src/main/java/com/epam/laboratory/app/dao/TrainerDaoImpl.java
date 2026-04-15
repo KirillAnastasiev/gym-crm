@@ -18,12 +18,12 @@ public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
 
     @Override
     public Optional<Trainer> findById(Long id) {
-        return Optional.empty();
+        return findById(id, Trainer.class);
     }
 
     @Override
     public Collection<Trainer> findAll() {
-        return List.of();
+        return findAll(Trainer.class);
     }
 
     @Override
