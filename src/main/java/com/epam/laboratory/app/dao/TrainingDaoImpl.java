@@ -17,8 +17,7 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
 
     @Override
     public Optional<Training> findById(Long id) {
-        // todo
-        return null;
+        return findById(id, Training.class);
     }
 
     @Override

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,7 +23,7 @@ public abstract class AbstractDao<T> implements BaseDao<T, Long> {
                 .stream()
                 .filter(clazz::isInstance)
                 .map(clazz::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     protected Long save(T entity, Class<T> clazz) {
@@ -51,7 +50,7 @@ public abstract class AbstractDao<T> implements BaseDao<T, Long> {
     private List<String> getKeysByPrefix(String keyPrefix) {
         return storage.keySet().stream()
                 .filter(key -> key.startsWith(keyPrefix))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private long computeNextId(String keyPrefix) {
