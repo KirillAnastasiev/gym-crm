@@ -208,6 +208,65 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return true when trainee with given username exists")
+    void testExistsByUsername_positive() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setId(1L);
+        trainee.setUsername("FirstName.LastName");
+
+        given(storage.values()).willReturn(Collections.singletonList(trainee));
+
+        // when
+        var actualResult = traineeDao.existsByUsername("FirstName.LastName");
+
+        // then
+        assertThat(actualResult).isTrue();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return false when trainee with given username does not exist")
+    void testExistsByUsername_negative() {
+        // given
+        given(storage.values()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = traineeDao.existsByUsername("FirstName.LastName");
+
+        // then
+        assertThat(actualResult).isFalse();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method calculateTraineesWithFirstNameAndLastName - should return count of trainees with given first name and last name")
+    void testCalculateTraineesWithFirstNameAndLastName() {
+        // given
+        var trainee1 = createTestTrainee();
+        var trainee2 = createTestTrainee();
+        var trainee3 = createTestTrainee();
+        trainee1.setId(1L);
+        trainee2.setId(2L);
+        trainee3.setId(3L);
+
+        given(storage.values()).willReturn(List.of(trainee1, trainee2, trainee3));
+
+        // when
+        var actualResult = traineeDao.calculateTraineesWithFirstNameAndLastName("FirstName", "LastName");
+
+        // then
+        assertThat(actualResult).isEqualTo(3);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainee createTestTrainee() {
         Trainee trainee = new Trainee();
         trainee.setFirstName("FirstName");

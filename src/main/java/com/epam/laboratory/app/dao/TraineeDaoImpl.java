@@ -52,4 +52,23 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
                 .filter(trainee -> trainee.getUsername().equals(username))
                 .findFirst();
     }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return storage.values()
+                .stream()
+                .filter(Trainee.class::isInstance)
+                .map(Trainee.class::cast)
+                .anyMatch(trainee -> trainee.getUsername().equals(username));
+    }
+
+    @Override
+    public long calculateTraineesWithFirstNameAndLastName(String firstName, String lastName) {
+        return storage.values()
+                .stream()
+                .filter(Trainee.class::isInstance)
+                .map(Trainee.class::cast)
+                .filter(trainee -> trainee.getFirstName().equals(firstName) && trainee.getLastName().equals(lastName))
+                .count();
+    }
 }
