@@ -34,9 +34,8 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
     }
 
     @Override
-    public Training update(Training entity) {
-        // todo
-        return null;
+    public Training update(Training training) {
+        return update(training, training.getId(), Training.class);
     }
 
     @Override
