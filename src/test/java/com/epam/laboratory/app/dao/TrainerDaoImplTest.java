@@ -41,7 +41,7 @@ public class TrainerDaoImplTest {
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
-        assertThat(actualResult.get()).isEqualTo(trainer);
+        assertThat(actualResult).contains(trainer);
 
         verify(storage, times(1)).get(anyString());
         verifyNoMoreInteractions(storage);
@@ -93,7 +93,7 @@ public class TrainerDaoImplTest {
     @DisplayName("Test of the method findAll - should return empty list when there are no trainers in storage")
     public void testFindAll_negative() {
         // given
-        given(storage.values()).willReturn(Collections.EMPTY_LIST);
+        given(storage.values()).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainerDao.findAll();
@@ -111,7 +111,6 @@ public class TrainerDaoImplTest {
     public void testSave() {
         // given
         var trainer = createTestTrainer();
-        String key = "trainer:1";
 
         given(storage.keySet()).willReturn(Collections.emptySet());
 
