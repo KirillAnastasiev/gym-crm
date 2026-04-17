@@ -1,5 +1,7 @@
 package com.epam.laboratory.app.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -10,8 +12,11 @@ import java.time.LocalDate;
 @Setter
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class Trainee extends User {
+    @JsonProperty(value = "dateOfBirth", required = true)
     private LocalDate dateOfBirth;
 
+    @JsonProperty(value = "address", required = true)
     private String address;
 }
