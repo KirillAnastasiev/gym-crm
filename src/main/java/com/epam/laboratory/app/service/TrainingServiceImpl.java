@@ -14,7 +14,7 @@ public class TrainingServiceImpl implements TrainingService {
     private final TrainingDao trainingDao;
 
     @Override
-    public Training creteTraining(Training training) {
+    public Training createTraining(Training training) {
         return trainingDao.save(training);
     }
 

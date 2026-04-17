@@ -43,7 +43,7 @@ class TrainingServiceImplTest {
         given(trainingDao.save(any(Training.class))).willReturn(training);
 
         // when
-        var actualResult = trainingServiceImpl.creteTraining(training);
+        var actualResult = trainingServiceImpl.createTraining(training);
 
         // then
         assertThat(actualResult).isNotNull();
