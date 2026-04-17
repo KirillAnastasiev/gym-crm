@@ -1,0 +1,51 @@
+{
+  "trainee:1" : {
+    "dateOfBirth" : [ 2026, 4, 17 ],
+    "address" : "Test Address",
+    "active" : false,
+    "id" : 1,
+    "firstName" : "FirstName",
+    "lastName" : "LastName",
+    "username" : "FirstName.LastName",
+    "password" : "YA\\]%z+4\\F",
+    "isActive" : false
+  },
+  "trainer:1" : {
+    "specialization" : "FITNESS",
+    "active" : false,
+    "id" : 1,
+    "firstName" : "FirstName",
+    "lastName" : "LastName",
+    "username" : "FirstName.LastName",
+    "password" : "3qc#57`s)_",
+    "isActive" : false
+  },
+  "training:1" : {
+    "id" : 1,
+    "trainee" : {
+      "dateOfBirth" : [ 2026, 4, 17 ],
+      "address" : "Test Address",
+      "active" : false,
+      "id" : 1,
+      "firstName" : "FirstName",
+      "lastName" : "LastName",
+      "username" : "FirstName.LastName",
+      "password" : "YA\\]%z+4\\F",
+      "isActive" : false
+    },
+    "trainer" : {
+      "specialization" : "FITNESS",
+      "active" : false,
+      "id" : 1,
+      "firstName" : "FirstName",
+      "lastName" : "LastName",
+      "username" : "FirstName.LastName",
+      "password" : "3qc#57`s)_",
+      "isActive" : false
+    },
+    "trainingName" : "Test Training",
+    "trainingType" : "FITNESS",
+    "trainingDate" : [ 2026, 4, 17, 0, 0 ],
+    "trainingDuration" : 3600.000000000
+  }
+}
