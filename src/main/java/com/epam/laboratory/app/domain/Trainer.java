@@ -2,6 +2,7 @@ package com.epam.laboratory.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 @NoArgsConstructor
@@ -11,6 +12,7 @@ import lombok.*;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonPropertyOrder({"specialization"})
 public class Trainer extends User {
     @JsonProperty(value = "specialization", required = true)
     private TrainingType specialization;

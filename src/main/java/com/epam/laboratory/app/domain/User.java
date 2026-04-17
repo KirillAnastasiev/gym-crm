@@ -2,6 +2,7 @@ package com.epam.laboratory.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.*;
 
 @NoArgsConstructor
@@ -11,6 +12,7 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
+@JsonPropertyOrder({"id", "firstName", "lastName", "username", "password", "isActive"})
 public abstract class User {
     @JsonProperty(value = "id", required = true)
     protected Long id;
