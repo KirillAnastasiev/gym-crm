@@ -1,12 +1,12 @@
 package com.epam.laboratory.app.repository;
 
+import com.epam.laboratory.app.aspect.Logging;
 import com.epam.laboratory.app.domain.Trainee;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -17,16 +17,19 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
         super(storage);
     }
 
+    @Logging(Level.INFO)
     @Override
     public Optional<Trainee> findById(Long id) {
         return findById(id, Trainee.class);
     }
 
+    @Logging(Level.INFO)
     @Override
     public Collection<Trainee> findAll() {
         return findAll(Trainee.class);
     }
 
+    @Logging(Level.INFO)
     @Override
     public Trainee save(Trainee trainee) {
         long id = save(trainee, Trainee.class);
@@ -35,16 +38,19 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
         return trainee;
     }
 
+    @Logging(Level.INFO)
     @Override
     public Trainee update(Trainee trainee) {
         return update(trainee, trainee.getId(), Trainee.class);
     }
 
+    @Logging(Level.INFO)
     @Override
     public void delete(Trainee trainee) {
         delete(trainee.getId(), Trainee.class);
     }
 
+    @Logging(Level.INFO)
     @Override
     public Optional<Trainee> findByUsername(String username) {
         return storage.values()
@@ -55,6 +61,7 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
                 .findFirst();
     }
 
+    @Logging(Level.INFO)
     @Override
     public boolean existsByUsername(String username) {
         return storage.values()
@@ -64,6 +71,7 @@ public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
                 .anyMatch(trainee -> trainee.getUsername().equals(username));
     }
 
+    @Logging(Level.INFO)
     @Override
     public long calculateTraineesWithFirstNameAndLastName(String firstName, String lastName) {
         return storage.values()
