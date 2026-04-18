@@ -17,7 +17,7 @@ public class LoggingAspect {
     @Pointcut("@annotation(logging)")
     public void executeLoggingAdvice(Logging logging) {}
 
-    @Pointcut("execution(* *.*(..))")
+    @Pointcut("execution(* *.*(..)) && !execution(* *.*())")
     public void executeMethodWithArgs() {}
 
     @Pointcut("execution(* *.*())")
@@ -26,7 +26,7 @@ public class LoggingAspect {
     @Pointcut("execution(void *.*(..))")
     public void executeVoidMethod() {}
 
-    @Pointcut("execution(!void *.*(..))")
+    @Pointcut("execution(* *.*(..)) && !execution(void *.*(..))")
     public void executeNotVoidMethod() {}
 
     @Before(value = "executeLoggingAdvice(logging) && executeMethodWithArgs()",
@@ -47,7 +47,7 @@ public class LoggingAspect {
         logByLevel(logging.value(), logMessage);
     }
 
-    @AfterReturning(pointcut = "@annotation(logging)",
+    @AfterReturning(pointcut = "@annotation(logging) && executeNotVoidMethod()",
                     returning = "result",
                     argNames = "joinPoint, logging, result")
     public void logMethodExitWithResult(JoinPoint joinPoint, Logging logging, Object result) {
