@@ -1,5 +1,8 @@
-package com.epam.laboratory.app.dao;
+package com.epam.laboratory.app.repository;
 
+import com.epam.laboratory.app.domain.Trainee;
+import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.domain.Training;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -10,10 +13,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,15 +66,32 @@ public class Storage implements InitializingBean, DisposableBean {
         return storageMap.values();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void afterPropertiesSet() throws Exception {
         var storageFile = getStorageFilePath();
         if (Files.exists(storageFile)) {
             String storedJson = Files.readString(storageFile);
-            var storedData = jsonMapper.readValue(storedJson, Map.class);
-            storageMap.putAll(storedData);
+            Map<String, LinkedHashMap<String, ?>> storedData = jsonMapper.readValue(storedJson, new TypeReference<>() {});
+
+            for (Map.Entry<String, LinkedHashMap<String, ?>> entry : storedData.entrySet()) {
+                String key = entry.getKey();
+                LinkedHashMap<String, ?> value = entry.getValue();
+
+                Object typedValue = convertToConcreteType(key, value);
+                storageMap.put(key, typedValue);
+            }
         }
+    }
+
+    private Object convertToConcreteType(String key, LinkedHashMap<String, ?> map) {
+        String prefix = key.split(":")[0];
+
+        return switch (prefix) {
+            case "trainee" -> jsonMapper.convertValue(map, Trainee.class);
+            case "trainer" -> jsonMapper.convertValue(map, Trainer.class);
+            case "training" -> jsonMapper.convertValue(map, Training.class);
+            default -> map;
+        };
     }
 
     @Override

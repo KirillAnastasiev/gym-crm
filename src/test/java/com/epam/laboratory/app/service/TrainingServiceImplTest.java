@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.dao.TrainingDao;
+import com.epam.laboratory.app.repository.TrainingDao;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;

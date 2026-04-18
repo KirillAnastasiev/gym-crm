@@ -1,9 +1,10 @@
-package com.epam.laboratory.app.dao;
+package com.epam.laboratory.app.repository;
 
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,11 +18,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -204,21 +206,32 @@ class StorageTest {
 
     @Test
     @DisplayName("Test of the method afterPropertiesSet - should read storage map from file and put it to storage map")
+    @SuppressWarnings("unchecked")
     void testAfterPropertiesSet() throws Exception {
         // given
         var storageFilePath = "src/test/resources/test_storage.json";
         storage.setStorageFilePath(storageFilePath);
-        var testMap = createTestStorageMap();
+        var testMap = createTestStorageMapWithLinkedHashMap();
 
-        given(jsonMapper.readValue(anyString(), eq(Map.class))).willReturn(testMap);
+        given(jsonMapper.readValue(anyString(), any(TypeReference.class))).willReturn(testMap);
+        given(jsonMapper.convertValue(any(LinkedHashMap.class), eq(Trainee.class))).willAnswer(invocation -> createTestTrainee());
+        given(jsonMapper.convertValue(any(LinkedHashMap.class), eq(Trainer.class))).willAnswer(invocation -> createTestTrainer());
+        given(jsonMapper.convertValue(any(LinkedHashMap.class), eq(Training.class))).willAnswer(invocation -> createTestTraining());
 
         // when
         storage.afterPropertiesSet();
 
         // then
-        assertThat(storage.getStorageMap()).isEqualTo(testMap);
+        assertThat(storage.getStorageMap()).hasSize(3);
+        assertThat(storage.getStorageMap()).containsKeys("trainee:1", "trainer:1", "training:1");
+        assertThat(storage.getStorageMap().get("trainee:1")).isInstanceOf(Trainee.class);
+        assertThat(storage.getStorageMap().get("trainer:1")).isInstanceOf(Trainer.class);
+        assertThat(storage.getStorageMap().get("training:1")).isInstanceOf(Training.class);
 
-        verify(jsonMapper, times(1)).readValue(anyString(), eq(Map.class));
+        verify(jsonMapper, times(1)).readValue(anyString(), any(TypeReference.class));
+        verify(jsonMapper, times(1)).convertValue(any(LinkedHashMap.class), eq(Trainee.class));
+        verify(jsonMapper, times(1)).convertValue(any(LinkedHashMap.class), eq(Trainer.class));
+        verify(jsonMapper, times(1)).convertValue(any(LinkedHashMap.class), eq(Training.class));
     }
 
     @Test
@@ -281,12 +294,12 @@ class StorageTest {
         return training;
     }
 
-    private Map<String, Object> createTestStorageMap() {
-        return Map.of(
-                "trainee:1", createTestTrainee(),
-                "trainer:1", createTestTrainer(),
-                "training:1", createTestTraining()
-        );
+    private Map<String, LinkedHashMap<String, Object>> createTestStorageMapWithLinkedHashMap() {
+        Map<String, LinkedHashMap<String, Object>> map = new LinkedHashMap<>();
+        map.put("trainee:1", new LinkedHashMap<>());
+        map.put("trainer:1", new LinkedHashMap<>());
+        map.put("training:1", new LinkedHashMap<>());
+        return map;
     }
 
     private String createTestJsonString() {
@@ -300,7 +313,7 @@ class StorageTest {
                     "firstName" : "FirstName",
                     "lastName" : "LastName",
                     "username" : "FirstName.LastName",
-                    "password" : "YA\\\\]%z+4\\\\F",
+                    "password" : "0123456789",
                     "isActive" : false
                   },
                   "trainer:1" : {
@@ -310,7 +323,7 @@ class StorageTest {
                     "firstName" : "FirstName",
                     "lastName" : "LastName",
                     "username" : "FirstName.LastName",
-                    "password" : "3qc#57`s)_",
+                    "password" : "9876543210",
                     "isActive" : false
                   },
                   "training:1" : {
@@ -323,7 +336,7 @@ class StorageTest {
                       "firstName" : "FirstName",
                       "lastName" : "LastName",
                       "username" : "FirstName.LastName",
-                      "password" : "YA\\\\]%z+4\\\\F",
+                      "password" : "0123456789",
                       "isActive" : false
                     },
                     "trainer" : {
@@ -333,7 +346,7 @@ class StorageTest {
                       "firstName" : "FirstName",
                       "lastName" : "LastName",
                       "username" : "FirstName.LastName",
-                      "password" : "3qc#57`s)_",
+                      "password" : "9876543210",
                       "isActive" : false
                     },
                     "trainingName" : "Test Training",

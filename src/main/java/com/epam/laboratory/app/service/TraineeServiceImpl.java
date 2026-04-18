@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.dao.TraineeDao;
+import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.util.PasswordGenerator;

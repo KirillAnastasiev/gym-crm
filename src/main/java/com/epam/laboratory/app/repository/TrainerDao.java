@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.dao;
+package com.epam.laboratory.app.repository;
 
 import com.epam.laboratory.app.domain.Trainer;
 

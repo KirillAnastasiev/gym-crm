@@ -1,7 +1,7 @@
 package com.epam.laboratory.app.service;
 
 
-import com.epam.laboratory.app.dao.TrainerDao;
+import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.util.PasswordGenerator;

@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.dao.TrainerDao;
+import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.util.PasswordGenerator;
@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
