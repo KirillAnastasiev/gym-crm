@@ -38,7 +38,7 @@ public class LoggingAspect {
     }
 
     @AfterThrowing(pointcut = "@annotation(logging)", throwing = "exception")
-    public void logMethodException(JoinPoint joinPoint, Logging logging, Exception exception) {
+    public void logMethodException(JoinPoint joinPoint, Logging logging, Throwable exception) {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
 
