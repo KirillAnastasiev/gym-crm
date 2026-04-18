@@ -12,7 +12,7 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({"id", "firstName", "lastName", "username", "password", "isActive"})
+@JsonPropertyOrder({"id", "firstName", "lastName", "username", "password", "active"})
 public abstract class User {
     @JsonProperty(value = "id", required = true)
     protected Long id;
@@ -30,6 +30,6 @@ public abstract class User {
     @JsonProperty(value = "password", required = true)
     protected String password;
 
-    @JsonProperty(value = "isActive", required = true)
-    protected boolean isActive;
+    @JsonProperty(value = "active", required = true)
+    protected boolean active;
 }

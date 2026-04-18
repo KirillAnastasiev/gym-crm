@@ -313,8 +313,7 @@ class StorageTest {
                     "firstName" : "FirstName",
                     "lastName" : "LastName",
                     "username" : "FirstName.LastName",
-                    "password" : "0123456789",
-                    "isActive" : false
+                    "password" : "0123456789"
                   },
                   "trainer:1" : {
                     "specialization" : "FITNESS",
@@ -323,8 +322,7 @@ class StorageTest {
                     "firstName" : "FirstName",
                     "lastName" : "LastName",
                     "username" : "FirstName.LastName",
-                    "password" : "9876543210",
-                    "isActive" : false
+                    "password" : "9876543210"
                   },
                   "training:1" : {
                     "id" : 1,
@@ -336,8 +334,7 @@ class StorageTest {
                       "firstName" : "FirstName",
                       "lastName" : "LastName",
                       "username" : "FirstName.LastName",
-                      "password" : "0123456789",
-                      "isActive" : false
+                      "password" : "0123456789"
                     },
                     "trainer" : {
                       "specialization" : "FITNESS",
@@ -346,8 +343,7 @@ class StorageTest {
                       "firstName" : "FirstName",
                       "lastName" : "LastName",
                       "username" : "FirstName.LastName",
-                      "password" : "9876543210",
-                      "isActive" : false
+                      "password" : "9876543210"
                     },
                     "trainingName" : "Test Training",
                     "trainingType" : "FITNESS",
@@ -357,3 +353,4 @@ class StorageTest {
                 }""";
     }
 }
+
