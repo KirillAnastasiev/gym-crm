@@ -207,6 +207,67 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(storage);
     }
 
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return true when trainer with given username exists")
+    void testExistsByUsername_positive() {
+        // given
+        var trainer = createTestTrainer();
+        String username = "FirstName.LastName";
+        trainer.setUsername(username);
+
+        given(storage.values()).willReturn(Collections.singletonList(trainer));
+
+        // when
+        var actualResult = trainerDao.existsByUsername(username);
+
+        // then
+        assertThat(actualResult).isTrue();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return false when trainer with given username does not exist")
+    void testExistsByUsername_negative() {
+        // given
+        String username = "FirstName.LastName";
+
+        given(storage.values()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainerDao.existsByUsername(username);
+
+        // then
+        assertThat(actualResult).isFalse();
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method calculateTraineesWithFirstNameAndLastName - should return count of trainers with given first name and last name")
+    void testCalculateTraineesWithFirstNameAndLastName() {
+        // given
+        var trainer1 = createTestTrainer();
+        var trainer2 = createTestTrainer();
+        var trainer3 = createTestTrainer();
+        trainer1.setId(1L);
+        trainer2.setId(2L);
+        trainer3.setId(3L);
+
+        given(storage.values()).willReturn(List.of(trainer1, trainer2, trainer3));
+
+        // when
+        var actualResult = trainerDao.calculateTraineesWithFirstNameAndLastName("FirstName", "LastName");
+
+        // then
+        assertThat(actualResult).isEqualTo(3);
+
+        verify(storage, times(1)).values();
+        verifyNoMoreInteractions(storage);
+    }
+
     private Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setFirstName("FirstName");
