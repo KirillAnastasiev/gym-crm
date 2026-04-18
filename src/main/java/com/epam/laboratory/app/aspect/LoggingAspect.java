@@ -1,6 +1,5 @@
 package com.epam.laboratory.app.aspect;
 
-import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -39,7 +38,8 @@ public class LoggingAspect {
         logByLevel(logging.value(), logMessage);
     }
 
-    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithoutArgs()")
+    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithoutArgs()",
+            argNames = "joinPoint, logging")
     public void logMethodEntryWithoutArguments(JoinPoint joinPoint, Logging logging) {
         String className = getClassName(joinPoint);
         String methodName = getMethodName(joinPoint);
@@ -47,9 +47,9 @@ public class LoggingAspect {
         logByLevel(logging.value(), logMessage);
     }
 
-    @AfterReturning(pointcut = "@annotation(logging) && executeNotVoidMethod()",
-                    returning = "result",
-                    argNames = "joinPoint, logging, result")
+    @AfterReturning(pointcut = "executeLoggingAdvice(logging) && executeNotVoidMethod()",
+                    argNames = "joinPoint, logging, result",
+                    returning = "result")
     public void logMethodExitWithResult(JoinPoint joinPoint, Logging logging, Object result) {
         String className = getClassName(joinPoint);
         String methodName = getMethodName(joinPoint);
@@ -67,8 +67,8 @@ public class LoggingAspect {
     }
 
     @AfterThrowing(value = "executeLoggingAdvice(logging)",
-                   throwing = "exception",
-                   argNames = "joinPoint, logging, exception")
+                   argNames = "joinPoint, logging, exception",
+                   throwing = "exception")
     public void logMethodException(JoinPoint joinPoint, Logging logging, Throwable exception) {
         String methodName = getMethodName(joinPoint);
         String className = getClassName(joinPoint);
@@ -87,13 +87,11 @@ public class LoggingAspect {
     }
 
     private static String getClassName(JoinPoint joinPoint) {
-        String className = joinPoint.getTarget().getClass().getSimpleName();
-        return className;
+        return joinPoint.getTarget().getClass().getSimpleName();
     }
 
     private static String getMethodName(JoinPoint joinPoint) {
-        String methodName = joinPoint.getSignature().getName();
-        return methodName;
+        return joinPoint.getSignature().getName();
     }
 }
 
