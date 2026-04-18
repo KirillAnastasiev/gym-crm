@@ -5,6 +5,7 @@ import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.util.PasswordGenerator;
+import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,17 +32,23 @@ class TrainerServiceImplTest {
     @Mock
     private PasswordGenerator passwordGenerator;
 
+    @Mock
+    private UsernameHelper usernameHelper;
+
     @InjectMocks
     private TrainerServiceImpl trainerService;
 
     @Test
     @DisplayName("Test of the method createTrainer - should create trainer with generated password")
-    void testCreateTrainer() {
+    void testCreateTrainer_uniqueUsername() {
         // given
         var trainer = createTrainer();
         var password = "generatedPassword";
+        var username = "FirstName.LastName";
 
         given(passwordGenerator.generatePassword()).willReturn(password);
+        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
+        given(trainerDao.existsByUsername(anyString())).willReturn(false);
         given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
@@ -52,10 +59,48 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
         assertThat(actualResult.getPassword()).isEqualTo(password);
+        assertThat(actualResult.getUsername()).isEqualTo(username);
 
         verify(passwordGenerator, times(1)).generatePassword();
+        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
+        verify(trainerDao, times(1)).existsByUsername(anyString());
         verify(trainerDao, times(1)).save(any(Trainer.class));
-        verifyNoMoreInteractions(passwordGenerator, trainerDao);
+        verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method createTrainer - should create trainer with generated password and username with suffix if username is not unique")
+    void testCreateTrainer_nonUniqueUsername() {
+        // given
+        var trainer = createTrainer();
+        var password = "generatedPassword";
+        var username = "FirstName.LastName";
+        var usernameWithSuffix = "FirstName.LastName.2";
+
+        given(passwordGenerator.generatePassword()).willReturn(password);
+        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
+        given(trainerDao.existsByUsername(anyString())).willReturn(true);
+        given(trainerDao.calculateTrainersWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
+        given(usernameHelper.generateUsername(any(Trainer.class), anyString())).willReturn(usernameWithSuffix);
+        given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
+
+        // when
+        var actualResult = trainerService.createTrainer(trainer);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isNotNull();
+        assertThat(actualResult).isEqualTo(trainer);
+        assertThat(actualResult.getPassword()).isEqualTo(password);
+        assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
+
+        verify(passwordGenerator, times(1)).generatePassword();
+        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
+        verify(trainerDao, times(1)).existsByUsername(anyString());
+        verify(trainerDao, times(1)).calculateTrainersWithFirstNameAndLastName(anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), anyString());
+        verify(trainerDao, times(1)).save(any(Trainer.class));
+        verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
     }
 
     @Test

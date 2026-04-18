@@ -246,8 +246,8 @@ class TrainerDaoImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method calculateTraineesWithFirstNameAndLastName - should return count of trainers with given first name and last name")
-    void testCalculateTraineesWithFirstNameAndLastName() {
+    @DisplayName("Test of the method calculateTrainersWithFirstNameAndLastName - should return count of trainers with given first name and last name")
+    void testCalculateTrainersWithFirstNameAndLastName() {
         // given
         var trainer1 = createTestTrainer();
         var trainer2 = createTestTrainer();
@@ -259,7 +259,7 @@ class TrainerDaoImplTest {
         given(storage.values()).willReturn(List.of(trainer1, trainer2, trainer3));
 
         // when
-        var actualResult = trainerDao.calculateTraineesWithFirstNameAndLastName("FirstName", "LastName");
+        var actualResult = trainerDao.calculateTrainersWithFirstNameAndLastName("FirstName", "LastName");
 
         // then
         assertThat(actualResult).isEqualTo(3);

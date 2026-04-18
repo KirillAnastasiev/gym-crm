@@ -4,6 +4,7 @@ import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.util.PasswordGenerator;
+import com.epam.laboratory.app.util.UsernameHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +15,12 @@ import java.util.Collection;
 public class TrainerServiceImpl implements TrainerService {
     private final TrainerDao trainerDao;
     private final PasswordGenerator passwordGenerator;
+    private final UsernameHelper usernameHelper;
 
     @Override
     public Trainer createTrainer(Trainer trainer) {
-        var password = passwordGenerator.generatePassword();
-        trainer.setPassword(password);
+        trainer.setPassword(getPassword());
+        trainer.setUsername(getUsername(trainer));
 
         return trainerDao.save(trainer);
     }
@@ -42,5 +44,20 @@ public class TrainerServiceImpl implements TrainerService {
     @Override
     public Collection<Trainer> selectAllTrainees() {
         return trainerDao.findAll();
+    }
+
+    private String getPassword() {
+        return passwordGenerator.generatePassword();
+    }
+
+    private String getUsername(Trainer trainer) {
+        var username = usernameHelper.generateUsername(trainer);
+        var isAlreadyExists = trainerDao.existsByUsername(username);
+        if (isAlreadyExists) {
+            long traineesCount = trainerDao.calculateTrainersWithFirstNameAndLastName(trainer.getFirstName(), trainer.getLastName());
+            username = usernameHelper.generateUsername(trainer, String.valueOf(traineesCount + 1));
+        }
+
+        return username;
     }
 }

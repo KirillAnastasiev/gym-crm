@@ -63,7 +63,7 @@ public class TrainerDaoImpl extends AbstractDao<Trainer> implements TrainerDao {
     }
 
     @Override
-    public long calculateTraineesWithFirstNameAndLastName(String firstName, String lastName) {
+    public long calculateTrainersWithFirstNameAndLastName(String firstName, String lastName) {
         return storage.values()
                 .stream()
                 .filter(Trainer.class::isInstance)

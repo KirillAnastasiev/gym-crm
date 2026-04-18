@@ -61,6 +61,7 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
         assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
         verify(passwordGenerator, times(1)).generatePassword();
         verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
