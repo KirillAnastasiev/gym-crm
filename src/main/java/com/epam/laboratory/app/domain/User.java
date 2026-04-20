@@ -13,7 +13,7 @@ import lombok.*;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "firstName", "lastName", "username", "password", "active"})
-public abstract class User {
+public abstract class User implements Entity {
     @JsonProperty(value = "id", required = true)
     protected Long id;
 

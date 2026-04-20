@@ -2,7 +2,6 @@ package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.Logging;
 import com.epam.laboratory.app.domain.Trainee;
-import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
@@ -11,6 +10,7 @@ import org.slf4j.event.Level;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Logging(Level.INFO)
     @Override
     public Trainee createTrainee(Trainee trainee) {
-        trainee.setPassword(getPassword());
+        trainee.setPassword(passwordGenerator.generatePassword());
         trainee.setUsername(getUsername(trainee));
 
         return traineeDao.save(trainee);
@@ -44,29 +44,14 @@ public class TraineeServiceImpl implements TraineeService {
 
     @Logging(Level.INFO)
     @Override
-    public Trainee selectTrainee(String username) {
-        return traineeDao.findByUsername(username)
-                .orElseThrow(() -> new NoSuchEntityException("Trainee with username " + username + " not found"));
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Trainee> selectAllTrainees() {
-        return traineeDao.findAll();
-    }
-
-    private String getPassword() {
-        return passwordGenerator.generatePassword();
+    public Collection<Trainee> selectTraineesByCondition(Predicate<Trainee> condition) {
+        return traineeDao.findByCondition(condition, Trainee.class);
     }
 
     private String getUsername(Trainee trainee) {
-        var username = usernameHelper.generateUsername(trainee);
-        var isAlreadyExists = traineeDao.existsByUsername(username);
-        if (isAlreadyExists) {
-            long traineesCount = traineeDao.calculateTraineesWithFirstNameAndLastName(trainee.getFirstName(), trainee.getLastName());
-            username = usernameHelper.generateUsername(trainee, String.valueOf(traineesCount + 1));
-        }
-
-        return username;
+        Collection<Trainee> traineesWithSameFirstNameAndLastName = traineeDao.findByCondition(
+                t -> t.getFirstName().equals(trainee.getFirstName())
+                        && t.getLastName().equals(trainee.getLastName()), Trainee.class);
+        return usernameHelper.generateUsername(trainee.getFirstName(), trainee.getLastName(), traineesWithSameFirstNameAndLastName);
     }
 }

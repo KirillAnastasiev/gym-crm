@@ -1,107 +1,89 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.domain.Trainee;
-import com.epam.laboratory.app.domain.Trainer;
-import com.epam.laboratory.app.domain.Training;
+import com.epam.laboratory.app.domain.Entity;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import static java.nio.file.StandardOpenOption.CREATE;
-import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import java.util.function.Predicate;
 
 @Component
 @RequiredArgsConstructor
 @Setter
 @Getter
 @PropertySource("classpath:application.properties")
-public class Storage implements InitializingBean, DisposableBean {
+public class Storage {
     private final JsonMapper jsonMapper;
 
-    private final Map<String, Object> storageMap = new HashMap<>();
+    private final Map<String, Entity> storageMap = new HashMap<>();
 
-    @Value("${storage.path}")
-    private String storageFilePath;
-
-    public void put(String key, Object value) {
-        storageMap.put(key, value);
+    public void store(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var keyPrefix = getKeyPrefix(entityClass);
+        var id = computeNextId(keyPrefix);
+        entity.setId(id);
+        var key = getKey(id, entityClass);
+        storageMap.put(key, entity);
     }
 
-    public Object get(String key) {
+    public void update(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var key = getKey(entity.getId(), entityClass);
+        storageMap.put(key, entity);
+    }
+
+    public Entity retrieveById(long id, Class<? extends Entity> clazz) {
+        var key = getKey(id, clazz);
         return storageMap.get(key);
     }
 
-    public void remove(String key) {
+    public void remove(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var key = getKey(entity.getId(), entityClass);
         storageMap.remove(key);
     }
 
-    public  void clear() {
-        storageMap.clear();
+    @SuppressWarnings("unchecked")
+    public <T extends Entity> Collection<T> retrieveByCondition(Predicate<T> condition, Class<T> clazz) {
+        return storageMap.values()
+                .stream()
+                .filter(clazz::isInstance)
+                .map(e -> (T) e)
+                .filter(condition)
+                .toList();
     }
 
-    public int size() {
-        return storageMap.size();
+    private List<String> getKeysByPrefix(String keyPrefix) {
+        return storageMap.keySet().stream()
+                .filter(key -> key.startsWith(keyPrefix))
+                .toList();
     }
 
-    public Set<String> keySet() {
-        return storageMap.keySet();
+    private long computeNextId(String keyPrefix) {
+        List<String> keys = getKeysByPrefix(keyPrefix);
+        return keys.stream()
+                .map(key -> key.substring(keyPrefix.length() + 1))
+                .mapToLong(Long::parseLong)
+                .max()
+                .orElse(0L) + 1;
     }
 
-    public Collection<Object> values() {
-        return storageMap.values();
+    private String getKeyPrefix(Class<?> clazz) {
+        return clazz.getSimpleName().toLowerCase();
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        var storageFile = getStorageFilePath();
-        if (Files.exists(storageFile)) {
-            String storedJson = Files.readString(storageFile);
-            Map<String, LinkedHashMap<String, ?>> storedData = jsonMapper.readValue(storedJson, new TypeReference<>() {});
-
-            for (Map.Entry<String, LinkedHashMap<String, ?>> entry : storedData.entrySet()) {
-                String key = entry.getKey();
-                LinkedHashMap<String, ?> value = entry.getValue();
-
-                Object typedValue = convertToConcreteType(key, value);
-                storageMap.put(key, typedValue);
-            }
-        }
+    private String getKey(long id, Class<?> clazz) {
+        return getKeyPrefix(clazz) + ":" + id;
     }
 
-    private Object convertToConcreteType(String key, LinkedHashMap<String, ?> map) {
-        String prefix = key.split(":")[0];
-
-        return switch (prefix) {
-            case "trainee" -> jsonMapper.convertValue(map, Trainee.class);
-            case "trainer" -> jsonMapper.convertValue(map, Trainer.class);
-            case "training" -> jsonMapper.convertValue(map, Training.class);
-            default -> map;
-        };
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        var storageFile = getStorageFilePath();
-        String json = jsonMapper.writeValueAsString(storageMap);
-        Files.writeString(storageFile, json, CREATE, TRUNCATE_EXISTING);
-    }
-
-    private Path getStorageFilePath() {
-        return Path.of(storageFilePath);
+    private Class<? extends Entity> getEntityClass(Entity entity) {
+        return entity.getClass();
     }
 }

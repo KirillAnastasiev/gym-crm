@@ -1,9 +1,9 @@
 package com.epam.laboratory.app.service;
 
 
-import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
@@ -15,10 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.function.Predicate;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -47,8 +45,8 @@ class TrainerServiceImplTest {
         var username = "FirstName.LastName";
 
         given(passwordGenerator.generatePassword()).willReturn(password);
-        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
-        given(trainerDao.existsByUsername(anyString())).willReturn(false);
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(username);
         given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
@@ -62,8 +60,8 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(username);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
-        verify(trainerDao, times(1)).existsByUsername(anyString());
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
     }
@@ -74,14 +72,11 @@ class TrainerServiceImplTest {
         // given
         var trainer = createTrainer();
         var password = "generatedPassword";
-        var username = "FirstName.LastName";
         var usernameWithSuffix = "FirstName.LastName.2";
 
         given(passwordGenerator.generatePassword()).willReturn(password);
-        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
-        given(trainerDao.existsByUsername(anyString())).willReturn(true);
-        given(trainerDao.calculateTrainersWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
-        given(usernameHelper.generateUsername(any(Trainer.class), anyString())).willReturn(usernameWithSuffix);
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(usernameWithSuffix);
         given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
@@ -95,10 +90,8 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
-        verify(trainerDao, times(1)).existsByUsername(anyString());
-        verify(trainerDao, times(1)).calculateTrainersWithFirstNameAndLastName(anyString(), anyString());
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), anyString());
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
     }
@@ -140,75 +133,44 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainer - successful execution, should return trainer by username")
-    void testSelectTrainer_positive() {
+    void testSelectTrainersByCondition_positive() {
         // given
         var trainer = createTrainer();
         trainer.setUsername("FirstName.LastName");
 
-        given(trainerDao.findByUsername(anyString())).willReturn(Optional.of(trainer));
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
 
         // when
-        var actualResult = trainerService.selectTrainer("FirstName.LastName");
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-        assertThat(actualResult.getUsername()).isEqualTo("FirstName.LastName");
-
-        verify(trainerDao, times(1)).findByUsername(anyString());
-        verifyNoMoreInteractions(trainerDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method selectTrainer - failure execution, should throw NoSuchEntityException")
-    void testSelectTrainer_negative() {
-        // given
-        given(trainerDao.findByUsername(anyString())).willReturn(Optional.empty());
-
-        // when & then
-        assertThatThrownBy(() -> trainerService.selectTrainer("FirstName.LastName"))
-                .isInstanceOf(com.epam.laboratory.app.exception.NoSuchEntityException.class)
-                .hasMessageContaining("Trainer with username FirstName.LastName not found");
-
-        verify(trainerDao, times(1)).findByUsername(anyString());
-        verifyNoMoreInteractions(trainerDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method selectAllTrainers - successful execution, should return collection of trainers")
-    void testSelectAllTrainers_positive() {
-        // given
-        given(trainerDao.findAll()).willReturn(List.of(new Trainer() {{ setId(1L); }}, new Trainer() {{ setId(2L); }}));
-
-        // when
-        var actualResult = trainerService.selectAllTrainees();
+        var actualResult = trainerService.selectTrainerByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).hasSize(2);
-        actualResult.forEach(trainer -> assertThat(trainer).isInstanceOf(Trainer.class));
+        assertThat(actualResult).hasSize(1);
+        actualResult.forEach(t -> {
+            assertThat(t).isInstanceOf(Trainer.class);
+            assertThat(t.getUsername()).isEqualTo("FirstName.LastName");
+        });
 
-        verify(trainerDao, times(1)).findAll();
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(trainerDao);
     }
 
     @Test
-    @DisplayName("Test of the method selectAllTrainers - should return empty collection if there are no trainers")
-    void testSelectAllTrainers_negative() {
+    @DisplayName("Test of the method selectTrainersByCondition - should return empty collection if there are no trainers that match the condition")
+    void testSelectTrainersByCondition_negative() {
         // given
-        given(trainerDao.findAll()).willReturn(Collections.emptyList());
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = trainerService.selectAllTrainees();
+        var actualResult = trainerService.selectTrainerByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(trainerDao, times(1)).findAll();
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(trainerDao);
     }
 

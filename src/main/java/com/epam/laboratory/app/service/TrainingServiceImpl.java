@@ -1,14 +1,14 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.Logging;
-import com.epam.laboratory.app.repository.TrainingDao;
 import com.epam.laboratory.app.domain.Training;
-import com.epam.laboratory.app.exception.NoSuchEntityException;
+import com.epam.laboratory.app.repository.TrainingDao;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +35,7 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Logging(Level.INFO)
     @Override
-    public Training selectTraining(String trainingName) {
-        return trainingDao.findByTrainingName(trainingName)
-                .orElseThrow(() -> new NoSuchEntityException("Training with training name " + trainingName + " not found"));
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Training> selectAllTrainings() {
-        return trainingDao.findAll();
+    public Collection<Training> selectTrainingsByCondition(Predicate<Training> condition) {
+        return trainingDao.findByCondition(condition, Training.class);
     }
 }

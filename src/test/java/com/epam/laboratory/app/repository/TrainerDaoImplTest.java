@@ -9,9 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
-import java.util.List;
-
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -31,19 +28,18 @@ class TrainerDaoImplTest {
         // given
         var trainer = createTestTrainer();
         trainer.setId(1L);
-        String key = "trainer:1";
 
-        given(storage.get(key)).willReturn(trainer);
+        given(storage.retrieveById(anyLong(), any())).willReturn(trainer);
 
         // when
-        var actualResult = trainerDao.findById(1L);
+        var actualResult = trainerDao.findById(1L, Trainer.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
         assertThat(actualResult).contains(trainer);
 
-        verify(storage, times(1)).get(anyString());
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -51,58 +47,16 @@ class TrainerDaoImplTest {
     @DisplayName("Test of the method findById - should return empty optional when trainer with given id does not exist")
     void testFindById_negative() {
         // given
-        String key = "trainer:1";
-
-        given(storage.get(key)).willReturn(null);
+        given(storage.retrieveById(anyLong(), any())).willReturn(null);
 
         // when
-        var actualResult = trainerDao.findById(1L);
+        var actualResult = trainerDao.findById(1L, Trainer.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).get(anyString());
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findAll - should return list of trainers when trainers exist")
-    void testFindAll_positive() {
-        // given
-        var trainer1 = createTestTrainer();
-        trainer1.setId(1L);
-        var trainer2 = createTestTrainer();
-        trainer2.setId(2L);
-
-        given(storage.values()).willReturn(List.of(trainer1, trainer2));
-
-        // when
-        var actualResult = trainerDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).hasSize(2);
-        assertThat(actualResult).containsExactlyInAnyOrder(trainer1, trainer2);
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findAll - should return empty list when there are no trainers in storage")
-    void testFindAll_negative() {
-        // given
-        given(storage.values()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainerDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
-
-        verify(storage, times(1)).values();
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -111,8 +65,9 @@ class TrainerDaoImplTest {
     void testSave() {
         // given
         var trainer = createTestTrainer();
+        trainer.setId(1L);
 
-        given(storage.keySet()).willReturn(Collections.emptySet());
+        doNothing().when(storage).store(any(Trainer.class));
 
         // when
         var actualResult = trainerDao.save(trainer);
@@ -122,8 +77,7 @@ class TrainerDaoImplTest {
         assertThat(actualResult.getId()).isEqualTo(1L);
         assertThat(actualResult).isEqualTo(trainer);
 
-        verify(storage, times(1)).keySet();
-        verify(storage, times(1)).put(anyString(), any(Trainer.class));
+        verify(storage, times(1)).store(any(Trainer.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -136,7 +90,7 @@ class TrainerDaoImplTest {
         trainer.setSpecialization(TrainingType.YOGA);
         trainer.setId(1L);
 
-        doNothing().when(storage).put(anyString(), any(Trainer.class));
+        doNothing().when(storage).update(any(Trainer.class));
 
         // when
         var actualResult = trainerDao.update(trainer);
@@ -145,7 +99,7 @@ class TrainerDaoImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
 
-        verify(storage, times(1)).put(anyString(), any(Trainer.class));
+        verify(storage, times(1)).update(any(Trainer.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -156,115 +110,13 @@ class TrainerDaoImplTest {
         var trainer = createTestTrainer();
         trainer.setId(1L);
 
-        doNothing().when(storage).remove(anyString());
+        doNothing().when(storage).remove(any(Trainer.class));
 
         // when
         trainerDao.delete(trainer);
 
         // then
-        verify(storage, times(1)).remove(anyString());
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findByUsername - should return trainer when trainer with given username exists")
-    void testFindByUsername_positive() {
-        // given
-        var trainer = createTestTrainer();
-        String username = "FirstName.LastName";
-        trainer.setUsername(username);
-
-        given(storage.values()).willReturn(Collections.singletonList(trainer));
-
-        // when
-        var actualResult = trainerDao.findByUsername(username);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isPresent();
-        assertThat(actualResult).contains(trainer);
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findByUsername - should return empty optional when trainer with given username does not exist")
-    void testFindByUsername_negative() {
-        // given
-        String username = "FirstName.LastName";
-
-        given(storage.values()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainerDao.findByUsername(username);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method existsByUsername - should return true when trainer with given username exists")
-    void testExistsByUsername_positive() {
-        // given
-        var trainer = createTestTrainer();
-        String username = "FirstName.LastName";
-        trainer.setUsername(username);
-
-        given(storage.values()).willReturn(Collections.singletonList(trainer));
-
-        // when
-        var actualResult = trainerDao.existsByUsername(username);
-
-        // then
-        assertThat(actualResult).isTrue();
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method existsByUsername - should return false when trainer with given username does not exist")
-    void testExistsByUsername_negative() {
-        // given
-        String username = "FirstName.LastName";
-
-        given(storage.values()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainerDao.existsByUsername(username);
-
-        // then
-        assertThat(actualResult).isFalse();
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method calculateTrainersWithFirstNameAndLastName - should return count of trainers with given first name and last name")
-    void testCalculateTrainersWithFirstNameAndLastName() {
-        // given
-        var trainer1 = createTestTrainer();
-        var trainer2 = createTestTrainer();
-        var trainer3 = createTestTrainer();
-        trainer1.setId(1L);
-        trainer2.setId(2L);
-        trainer3.setId(3L);
-
-        given(storage.values()).willReturn(List.of(trainer1, trainer2, trainer3));
-
-        // when
-        var actualResult = trainerDao.calculateTrainersWithFirstNameAndLastName("FirstName", "LastName");
-
-        // then
-        assertThat(actualResult).isEqualTo(3);
-
-        verify(storage, times(1)).values();
+        verify(storage, times(1)).remove(any(Trainer.class));
         verifyNoMoreInteractions(storage);
     }
 
