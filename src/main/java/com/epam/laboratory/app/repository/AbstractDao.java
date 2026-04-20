@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.repository;
 
+import com.epam.laboratory.app.domain.Entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -9,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public abstract class AbstractDao<T> implements BaseDao<T, Long> {
+public abstract class AbstractDao<T extends Entity> implements BaseDao<T, Long> {
     protected final Storage storage;
 
     @SuppressWarnings("unchecked")

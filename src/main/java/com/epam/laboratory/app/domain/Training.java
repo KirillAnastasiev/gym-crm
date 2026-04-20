@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "trainee", "trainer", "trainingName", "trainingType", "trainingDate", "trainingDuration"})
-public class Training {
+public class Training implements  Entity {
     @JsonProperty(value = "id", required = true)
     private Long id;
 
