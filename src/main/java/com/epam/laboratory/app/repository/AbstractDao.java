@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public abstract class AbstractDao<T extends Entity> implements BaseDao<T, Long> {
+public abstract class AbstractDao<T extends Entity> implements Dao<T> {
     protected final Storage storage;
 
     @SuppressWarnings("unchecked")

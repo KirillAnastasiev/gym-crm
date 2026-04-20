@@ -4,7 +4,7 @@ import com.epam.laboratory.app.domain.Trainer;
 
 import java.util.Optional;
 
-public interface TrainerDao extends BaseDao<Trainer, Long> {
+public interface TrainerDao extends Dao<Trainer> {
     Optional<Trainer> findByUsername(String username);
     boolean existsByUsername(String username);
     long calculateTrainersWithFirstNameAndLastName(String firstName, String lastName);

@@ -4,6 +4,6 @@ import com.epam.laboratory.app.domain.Training;
 
 import java.util.Optional;
 
-public interface TrainingDao extends  BaseDao<Training, Long> {
+public interface TrainingDao extends Dao<Training> {
     Optional<Training> findByTrainingName(String trainingName);
 }
