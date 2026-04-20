@@ -5,14 +5,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UsernameHelper {
-    public String generateUsername(User user) {
-        var firstName = user.getFirstName();
-        var lastName = user.getLastName();
-
+    public String generateUsername(String firstName, String lastName) {
         return firstName + "." + lastName;
     }
 
-    public String generateUsername(User user, String suffix) {
-        return generateUsername(user) + suffix;
+    public String generateUsername(String firstName, String lastName, String suffix) {
+        return generateUsername(firstName, lastName) + suffix;
     }
 }

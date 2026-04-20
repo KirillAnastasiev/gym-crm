@@ -31,13 +31,8 @@ class UsernameHelperTest {
     })
     @DisplayName("Test of the method generateUsername - should generate username in format 'firstName.lastName'")
     void testGenerateUsername(String firstName, String lastName, String expectedUsername) {
-        // given
-        var user = new User() {};
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-
         // when
-        var actualResult = usernameHelper.generateUsername(user);
+        var actualResult = usernameHelper.generateUsername(firstName, lastName);
 
         // then
         assertThat(actualResult).isEqualTo(expectedUsername);
@@ -58,13 +53,8 @@ class UsernameHelperTest {
     })
     @DisplayName("Test of the method generateUsername with suffix - should generate username in format 'firstName.lastNameSuffix'")
     void testGenerateUsernameWithSuffix(String firstName, String lastName, String suffix, String expectedUsername) {
-        // given
-        var user = new User() {};
-        user.setFirstName(firstName);
-        user.setLastName(lastName);
-
         // when
-        var actualResult = usernameHelper.generateUsername(user, suffix);
+        var actualResult = usernameHelper.generateUsername(firstName, lastName, suffix);
 
         // then
         assertThat(actualResult).isEqualTo(expectedUsername);

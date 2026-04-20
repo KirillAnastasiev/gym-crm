@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -32,19 +31,18 @@ class TraineeDaoImplTest {
         // given
         var trainee = createTestTrainee();
         trainee.setId(1L);
-        String key = "trainee:1";
 
-        given(storage.get(key)).willReturn(trainee);
+        given(storage.retrieveById(anyLong(), any())).willReturn(trainee);
 
         // when
-        var actualResult = traineeDao.findById(1L);
+        var actualResult = traineeDao.findById(1L, Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
         assertThat(actualResult).contains(trainee);
 
-        verify(storage, times(1)).get(anyString());
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -52,18 +50,16 @@ class TraineeDaoImplTest {
     @DisplayName("Test of the method findById - should return empty optional when trainee with given id does not exist")
     void testFindById_negative() {
         // given
-        String key = "trainee:1";
-
-        given(storage.get(key)).willReturn(null);
+        given(storage.retrieveById(anyLong(), any())).willReturn(null);
 
         // when
-        var actualResult = traineeDao.findById(1L);
+        var actualResult = traineeDao.findById(1L, Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).get(anyString());
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -113,8 +109,9 @@ class TraineeDaoImplTest {
     void testSave() {
         // given
         var trainee = createTestTrainee();
+        trainee.setId(1L);
 
-        given(storage.keySet()).willReturn(Collections.emptySet());
+        doNothing().when(storage).store(any(Trainee.class));
 
         // when
         var actualResult = traineeDao.save(trainee);
@@ -124,8 +121,7 @@ class TraineeDaoImplTest {
         assertThat(actualResult.getId()).isEqualTo(1L);
         assertThat(actualResult).isEqualTo(trainee);
 
-        verify(storage, times(1)).keySet();
-        verify(storage, times(1)).put(anyString(), any(Trainee.class));
+        verify(storage, times(1)).store(any(Trainee.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -136,7 +132,7 @@ class TraineeDaoImplTest {
         var trainee = createTestTrainee();
         trainee.setId(1L);
 
-        doNothing().when(storage).put(anyString(), any(Trainee.class));
+        doNothing().when(storage).update(any(Trainee.class));
 
         // when
         var actualResult = traineeDao.update(trainee);
@@ -145,7 +141,7 @@ class TraineeDaoImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
 
-        verify(storage, times(1)).put(anyString(), any(Trainee.class));
+        verify(storage, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -156,13 +152,13 @@ class TraineeDaoImplTest {
         var trainee = createTestTrainee();
         trainee.setId(1L);
 
-        doNothing().when(storage).remove(anyString());
+        doNothing().when(storage).remove(any(Trainee.class));
 
         // when
         traineeDao.delete(trainee);
 
         // then
-        verify(storage, times(1)).remove(anyString());
+        verify(storage, times(1)).remove(any(Trainee.class));
         verifyNoMoreInteractions(storage);
     }
 

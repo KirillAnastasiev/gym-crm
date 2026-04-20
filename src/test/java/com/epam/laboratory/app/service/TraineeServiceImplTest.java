@@ -1,8 +1,8 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
+import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -49,8 +50,8 @@ class TraineeServiceImplTest {
         var generatedUsername = "FirstName.LastName";
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
-        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
-        given(traineeDao.existsByUsername(anyString())).willReturn(false);
+        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(generatedUsername);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -64,8 +65,8 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
-        verify(traineeDao, times(1)).existsByUsername(anyString());
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
         verifyNoMoreInteractions(usernameHelper);
@@ -78,14 +79,11 @@ class TraineeServiceImplTest {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
-        var generatedUsername = "FirstName.LastName";
         var generatedUsernameWithSuffix = "FirstName.LastName2";
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
-        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
-        given(traineeDao.existsByUsername(anyString())).willReturn(true);
-        given(traineeDao.calculateTraineesWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
-        given(usernameHelper.generateUsername(any(Trainee.class), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyString())).willReturn(generatedUsernameWithSuffix);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -99,10 +97,8 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
-        verify(traineeDao, times(1)).existsByUsername(anyString());
-        verify(traineeDao, times(1)).calculateTraineesWithFirstNameAndLastName(anyString(), anyString());
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), anyString());
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyString());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
         verifyNoMoreInteractions(usernameHelper);
@@ -117,8 +113,8 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsername = "UpdatedFirstName.LastName";
 
-        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
-        given(traineeDao.existsByUsername(anyString())).willReturn(false);
+        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(generatedUsername);
+        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -130,8 +126,8 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
-        verify(traineeDao, times(1)).existsByUsername(anyString());
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
@@ -143,13 +139,10 @@ class TraineeServiceImplTest {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
-        var generatedUsername = "UpdatedFirstName.LastName";
         var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
 
-        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
-        given(traineeDao.existsByUsername(anyString())).willReturn(true);
-        given(traineeDao.calculateTraineesWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
-        given(usernameHelper.generateUsername(any(Trainee.class), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(traineeDao.findByCondition(any(Predicate.class), eq(Trainee.class))).willReturn(Collections.singletonList(trainee));
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyString())).willReturn(generatedUsernameWithSuffix);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -161,10 +154,8 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
-        verify(traineeDao, times(1)).existsByUsername(anyString());
-        verify(traineeDao, times(1)).calculateTraineesWithFirstNameAndLastName(anyString(), anyString());
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), anyString());
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), eq(Trainee.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyString());
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);

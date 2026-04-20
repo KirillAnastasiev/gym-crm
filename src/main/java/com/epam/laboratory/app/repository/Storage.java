@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.repository;
 
+import com.epam.laboratory.app.domain.Entity;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +15,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -33,36 +30,38 @@ import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 public class Storage implements InitializingBean, DisposableBean {
     private final JsonMapper jsonMapper;
 
-    private final Map<String, Object> storageMap = new HashMap<>();
+    private final Map<String, Entity> storageMap = new HashMap<>();
 
     @Value("${storage.path}")
     private String storageFilePath;
 
-    public void put(String key, Object value) {
-        storageMap.put(key, value);
+    public void store(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var keyPrefix = getKeyPrefix(entityClass);
+        var id = computeNextId(keyPrefix);
+        entity.setId(id);
+        var key = getKey(id, entityClass);
+        storageMap.put(key, entity);
     }
 
-    public Object get(String key) {
+    public void update(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var key = getKey(entity.getId(), entityClass);
+        storageMap.put(key, entity);
+    }
+
+    public Entity retrieveById(long id, Class<? extends Entity> clazz) {
+        var key = getKey(id, clazz);
         return storageMap.get(key);
     }
 
-    public void remove(String key) {
+    public void remove(Entity entity) {
+        var entityClass = getEntityClass(entity);
+        var key = getKey(entity.getId(), entityClass);
         storageMap.remove(key);
     }
 
-    public  void clear() {
-        storageMap.clear();
-    }
-
-    public int size() {
-        return storageMap.size();
-    }
-
-    public Set<String> keySet() {
-        return storageMap.keySet();
-    }
-
-    public Collection<Object> values() {
+    public Collection<Entity> values() {
         return storageMap.values();
     }
 
@@ -71,22 +70,22 @@ public class Storage implements InitializingBean, DisposableBean {
         var storageFile = getStorageFilePath();
         if (Files.exists(storageFile)) {
             String storedJson = Files.readString(storageFile);
-            Map<String, LinkedHashMap<String, ?>> storedData = jsonMapper.readValue(storedJson, new TypeReference<>() {});
+            Map<String, LinkedHashMap<String, Object>> storedData = jsonMapper.readValue(storedJson, new TypeReference<>() {});
 
-            for (Map.Entry<String, LinkedHashMap<String, ?>> entry : storedData.entrySet()) {
+            for (Map.Entry<String, LinkedHashMap<String, Object>> entry : storedData.entrySet()) {
                 String key = entry.getKey();
-                LinkedHashMap<String, ?> value = entry.getValue();
+                LinkedHashMap<String, Object> value = entry.getValue();
 
-                Object typedValue = convertToConcreteType(key, value);
+                Entity typedValue = convertToConcreteType(key, value);
                 storageMap.put(key, typedValue);
             }
         }
     }
 
-    private Object convertToConcreteType(String key, LinkedHashMap<String, ?> map) {
+    private Entity convertToConcreteType(String key, LinkedHashMap<String, Object> map) {
         String prefix = key.split(":")[0];
 
-        return switch (prefix) {
+        return (Entity) switch (prefix) {
             case "trainee" -> jsonMapper.convertValue(map, Trainee.class);
             case "trainer" -> jsonMapper.convertValue(map, Trainer.class);
             case "training" -> jsonMapper.convertValue(map, Training.class);
@@ -103,5 +102,32 @@ public class Storage implements InitializingBean, DisposableBean {
 
     private Path getStorageFilePath() {
         return Path.of(storageFilePath);
+    }
+
+    private List<String> getKeysByPrefix(String keyPrefix) {
+        return storageMap.keySet().stream()
+                .filter(key -> key.startsWith(keyPrefix))
+                .toList();
+    }
+
+    private long computeNextId(String keyPrefix) {
+        List<String> keys = getKeysByPrefix(keyPrefix);
+        return keys.stream()
+                .map(key -> key.substring(keyPrefix.length() + 1))
+                .mapToLong(Long::parseLong)
+                .max()
+                .orElse(0L) + 1;
+    }
+
+    private String getKeyPrefix(Class<?> clazz) {
+        return clazz.getSimpleName().toLowerCase();
+    }
+
+    private String getKey(long id, Class<?> clazz) {
+        return getKeyPrefix(clazz) + ":" + id;
+    }
+
+    private Class<? extends Entity> getEntityClass(Entity entity) {
+        return entity.getClass();
     }
 }

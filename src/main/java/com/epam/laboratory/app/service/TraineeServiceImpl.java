@@ -22,7 +22,7 @@ public class TraineeServiceImpl implements TraineeService {
     @Logging(Level.INFO)
     @Override
     public Trainee createTrainee(Trainee trainee) {
-        trainee.setPassword(getPassword());
+        trainee.setPassword(passwordGenerator.generatePassword());
         trainee.setUsername(getUsername(trainee));
 
         return traineeDao.save(trainee);
@@ -55,18 +55,22 @@ public class TraineeServiceImpl implements TraineeService {
         return traineeDao.findAll();
     }
 
-    private String getPassword() {
-        return passwordGenerator.generatePassword();
+    @Override
+    public Collection<Trainee> selectTraineesByFirstNameAndLastName(String firstName, String lastName) {
+        return traineeDao.findByCondition(
+                trainee -> trainee.getFirstName().equals(firstName)
+                        && trainee.getLastName().equals(lastName), Trainee.class);
     }
 
     private String getUsername(Trainee trainee) {
-        var username = usernameHelper.generateUsername(trainee);
-        var isAlreadyExists = traineeDao.existsByUsername(username);
+        Collection<Trainee> traineesWithSameFirstNameAndLastName = selectTraineesByFirstNameAndLastName(trainee.getFirstName(), trainee.getLastName());
+        boolean isAlreadyExists = !traineesWithSameFirstNameAndLastName.isEmpty();
         if (isAlreadyExists) {
-            long traineesCount = traineeDao.calculateTraineesWithFirstNameAndLastName(trainee.getFirstName(), trainee.getLastName());
-            username = usernameHelper.generateUsername(trainee, String.valueOf(traineesCount + 1));
-        }
+            long traineesCount = traineesWithSameFirstNameAndLastName.size();
+            return usernameHelper.generateUsername(trainee.getFirstName(), trainee.getLastName(), String.valueOf(traineesCount + 1));
+        } else {
+            return usernameHelper.generateUsername(trainee.getFirstName(), trainee.getLastName());
 
-        return username;
+        }
     }
 }

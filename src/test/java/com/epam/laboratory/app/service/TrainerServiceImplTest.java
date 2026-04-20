@@ -47,7 +47,7 @@ class TrainerServiceImplTest {
         var username = "FirstName.LastName";
 
         given(passwordGenerator.generatePassword()).willReturn(password);
-        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
+        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(username);
         given(trainerDao.existsByUsername(anyString())).willReturn(false);
         given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
@@ -62,7 +62,7 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(username);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
         verify(trainerDao, times(1)).existsByUsername(anyString());
         verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
@@ -78,10 +78,10 @@ class TrainerServiceImplTest {
         var usernameWithSuffix = "FirstName.LastName.2";
 
         given(passwordGenerator.generatePassword()).willReturn(password);
-        given(usernameHelper.generateUsername(any(Trainer.class))).willReturn(username);
+        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(username);
         given(trainerDao.existsByUsername(anyString())).willReturn(true);
         given(trainerDao.calculateTrainersWithFirstNameAndLastName(anyString(), anyString())).willReturn(1L);
-        given(usernameHelper.generateUsername(any(Trainer.class), anyString())).willReturn(usernameWithSuffix);
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyString())).willReturn(usernameWithSuffix);
         given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
@@ -95,10 +95,10 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
 
         verify(passwordGenerator, times(1)).generatePassword();
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
         verify(trainerDao, times(1)).existsByUsername(anyString());
         verify(trainerDao, times(1)).calculateTrainersWithFirstNameAndLastName(anyString(), anyString());
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), anyString());
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyString());
         verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
     }

@@ -58,11 +58,11 @@ public class TrainerServiceImpl implements TrainerService {
     }
 
     private String getUsername(Trainer trainer) {
-        var username = usernameHelper.generateUsername(trainer);
+        var username = usernameHelper.generateUsername(trainer.getFirstName(), trainer.getLastName());
         var isAlreadyExists = trainerDao.existsByUsername(username);
         if (isAlreadyExists) {
             long traineesCount = trainerDao.calculateTrainersWithFirstNameAndLastName(trainer.getFirstName(), trainer.getLastName());
-            username = usernameHelper.generateUsername(trainer, String.valueOf(traineesCount + 1));
+            username = usernameHelper.generateUsername(trainer.getFirstName(), trainer.getLastName(), String.valueOf(traineesCount + 1));
         }
 
         return username;

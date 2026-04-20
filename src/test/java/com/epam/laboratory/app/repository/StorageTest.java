@@ -41,46 +41,21 @@ class StorageTest {
     }
 
     @Test
-    @DisplayName("Test of the method put - should put entity to storage map")
-    void testPut() {
+    @DisplayName("Test of the method update - should update entity in storage map")
+    void testUpdate() {
         // given
         var storageMap = storage.getStorageMap();
         var trainee = createTestTrainee();
+        trainee.setFirstName("UpdatedFirstName");
 
         // when
-        storage.put("trainee:1", trainee);
+        storage.update(trainee);
 
         // then
         assertThat(storageMap).isNotEmpty();
         assertThat(storageMap).containsKey("trainee:1");
         assertThat(storageMap).containsValue(trainee);
         assertThat(storageMap.get("trainee:1")).isSameAs(trainee);
-    }
-
-    @Test
-    @DisplayName("Test of the method get - should return entity from storage map by key")
-    void testGet_positive() {
-        // given
-        var storageMap = storage.getStorageMap();
-        var trainee = createTestTrainee();
-        storageMap.put("trainee:1", trainee);
-
-        // when
-        var actualResult = storage.get("trainee:1");
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isSameAs(trainee);
-    }
-
-    @Test
-    @DisplayName("Test of the method get - should return null if key is not present in storage map")
-    void testGet_negative() {
-        // when
-        var actualResult = storage.get("trainee:1");
-
-        // then
-        assertThat(actualResult).isNull();
     }
 
     @Test
@@ -92,85 +67,11 @@ class StorageTest {
         storageMap.put("trainee:1", trainee);
 
         // when
-        storage.remove("trainee:1");
+        storage.remove(trainee);
 
         // then
         assertThat(storageMap).doesNotContainKey("trainee:1");
         assertThat(storageMap).doesNotContainValue(trainee);
-    }
-
-    @Test
-    @DisplayName("Test of the method clear - should clear storage map")
-    void testClear() {
-        // given
-        var storageMap = storage.getStorageMap();
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        trainee2.setId(2L);
-        storageMap.put("trainee:1", trainee1);
-        storageMap.put("trainee:2", trainee2);
-
-        // when
-        storage.clear();
-
-        // then
-        assertThat(storageMap).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Test of the method size - should return size of storage map")
-    void testSizeOfEmptyStorage() {
-        // when
-        var actualResult = storage.size();
-
-        // then
-        assertThat(actualResult).isZero();
-    }
-
-    @Test
-    @DisplayName("Test of the method size - should return size of non-empty storage map")
-    void testSizeOfNonEmptyStorage() {
-        // given
-        var storageMap = storage.getStorageMap();
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        storageMap.put("trainee:1", trainee1);
-        storageMap.put("trainee:2", trainee2);
-
-        // when
-        var actualResult = storage.size();
-
-        // then
-        assertThat(actualResult).isEqualTo(2);
-    }
-
-    @Test
-    @DisplayName("Test of the method keySet - should return empty set if storage map is empty")
-    void testKeySet_emptyStorage() {
-        // when
-        var actualResult = storage.keySet();
-
-        // then
-        assertThat(actualResult).isInstanceOf(Set.class);
-        assertThat(actualResult).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Test of the method keySet - should return set of keys from storage map")
-    void testKeySet_nonEmptyStorage() {
-        // given
-        var storageMap = storage.getStorageMap();
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        storageMap.put("trainee:1", trainee1);
-        storageMap.put("trainee:2", trainee2);
-
-        // when
-        var actualResult = storage.keySet();
-
-        // then
-        assertThat(actualResult).isInstanceOf(Set.class);
-        assertThat(actualResult).containsExactlyInAnyOrder("trainee:1", "trainee:2");
     }
 
     @Test

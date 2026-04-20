@@ -12,42 +12,15 @@ import java.util.Optional;
 @Repository
 public class TraineeDaoImpl extends AbstractDao<Trainee> implements TraineeDao {
 
-    @Autowired
-    public TraineeDaoImpl(Storage storage) {
+//    @Autowired
+    public TraineeDaoImpl(@Autowired Storage storage) {
         super(storage);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Optional<Trainee> findById(Long id) {
-        return findById(id, Trainee.class);
     }
 
     @Logging(Level.INFO)
     @Override
     public Collection<Trainee> findAll() {
         return findAll(Trainee.class);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Trainee save(Trainee trainee) {
-        long id = save(trainee, Trainee.class);
-        trainee.setId(id);
-
-        return trainee;
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Trainee update(Trainee trainee) {
-        return update(trainee, trainee.getId(), Trainee.class);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public void delete(Trainee trainee) {
-        delete(trainee.getId(), Trainee.class);
     }
 
     @Logging(Level.INFO)

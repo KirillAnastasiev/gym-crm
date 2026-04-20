@@ -10,4 +10,5 @@ public interface TraineeService {
     void deleteTrainee(Trainee trainee);
     Trainee selectTrainee(String username);
     Collection<Trainee> selectAllTrainees();
+    Collection<Trainee> selectTraineesByFirstNameAndLastName(String firstName, String lastName);
 }

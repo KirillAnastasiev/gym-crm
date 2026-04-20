@@ -17,7 +17,6 @@ import java.util.List;
 
 import static java.time.Duration.ofHours;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -36,17 +35,17 @@ class TrainingDaoImplTest {
         var training = createTestTraining();
         training.setId(1L);
 
-        given(storage.get(anyString())).willReturn(training);
+        given(storage.retrieveById(anyLong(), any())).willReturn(training);
 
         // when
-        var actualResult = trainingDao.findById(1L);
+        var actualResult = trainingDao.findById(1L, Training.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
         assertThat(actualResult).contains(training);
 
-        verify(storage, times(1)).get(anyString());
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -54,16 +53,16 @@ class TrainingDaoImplTest {
     @DisplayName("Test of the method findById - should return empty optional when training with given id does not exist")
     void testFindById_negative() {
         // given
-        given(storage.get(anyString())).willReturn(null);
+        given(storage.retrieveById(anyLong(), any())).willReturn(null);
 
         // when
-        var actualResult = trainingDao.findById(1L);
+        var actualResult = trainingDao.findById(1L, Training.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).get(anyString());
+        verify(storage, times(1)).retrieveById(anyLong(), any());
         verifyNoMoreInteractions(storage);
     }
 
@@ -112,8 +111,9 @@ class TrainingDaoImplTest {
     void testSave() {
         // given
         var training = createTestTraining();
+        training.setId(1L);
 
-        given(storage.keySet()).willReturn(Collections.emptySet());
+        doNothing().when(storage).store(any(Training.class));
 
         // when
         var actualResult = trainingDao.save(training);
@@ -123,8 +123,7 @@ class TrainingDaoImplTest {
         assertThat(actualResult.getId()).isEqualTo(1);
         assertThat(actualResult).isEqualTo(training);
 
-        verify(storage, times(1)).keySet();
-        verify(storage, times(1)).put(anyString(), any(Training.class));
+        verify(storage, times(1)).store(any(Training.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -136,7 +135,7 @@ class TrainingDaoImplTest {
         training.setId(1L);
         training.setTrainingType(TrainingType.YOGA);
 
-        doNothing().when(storage).put(anyString(), any(Training.class));
+        doNothing().when(storage).update(any(Training.class));
 
         // when
         var actualResult = trainingDao.update(training);
@@ -145,7 +144,7 @@ class TrainingDaoImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(training);
 
-        verify(storage, times(1)).put(anyString(), any(Training.class));
+        verify(storage, times(1)).update(any(Training.class));
         verifyNoMoreInteractions(storage);
     }
 
@@ -156,13 +155,13 @@ class TrainingDaoImplTest {
         var training = createTestTraining();
         training.setId(1L);
 
-        doNothing().when(storage).remove(anyString());
+        doNothing().when(storage).remove(any(Training.class));
 
         // when
         trainingDao.delete(training);
 
         // then
-        verify(storage, times(1)).remove(anyString());
+        verify(storage, times(1)).remove(any(Training.class));
         verifyNoMoreInteractions(storage);
     }
 
