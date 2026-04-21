@@ -48,12 +48,6 @@ public class TraineeServiceImpl implements TraineeService {
         return traineeDao.findByCondition(condition, Trainee.class);
     }
 
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Trainee> selectAllTrainees() {
-        return traineeDao.findAll();
-    }
-
     private String getUsername(Trainee trainee) {
         Collection<Trainee> traineesWithSameFirstNameAndLastName = traineeDao.findByCondition(
                 t -> t.getFirstName().equals(trainee.getFirstName())

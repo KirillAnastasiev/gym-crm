@@ -9,6 +9,7 @@ import org.slf4j.event.Level;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -35,14 +36,7 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Logging(Level.INFO)
     @Override
-    public Training selectTraining(String trainingName) {
-        return trainingDao.findByTrainingName(trainingName)
-                .orElseThrow(() -> new NoSuchEntityException("Training with training name " + trainingName + " not found"));
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Training> selectAllTrainings() {
-        return trainingDao.findAll();
+    public Collection<Training> selectTrainingsByCondition(Predicate<Training> condition) {
+        return trainingDao.findByCondition(condition, Training.class);
     }
 }

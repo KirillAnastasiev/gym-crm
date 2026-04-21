@@ -12,8 +12,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static java.time.Duration.ofHours;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -63,46 +65,6 @@ class TrainingDaoImplTest {
         assertThat(actualResult).isEmpty();
 
         verify(storage, times(1)).retrieveById(anyLong(), any());
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findAll - should return list of all trainings")
-    void testFindAll_positive() {
-        // given
-        var training1 = createTestTraining();
-        var training2 = createTestTraining();
-        training1.setId(1L);
-        training2.setId(2L);
-
-        given(storage.values()).willReturn(List.of(training1, training2));
-
-        // when
-        var actualResult = trainingDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).hasSize(2);
-        assertThat(actualResult).contains(training1, training2);
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findAll - should return empty list when no trainings exist")
-    void testFindAll_negative() {
-        // given
-        given(storage.values()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainingDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
-
-        verify(storage, times(1)).values();
         verifyNoMoreInteractions(storage);
     }
 
@@ -166,40 +128,40 @@ class TrainingDaoImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method findByTrainingName - should return training when training with given name exists")
-    void testFindByTrainingName_positive() {
+    @DisplayName("Test of the method findByCondition - should return collection of trainings that satisfy condition")
+    void testFindByCondition_positive() {
         // given
         var training = createTestTraining();
         training.setId(1L);
 
-        given(storage.values()).willReturn(List.of(training));
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(training));
 
         // when
-        var actualResult = trainingDao.findByTrainingName("Test Training");
+        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isPresent();
+        assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).contains(training);
 
-        verify(storage, times(1)).values();
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(storage);
     }
 
     @Test
-    @DisplayName("Test of the method findByTrainingName - should return empty optional when training with given name does not exist")
-    void testFindByTrainingName_negative() {
+    @DisplayName("Test of the method findByCondition - should return empty collection if there are no trainings that satisfy condition")
+    void testFindByConditions_negative() {
         // given
-        given(storage.values()).willReturn(Collections.emptyList());
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = trainingDao.findByTrainingName("Test Training");
+        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).values();
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(storage);
     }
 

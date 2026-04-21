@@ -22,23 +22,10 @@ public abstract class AbstractDao<T extends Entity> implements Dao<T> {
         return Optional.ofNullable((T) storage.retrieveById(id, clazz));
     }
 
-    protected Collection<T> findAll(Class<T> clazz) {
-        return storage.values()
-                .stream()
-                .filter(clazz::isInstance)
-                .map(clazz::cast)
-                .toList();
-    }
-
     @Logging(Level.INFO)
     @Override
     public Collection<T> findByCondition(Predicate<T> condition, Class<T> clazz) {
-        return storage.values()
-                .stream()
-                .filter(clazz::isInstance)
-                .map(clazz::cast)
-                .filter(condition)
-                .toList();
+        return storage.retrieveByCondition(condition, clazz);
     }
 
     @Logging(Level.INFO)

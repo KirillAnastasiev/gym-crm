@@ -64,47 +64,6 @@ class TraineeDaoImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method findAll - should return collection with trainees when there are trainees in storage")
-    void testFindAll_positive() {
-        // given
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        trainee1.setId(1L);
-        trainee2.setId(2L);
-
-        given(storage.values()).willReturn(List.of(trainee1, trainee2));
-
-        // when
-        var actualResult = traineeDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).containsExactly(trainee1, trainee2);
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findAll - should return empty collection when there are no trainees in storage")
-    void testFindAll_negative() {
-        // given
-        given(storage.values()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = traineeDao.findAll();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).isEmpty();
-
-        verify(storage, times(1)).values();
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
     @DisplayName("Test of the method save - should save trainee and return it with generated id")
     void testSave() {
         // given

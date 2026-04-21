@@ -10,5 +10,4 @@ public interface TraineeService {
     Trainee updateTrainee(Trainee trainee);
     void deleteTrainee(Trainee trainee);
     Collection<Trainee> selectTraineesByCondition(Predicate<Trainee> condition);
-    Collection<Trainee> selectAllTrainees();
 }

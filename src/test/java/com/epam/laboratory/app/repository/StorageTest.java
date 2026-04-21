@@ -75,37 +75,6 @@ class StorageTest {
     }
 
     @Test
-    @DisplayName("Test of the method values - should return empty collection if storage map is empty")
-    void testValues_emptyStorage() {
-        // when
-        var actualResult = storage.values();
-
-        // then
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Test of the method values - should return collection of values from storage map")
-    void testValues_nonEmptyStorage() {
-        // given
-        var storageMap = storage.getStorageMap();
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        trainee1.setId(1L);
-        trainee2.setId(2L);
-        storageMap.put("trainee:1", trainee1);
-        storageMap.put("trainee:2", trainee2);
-
-        // when
-        var actualResult = storage.values();
-
-        // then
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).contains(trainee1, trainee2);
-    }
-
-    @Test
     @DisplayName("Test of the method afterPropertiesSet - should read storage map from file and put it to storage map")
     @SuppressWarnings("unchecked")
     void testAfterPropertiesSet() throws Exception {

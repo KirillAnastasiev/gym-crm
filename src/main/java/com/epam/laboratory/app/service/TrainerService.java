@@ -10,5 +10,4 @@ public interface TrainerService {
     Trainer updateTrainer(Trainer trainer);
     void deleteTrainer(Trainer trainer);
     Collection<Trainer> selectTrainerByCondition(Predicate<Trainer> condition);
-    Collection<Trainer> selectAllTrainees();
 }

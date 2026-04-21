@@ -16,20 +16,4 @@ public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDa
         super(storage);
     }
 
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Training> findAll() {
-        return findAll(Training.class);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public Optional<Training> findByTrainingName(String trainingName) {
-        return storage.values()
-                .stream()
-                .filter(Training.class::isInstance)
-                .map(Training.class::cast)
-                .filter(training -> training.getTrainingName().equals(trainingName))
-                .findFirst();
-    }
 }

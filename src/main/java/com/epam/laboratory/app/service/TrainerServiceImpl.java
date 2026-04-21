@@ -46,12 +46,6 @@ public class TrainerServiceImpl implements TrainerService {
         return trainerDao.findByCondition(condition, Trainer.class);
     }
 
-    @Logging(Level.INFO)
-    @Override
-    public Collection<Trainer> selectAllTrainees() {
-        return trainerDao.findAll();
-    }
-
     private String getUsername(Trainer trainer) {
         Collection<Trainer> trainersWithSameFirstNameAndLastName = trainerDao.findByCondition(
                 t -> t.getFirstName().equals(trainer.getFirstName())

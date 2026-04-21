@@ -217,43 +217,6 @@ class TraineeServiceImplTest {
         verifyNoMoreInteractions(traineeDao);
     }
 
-    @Test
-    @DisplayName("Test of the method selectAllTrainees - should return collection of all trainees")
-    void testSelectAllTrainees_positive() {
-        // given
-        given(traineeDao.findAll()).willReturn(List.of(new Trainee() {{ setId(1L); }}, new Trainee() {{ setId(2L); }}, new Trainee() {{ setId(3L);}}));
-
-        // when
-        var actualResult = traineeService.selectAllTrainees();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).hasSize(3);
-        actualResult.forEach(trainee -> assertThat(trainee).isInstanceOf(Trainee.class));
-
-        verify(traineeDao, times(1)).findAll();
-        verifyNoMoreInteractions(traineeDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method selectAllTrainees - should return empty collection if there are no trainees")
-    void testSelectAllTrainees_negative() {
-        // given
-        given(traineeDao.findAll()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = traineeService.selectAllTrainees();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).isEmpty();
-
-        verify(traineeDao, times(1)).findAll();
-        verifyNoMoreInteractions(traineeDao);
-    }
-
     private Trainee createTestTrainee() {
         var trainee = new Trainee();
         trainee.setId(1L);

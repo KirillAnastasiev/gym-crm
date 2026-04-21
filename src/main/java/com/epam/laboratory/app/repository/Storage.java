@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Predicate;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
@@ -61,8 +62,14 @@ public class Storage implements InitializingBean, DisposableBean {
         storageMap.remove(key);
     }
 
-    public Collection<Entity> values() {
-        return storageMap.values();
+   @SuppressWarnings("unchecked")
+   public <T extends Entity> Collection<T> retrieveByCondition(Predicate<T> condition, Class<T> clazz) {
+        return storageMap.values()
+                .stream()
+                .filter(clazz::isInstance)
+                .map(e -> (T) e)
+                .filter(condition)
+                .toList();
     }
 
     @Override

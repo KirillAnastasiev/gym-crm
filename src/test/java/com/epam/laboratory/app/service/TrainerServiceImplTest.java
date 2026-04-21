@@ -163,51 +163,15 @@ class TrainerServiceImplTest {
         // given
         given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
-        // when & then
+        // when
         var actualResult = trainerService.selectTrainerByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
 
+        // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
         verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verifyNoMoreInteractions(trainerDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method selectAllTrainers - successful execution, should return collection of trainers")
-    void testSelectAllTrainers_positive() {
-        // given
-        given(trainerDao.findAll()).willReturn(List.of(new Trainer() {{ setId(1L); }}, new Trainer() {{ setId(2L); }}));
-
-        // when
-        var actualResult = trainerService.selectAllTrainees();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).hasSize(2);
-        actualResult.forEach(trainer -> assertThat(trainer).isInstanceOf(Trainer.class));
-
-        verify(trainerDao, times(1)).findAll();
-        verifyNoMoreInteractions(trainerDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method selectAllTrainers - should return empty collection if there are no trainers")
-    void testSelectAllTrainers_negative() {
-        // given
-        given(trainerDao.findAll()).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainerService.selectAllTrainees();
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).isEmpty();
-
-        verify(trainerDao, times(1)).findAll();
         verifyNoMoreInteractions(trainerDao);
     }
 
