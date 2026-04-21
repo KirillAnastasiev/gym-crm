@@ -18,11 +18,11 @@ public class UsernameHelper {
         }
     }
 
-    public String generateUsername(String firstName, String lastName) {
+    public static String generateUsername(String firstName, String lastName) {
         return firstName + "." + lastName;
     }
 
-    public String generateUsername(String firstName, String lastName, String suffix) {
+    public static String generateUsername(String firstName, String lastName, String suffix) {
         return generateUsername(firstName, lastName) + suffix;
     }
 }

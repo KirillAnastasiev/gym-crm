@@ -33,6 +33,9 @@ class CustomStorageBeanPostProcessorTest {
     @Mock
     private JsonMapper jsonMapper;
 
+    @Mock
+    private Storage.EntityKeyMapper entityKeyMapper;
+
     @InjectMocks
     private CustomStorageBeanPostProcessor customStorageBeanPostProcessor;
 
@@ -46,6 +49,7 @@ class CustomStorageBeanPostProcessorTest {
     void testPostProcessBeforeInitialization() throws Exception {
        // given
         var storageMap = createTestStorageMapWithLinkedHashMap();
+        var storageBean = new Storage(jsonMapper, new Storage.EntityKeyMapper());
 
         given(jsonMapper.readValue(anyString(), any(TypeReference.class))).willReturn(storageMap);
         given(jsonMapper.convertValue(any(LinkedHashMap.class), eq(Trainee.class))).willAnswer(invocation -> createTestTrainee());
@@ -54,7 +58,7 @@ class CustomStorageBeanPostProcessorTest {
 
 
         // when
-        var result = customStorageBeanPostProcessor.postProcessBeforeInitialization(new Storage(jsonMapper), "storage");
+        var result = customStorageBeanPostProcessor.postProcessBeforeInitialization(storageBean, "storage");
 
         // then
         assertThat(result).isInstanceOf(Storage.class);
@@ -77,7 +81,7 @@ class CustomStorageBeanPostProcessorTest {
     @DisplayName("Test of the method postProcessBeforeDestruction - should convert storage map to json and write it to file")
     void testPostProcessBeforeDestruction() throws Exception {
         // given
-        var storage = new Storage(jsonMapper);
+        var storage = new Storage(jsonMapper, entityKeyMapper);
         var jsonString = createTestJsonString();
 
         given(jsonMapper.writeValueAsString(any(Map.class))).willReturn(jsonString);
