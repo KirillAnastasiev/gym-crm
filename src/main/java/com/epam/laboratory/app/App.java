@@ -1,6 +1,7 @@
 package com.epam.laboratory.app;
 
 import com.epam.laboratory.app.config.AppConfig;
+import com.epam.laboratory.app.config.CustomStorageBeanPostProcessor;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
@@ -11,6 +12,7 @@ import com.epam.laboratory.app.service.TrainerService;
 import com.epam.laboratory.app.service.TrainingService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.LocalDate;
@@ -22,6 +24,8 @@ public class App {
         logger.info("Test logging");
 
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+        BeanPostProcessor beanPostProcessor = context.getBean(CustomStorageBeanPostProcessor.class);
+
         Storage storage = context.getBean(Storage.class);
 
         Trainee trainee = new Trainee();
