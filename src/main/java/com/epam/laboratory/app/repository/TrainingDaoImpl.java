@@ -12,7 +12,6 @@ import java.util.Optional;
 @Repository
 public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDao {
 
-//    @Autowired
     public TrainingDaoImpl(@Autowired Storage storage) {
         super(storage);
     }

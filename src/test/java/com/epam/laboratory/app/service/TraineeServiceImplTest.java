@@ -1,7 +1,6 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.domain.Trainee;
-import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
@@ -17,10 +16,8 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Predicate;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -51,7 +48,7 @@ class TraineeServiceImplTest {
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
         given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
-        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(generatedUsername);
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsername);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -66,7 +63,7 @@ class TraineeServiceImplTest {
 
         verify(passwordGenerator, times(1)).generatePassword();
         verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
         verifyNoMoreInteractions(usernameHelper);
@@ -83,7 +80,7 @@ class TraineeServiceImplTest {
 
         given(passwordGenerator.generatePassword()).willReturn(generatedPassword);
         given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsernameWithSuffix);
         given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -98,7 +95,7 @@ class TraineeServiceImplTest {
 
         verify(passwordGenerator, times(1)).generatePassword();
         verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(traineeDao, times(1)).save(any(Trainee.class));
         verifyNoMoreInteractions(passwordGenerator);
         verifyNoMoreInteractions(usernameHelper);
@@ -113,8 +110,8 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsername = "UpdatedFirstName.LastName";
 
-        given(usernameHelper.generateUsername(anyString(), anyString())).willReturn(generatedUsername);
         given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsername);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -126,8 +123,8 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString());
         verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
@@ -142,7 +139,7 @@ class TraineeServiceImplTest {
         var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
 
         given(traineeDao.findByCondition(any(Predicate.class), eq(Trainee.class))).willReturn(Collections.singletonList(trainee));
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyString())).willReturn(generatedUsernameWithSuffix);
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsernameWithSuffix);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -155,7 +152,7 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
         verify(traineeDao, times(1)).findByCondition(any(Predicate.class), eq(Trainee.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyString());
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);
@@ -178,38 +175,45 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainee - successful execution, should return trainee by username")
-    void testSelectTrainee_positive() {
+    @DisplayName("Test of the method selectTraineesByCondition - should return collection of trainees that satisfy condition")
+    void testSelectTraineesByCondition_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setUsername("FirstName.LastName");
 
-        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
+        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
 
         // when
-        var actualResult = traineeService.selectTrainee("FirstName.LastName");
+        var actualResult = traineeService.selectTraineesByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainee);
-        assertThat(actualResult.getUsername()).isEqualTo("FirstName.LastName");
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).hasSize(1);
+        actualResult.forEach(t -> {
+            assertThat(t).isInstanceOf(Trainee.class);
+            assertThat(t.getUsername()).isEqualTo("FirstName.LastName");
+        });
 
-        verify(traineeDao, times(1)).findByUsername(anyString());
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(traineeDao);
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainee - failure execution, should throw NoSuchEntityException")
-    void testSelectTrainee_negative() {
+    @DisplayName("Test of the method selectTraineesByCondition - should return empty collection if there are no trainees that satisfy condition")
+    void testSelectTraineeByCondition_negative() {
         // given
-        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
+        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
-        // when & then
-        assertThatThrownBy(() -> traineeService.selectTrainee("FirstName.LastName"))
-                .isInstanceOf(NoSuchEntityException.class)
-                .hasMessageContaining("Trainee with username FirstName.LastName not found");
+        // when
+        var actualResult = traineeService.selectTraineesByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
 
-        verify(traineeDao, times(1)).findByUsername(anyString());
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isEmpty();
+
+        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(traineeDao);
     }
 

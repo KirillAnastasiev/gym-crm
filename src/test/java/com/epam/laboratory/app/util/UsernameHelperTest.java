@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.util;
 
+import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -14,6 +16,37 @@ class UsernameHelperTest {
     @BeforeEach
     void setUp() {
         usernameHelper = new UsernameHelper();
+    }
+
+    @Test
+    @DisplayName("Test of the method generateUsername with suffix - should generate username in format 'firstName.lastName' if there are no users with such first name and last name")
+    void testGenerateUsernameWithSuffix_noUsersWithSuchFirstNameAndLastName() {
+        // given
+        String firstName = "FirstName";
+        String lastName = "LastName";
+        String expectedUsername = "FirstName.LastName";
+
+        // when
+        var actualResult = usernameHelper.generateUsername(firstName, lastName, java.util.Collections.emptyList());
+
+        // then
+        assertThat(actualResult).isEqualTo(expectedUsername);
+    }
+
+    @Test
+    @DisplayName("Test of the method generateUsername with suffix - should generate username in format 'firstName.lastNameN' where N is the number of users with such first name and last name + 1")
+    void testGenerateUsername_withUsersWithSuchFirstNameAndLastName() {
+        // given
+        String firstName = "FirstName";
+        String lastName = "LastName";
+        String expectedUsername = "FirstName.LastName3";
+        var usersWithSuchFirstNameAndLastName = java.util.List.of(new Trainee(), new Trainee());
+
+        // when
+        var actualResult = usernameHelper.generateUsername(firstName, lastName, usersWithSuchFirstNameAndLastName);
+
+        // then
+        assertThat(actualResult).isEqualTo(expectedUsername);
     }
 
     @ParameterizedTest
