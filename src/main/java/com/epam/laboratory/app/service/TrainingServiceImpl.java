@@ -1,9 +1,8 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.Logging;
-import com.epam.laboratory.app.repository.TrainingDao;
 import com.epam.laboratory.app.domain.Training;
-import com.epam.laboratory.app.exception.NoSuchEntityException;
+import com.epam.laboratory.app.repository.TrainingDao;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.stereotype.Service;
