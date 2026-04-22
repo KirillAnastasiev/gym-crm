@@ -45,8 +45,7 @@ class TraineeServiceImplTest {
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
 
-            given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
-            given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsername);
+            given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -59,8 +58,7 @@ class TraineeServiceImplTest {
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
-            verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-            verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+            verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
             verify(traineeDao, times(1)).save(any(Trainee.class));
             verifyNoMoreInteractions(usernameHelper);
             verifyNoMoreInteractions(traineeDao);
@@ -78,8 +76,7 @@ class TraineeServiceImplTest {
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
 
-            given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
-            given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsernameWithSuffix);
+            given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsernameWithSuffix);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -92,11 +89,9 @@ class TraineeServiceImplTest {
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
-            verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-            verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+            verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
             verify(traineeDao, times(1)).save(any(Trainee.class));
             verifyNoMoreInteractions(usernameHelper);
-            verifyNoMoreInteractions(traineeDao);
         }
     }
 
@@ -108,8 +103,7 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsername = "UpdatedFirstName.LastName";
 
-        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsername);
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsername);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -121,11 +115,9 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
-        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
-        verifyNoMoreInteractions(traineeDao);
     }
 
     @Test
@@ -136,8 +128,7 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
 
-        given(traineeDao.findByCondition(any(Predicate.class), eq(Trainee.class))).willReturn(Collections.singletonList(trainee));
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsernameWithSuffix);
+        given(usernameHelper.generateUsername(any(Trainee.class))).willReturn(generatedUsernameWithSuffix);
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
@@ -149,8 +140,7 @@ class TraineeServiceImplTest {
         assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
         assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
-        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), eq(Trainee.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class));
         verify(traineeDao, times(1)).update(any(Trainee.class));
         verifyNoMoreInteractions(usernameHelper);
         verifyNoMoreInteractions(traineeDao);

@@ -7,8 +7,6 @@ import com.epam.laboratory.app.util.UsernameHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collection;
-
 @Service
 public class TraineeServiceImpl extends UserService<Trainee> implements TraineeService {
     private final UsernameHelper usernameHelper;
@@ -21,13 +19,6 @@ public class TraineeServiceImpl extends UserService<Trainee> implements TraineeS
     @Override
     protected void prepareUser(Trainee trainee) {
         trainee.setPassword(PasswordGenerator.generatePassword());
-        trainee.setUsername(getUsername(trainee));
-    }
-
-    private String getUsername(Trainee trainee) {
-        Collection<Trainee> traineesWithSameFirstNameAndLastName = dao.findByCondition(
-                t -> t.getFirstName().equals(trainee.getFirstName())
-                        && t.getLastName().equals(trainee.getLastName()), Trainee.class);
-        return usernameHelper.generateUsername(trainee.getFirstName(), trainee.getLastName(), traineesWithSameFirstNameAndLastName);
+        trainee.setUsername(usernameHelper.generateUsername(trainee));
     }
 }
