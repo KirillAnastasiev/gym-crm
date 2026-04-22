@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 @Component
 @RequiredArgsConstructor
@@ -35,6 +36,10 @@ public class UsernameHelper {
         } else {
             return generateUsername(user.getFirstName(), user.getLastName());
         }
+    }
+
+    public String generateUsername(User user, Function<User, String> usernameGeneratorStrategy) {
+        return usernameGeneratorStrategy.apply(user);
     }
 
     public static String generateUsername(String firstName, String lastName) {
