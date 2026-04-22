@@ -53,9 +53,9 @@ public class App {
         TraineeService traineeService = context.getBean(TraineeService.class);
         TrainingService trainingService = context.getBean(TrainingService.class);
 
-        trainerService.createTrainer(trainer);
-        traineeService.createTrainee(trainee);
-        trainingService.createTraining(training);
+        trainerService.create(trainer);
+        traineeService.create(trainee);
+        trainingService.create(training);
 
         logger.trace(storage.getStorageMap().toString());
 

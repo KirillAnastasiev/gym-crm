@@ -28,17 +28,14 @@ class TrainerServiceImplTest {
     private TrainerDao trainerDao;
 
     @Mock
-    private PasswordGenerator passwordGenerator;
-
-    @Mock
     private UsernameHelper usernameHelper;
 
     @InjectMocks
     private TrainerServiceImpl trainerService;
 
     @Test
-    @DisplayName("Test of the method createTrainer - should create trainer with generated password")
-    void testCreateTrainer_uniqueUsername() {
+    @DisplayName("Test of the method create - should create trainer with generated password")
+    void testCreate_uniqueUsername() {
         // given
         var trainer = createTrainer();
         var password = "generatedPassword";
@@ -52,7 +49,7 @@ class TrainerServiceImplTest {
             given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
             // when
-            var actualResult = trainerService.createTrainer(trainer);
+            var actualResult = trainerService.create(trainer);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -69,8 +66,8 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method createTrainer - should create trainer with generated password and username with suffix if username is not unique")
-    void testCreateTrainer_nonUniqueUsername() {
+    @DisplayName("Test of the method create - should create trainer with generated password and username with suffix if username is not unique")
+    void testCreate_nonUniqueUsername() {
         // given
         var trainer = createTrainer();
         var password = "generatedPassword";
@@ -84,7 +81,7 @@ class TrainerServiceImplTest {
             given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
             // when
-            var actualResult = trainerService.createTrainer(trainer);
+            var actualResult = trainerService.create(trainer);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -101,35 +98,69 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method updateTrainer - should update trainer and return")
-    void testUpdateTrainer() {
+    @DisplayName("Test of the method update - should update trainer with generated username")
+    void testUpdate_uniqueUsername() {
         // given
         var trainer = createTrainer();
+        trainer.setFirstName("UpdatedFirstName");
+        var generatedUsername = "UpdatedFirstName.LastName";
 
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsername);
         given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
 
         // when
-        var actualResult = trainerService.updateTrainer(trainer);
+        var actualResult = trainerService.update(trainer);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult.getId()).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
         verify(trainerDao, times(1)).update(any(Trainer.class));
-        verifyNoMoreInteractions(trainerDao);
+        verifyNoMoreInteractions(usernameHelper, trainerDao);
     }
 
     @Test
-    @DisplayName("Test of the method deleteTrainer - should delete trainer")
-    void testDeleteTrainer() {
+    @DisplayName("Test of the method update - should update trainer with generated username with suffix if username is not unique")
+    void testUpdate_nonUniqueUsername() {
+        // given
+        var trainer = createTrainer();
+        trainer.setFirstName("UpdatedFirstName");
+        var generatedUsernameWithSuffix = "UpdatedFirstName.LastName.2";
+
+        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
+        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(generatedUsernameWithSuffix);
+        given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
+
+        // when
+        var actualResult = trainerService.update(trainer);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getId()).isNotNull();
+        assertThat(actualResult).isEqualTo(trainer);
+        assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+
+        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+        verify(trainerDao, times(1)).update(any(Trainer.class));
+        verifyNoMoreInteractions(usernameHelper, trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method delete - should delete trainer")
+    void testDelete() {
         // given
         var trainer = createTrainer();
 
         doNothing().when(trainerDao).delete(any(Trainer.class));
 
         // when
-        trainerService.deleteTrainer(trainer);
+        trainerService.delete(trainer);
 
         // then
         verify(trainerDao, times(1)).delete(any(Trainer.class));
@@ -137,7 +168,8 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    void testSelectTrainersByCondition_positive() {
+    @DisplayName("Test of the method selectByCondition - should return collection of trainers that satisfy condition")
+    void testSelectByCondition_positive() {
         // given
         var trainer = createTrainer();
         trainer.setUsername("FirstName.LastName");
@@ -145,7 +177,7 @@ class TrainerServiceImplTest {
         given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
 
         // when
-        var actualResult = trainerService.selectTrainerByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
+        var actualResult = trainerService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainer.class);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -161,13 +193,13 @@ class TrainerServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainersByCondition - should return empty collection if there are no trainers that match the condition")
-    void testSelectTrainersByCondition_negative() {
+    @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainers that match the condition")
+    void testSelectByCondition_negative() {
         // given
         given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = trainerService.selectTrainerByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
+        var actualResult = trainerService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainer.class);
 
         // then
         assertThat(actualResult).isNotNull();

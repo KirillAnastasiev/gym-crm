@@ -32,15 +32,15 @@ class TrainingServiceImplTest {
     private TrainingServiceImpl trainingServiceImpl;
 
     @Test
-    @DisplayName("Test of the method creteTraining - should create training")
-    void testCreteTraining() {
+    @DisplayName("Test of the method create - should create training")
+    void testCreate() {
         // given
         var training = createTestTraining();
 
         given(trainingDao.save(any(Training.class))).willReturn(training);
 
         // when
-        var actualResult = trainingServiceImpl.createTraining(training);
+        var actualResult = trainingServiceImpl.create(training);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -52,8 +52,8 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method updateTraining - should update training")
-    void testUpdateTraining() {
+    @DisplayName("Test of the method update - should update training")
+    void testUpdate() {
         // given
         var training = createTestTraining();
         training.setTrainingName("Updated Training");
@@ -61,7 +61,7 @@ class TrainingServiceImplTest {
         given(trainingDao.update(any(Training.class))).willReturn(training);
 
         // when
-        var actualResult = trainingServiceImpl.updateTraining(training);
+        var actualResult = trainingServiceImpl.update(training);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -73,15 +73,15 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method deleteTraining - should delete training")
-    void testDeleteTraining() {
+    @DisplayName("Test of the method delete - should delete training")
+    void testDelete() {
         // given
         var training = createTestTraining();
 
         doNothing().when(trainingDao).delete(any(Training.class));
 
         // when
-        trainingServiceImpl.deleteTraining(training);
+        trainingServiceImpl.delete(training);
 
         // then
         verify(trainingDao, times(1)).delete(any(Training.class));
@@ -89,15 +89,15 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainingsByCondition - should return collection of trainings that satisfy condition")
-    void testSelectTrainingsByCondition_positive() {
+    @DisplayName("Test of the method selectByCondition - should return collection of trainings that satisfy condition")
+    void testSelectByCondition_positive() {
         // given
         var training = createTestTraining();
 
         given(trainingDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(training));
 
         // when
-        var actualResult = trainingServiceImpl.selectTrainingsByCondition(t -> "Test Training".equals(t.getTrainingName()));
+        var actualResult = trainingServiceImpl.selectByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -113,13 +113,13 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTrainingsByCondition - should return empty collection if there are no trainings that satisfy condition")
-    void testSelectTrainingsByCondition_negative() {
+    @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainings that satisfy condition")
+    void testSelectByCondition_negative() {
         // given
         given(trainingDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
         // when
-        var actualResult =  trainingServiceImpl.selectTrainingsByCondition(t -> "Test Training".equals(t.getTrainingName()));
+        var actualResult =  trainingServiceImpl.selectByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
 
         // then
         assertThat(actualResult).isNotNull();

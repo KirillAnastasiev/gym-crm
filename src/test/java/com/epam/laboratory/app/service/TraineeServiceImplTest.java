@@ -10,7 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -30,17 +29,14 @@ class TraineeServiceImplTest {
     private TraineeDao traineeDao;
 
     @Mock
-    private PasswordGenerator passwordGenerator;
-
-    @Mock
     private UsernameHelper usernameHelper;
 
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
     @Test
-    @DisplayName("Test of the method createTrainee - should create trainee with unique username and return")
-    void testCreateTrainee_uniqueUsername() {
+    @DisplayName("Test of the method create - should create trainee with unique username and return")
+    void testCreate_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -54,7 +50,7 @@ class TraineeServiceImplTest {
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
-            var actualResult = traineeService.createTrainee(trainee);
+            var actualResult = traineeService.create(trainee);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -72,8 +68,8 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method createTrainee - should create trainee with non-unique username and return")
-    void testCreateTrainee_nonUniqueUsername() {
+    @DisplayName("Test of the method create - should create trainee with non-unique username and return")
+    void testCreate_nonUniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -87,7 +83,7 @@ class TraineeServiceImplTest {
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
-            var actualResult = traineeService.createTrainee(trainee);
+            var actualResult = traineeService.create(trainee);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -105,8 +101,8 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method updateTrainee - should update trainee with unique username and return")
-    void testUpdateTrainee_uniqueUsername() {
+    @DisplayName("Test of the method update - should update trainee with unique username and return")
+    void testUpdate_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
@@ -117,7 +113,7 @@ class TraineeServiceImplTest {
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
-        var actualResult = traineeService.updateTrainee(trainee);
+        var actualResult = traineeService.update(trainee);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -133,8 +129,8 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method updateTrainee - should update trainee with non-unique username and return")
-    void testUpdateTrainee_nonUniqueUsername() {
+    @DisplayName("Test of the method update - should update trainee with non-unique username and return")
+    void testUpdate_nonUniqueUsername() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
@@ -145,7 +141,7 @@ class TraineeServiceImplTest {
         given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
         // when
-        var actualResult = traineeService.updateTrainee(trainee);
+        var actualResult = traineeService.update(trainee);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -161,15 +157,15 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method deleteTrainee - should delete trainee")
-    void testDeleteTrainee() {
+    @DisplayName("Test of the method delete - should delete trainee")
+    void testDelete() {
         // given
         var trainee = createTestTrainee();
 
         doNothing().when(traineeDao).delete(any(Trainee.class));
 
         // when
-        traineeService.deleteTrainee(trainee);
+        traineeService.delete(trainee);
 
         // then
         verify(traineeDao, times(1)).delete(any(Trainee.class));
@@ -177,8 +173,8 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTraineesByCondition - should return collection of trainees that satisfy condition")
-    void testSelectTraineesByCondition_positive() {
+    @DisplayName("Test of the method selectByCondition - should return collection of trainees that satisfy condition")
+    void testSelectByCondition_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setUsername("FirstName.LastName");
@@ -186,7 +182,7 @@ class TraineeServiceImplTest {
         given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
 
         // when
-        var actualResult = traineeService.selectTraineesByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
+        var actualResult = traineeService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
@@ -202,13 +198,13 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method selectTraineesByCondition - should return empty collection if there are no trainees that satisfy condition")
-    void testSelectTraineeByCondition_negative() {
+    @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainees that satisfy condition")
+    void testSelectByCondition_negative() {
         // given
         given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = traineeService.selectTraineesByCondition(t -> "FirstName.LastName".equals(t.getUsername()));
+        var actualResult = traineeService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
