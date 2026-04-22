@@ -5,12 +5,18 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.context.annotation.*;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 @Configuration
 @ComponentScan(basePackages = "com.epam.laboratory.app")
 @PropertySource("classpath:application.properties")
 @EnableAspectJAutoProxy
 public class AppConfig {
+
+    @Bean
+    public PropertySourcesPlaceholderConfigurer propertyConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
 
     @Bean
     public JsonMapper objectMapper() {
