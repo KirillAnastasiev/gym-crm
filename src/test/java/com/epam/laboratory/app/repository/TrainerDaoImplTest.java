@@ -9,6 +9,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Predicate;
+
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -61,13 +66,56 @@ class TrainerDaoImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method findByCondition - should return collection with trainer when trainer with given condition exists")
+    void testFindByCondition_positive() {
+        // given
+        var trainer1 = createTestTrainer();
+        var trainer2 = createTestTrainer();
+        trainer1.setId(1L);
+        trainer2.setId(2L);
+
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(List.of(trainer1, trainer2));
+
+        // when
+        var actualResult = trainerDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainer.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isNotEmpty();
+        actualResult.forEach(t -> {
+            assertThat(t).isInstanceOf(Trainer.class);
+            assertThat(t.getFirstName()).isEqualTo("FirstName");
+        });
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByCondition - should return empty collection when trainer with given condition does not exist")
+    void testFindByCondition_negative() {
+        // given
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainerDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainer.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
     @DisplayName("Test of the method save - should save trainer and return it with generated id")
     void testSave() {
         // given
         var trainer = createTestTrainer();
         trainer.setId(1L);
 
-        doNothing().when(storage).store(any(Trainer.class));
+        given(storage.store(any(Trainer.class))).willReturn(trainer);
 
         // when
         var actualResult = trainerDao.save(trainer);
@@ -90,7 +138,7 @@ class TrainerDaoImplTest {
         trainer.setSpecialization(TrainingType.YOGA);
         trainer.setId(1L);
 
-        doNothing().when(storage).update(any(Trainer.class));
+        given(storage.update(any(Trainer.class))).willReturn(trainer);
 
         // when
         var actualResult = trainerDao.update(trainer);

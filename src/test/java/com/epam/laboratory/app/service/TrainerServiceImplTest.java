@@ -44,26 +44,28 @@ class TrainerServiceImplTest {
         var password = "generatedPassword";
         var username = "FirstName.LastName";
 
-        given(passwordGenerator.generatePassword()).willReturn(password);
-        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(username);
-        given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
+        try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+            mockedStaticPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
 
-        // when
-        var actualResult = trainerService.createTrainer(trainer);
+            given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+            given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(username);
+            given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-        assertThat(actualResult.getPassword()).isEqualTo(password);
-        assertThat(actualResult.getUsername()).isEqualTo(username);
+            // when
+            var actualResult = trainerService.createTrainer(trainer);
 
-        verify(passwordGenerator, times(1)).generatePassword();
-        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
-        verify(trainerDao, times(1)).save(any(Trainer.class));
-        verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult.getId()).isNotNull();
+            assertThat(actualResult).isEqualTo(trainer);
+            assertThat(actualResult.getPassword()).isEqualTo(password);
+            assertThat(actualResult.getUsername()).isEqualTo(username);
+
+            verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+            verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+            verify(trainerDao, times(1)).save(any(Trainer.class));
+            verifyNoMoreInteractions(usernameHelper, trainerDao);
+        }
     }
 
     @Test
@@ -74,26 +76,28 @@ class TrainerServiceImplTest {
         var password = "generatedPassword";
         var usernameWithSuffix = "FirstName.LastName.2";
 
-        given(passwordGenerator.generatePassword()).willReturn(password);
-        given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
-        given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(usernameWithSuffix);
-        given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
+        try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+            mockedStaticPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
 
-        // when
-        var actualResult = trainerService.createTrainer(trainer);
+            given(trainerDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainer));
+            given(usernameHelper.generateUsername(anyString(), anyString(), anyCollection())).willReturn(usernameWithSuffix);
+            given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-        assertThat(actualResult.getPassword()).isEqualTo(password);
-        assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
+            // when
+            var actualResult = trainerService.createTrainer(trainer);
 
-        verify(passwordGenerator, times(1)).generatePassword();
-        verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
-        verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
-        verify(trainerDao, times(1)).save(any(Trainer.class));
-        verifyNoMoreInteractions(passwordGenerator, usernameHelper, trainerDao);
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult.getId()).isNotNull();
+            assertThat(actualResult).isEqualTo(trainer);
+            assertThat(actualResult.getPassword()).isEqualTo(password);
+            assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
+
+            verify(trainerDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+            verify(usernameHelper, times(1)).generateUsername(anyString(), anyString(), anyCollection());
+            verify(trainerDao, times(1)).save(any(Trainer.class));
+            verifyNoMoreInteractions(usernameHelper, trainerDao);
+        }
     }
 
     @Test

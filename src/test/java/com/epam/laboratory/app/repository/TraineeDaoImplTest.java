@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -64,13 +65,56 @@ class TraineeDaoImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method findByCondition - should return collection of trainees that satisfy the condition")
+    void testFindByCondition_positive() {
+        // given
+        var trainee1 = createTestTrainee();
+        var trainee2 = createTestTrainee();
+        trainee1.setId(1L);
+        trainee2.setId(2L);
+
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(List.of(trainee1, trainee2));
+
+        // when
+        var actualResult = traineeDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainee.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        actualResult.forEach(t -> {
+            assertThat(t).isInstanceOf(Trainee.class);
+            assertThat(t.getFirstName()).isEqualTo("FirstName");
+        });
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByCondition - should return empty collection when no trainees satisfy the condition")
+    void testFindByCondition_negative() {
+        // given
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = traineeDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainee.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
     @DisplayName("Test of the method save - should save trainee and return it with generated id")
     void testSave() {
         // given
         var trainee = createTestTrainee();
         trainee.setId(1L);
 
-        doNothing().when(storage).store(any(Trainee.class));
+        given(storage.store(any(Trainee.class))).willReturn(trainee);
 
         // when
         var actualResult = traineeDao.save(trainee);
@@ -91,7 +135,7 @@ class TraineeDaoImplTest {
         var trainee = createTestTrainee();
         trainee.setId(1L);
 
-        doNothing().when(storage).update(any(Trainee.class));
+        given(storage.update(any(Trainee.class))).willReturn(trainee);
 
         // when
         var actualResult = traineeDao.update(trainee);

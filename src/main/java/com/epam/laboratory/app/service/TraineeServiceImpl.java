@@ -16,15 +16,13 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class TraineeServiceImpl implements TraineeService {
     private final TraineeDao traineeDao;
-    private final PasswordGenerator passwordGenerator;
     private final UsernameHelper usernameHelper;
 
     @Logging(Level.INFO)
     @Override
     public Trainee createTrainee(Trainee trainee) {
-        trainee.setPassword(passwordGenerator.generatePassword());
+        trainee.setPassword(PasswordGenerator.generatePassword());
         trainee.setUsername(getUsername(trainee));
-
         return traineeDao.save(trainee);
     }
 
@@ -32,7 +30,6 @@ public class TraineeServiceImpl implements TraineeService {
     @Override
     public Trainee updateTrainee(Trainee trainee) {
         trainee.setUsername(getUsername(trainee));
-
         return traineeDao.update(trainee);
     }
 

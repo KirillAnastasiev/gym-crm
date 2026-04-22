@@ -16,13 +16,12 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class TrainerServiceImpl implements TrainerService {
     private final TrainerDao trainerDao;
-    private final PasswordGenerator passwordGenerator;
     private final UsernameHelper usernameHelper;
 
     @Logging(Level.INFO)
     @Override
     public Trainer createTrainer(Trainer trainer) {
-        trainer.setPassword(passwordGenerator.generatePassword());
+        trainer.setPassword(PasswordGenerator.generatePassword());
         trainer.setUsername(getUsername(trainer));
 
         return trainerDao.save(trainer);

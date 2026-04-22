@@ -28,20 +28,18 @@ public abstract class AbstractDao<T extends Entity> implements Dao<T> {
         return storage.retrieveByCondition(condition, clazz);
     }
 
+    @SuppressWarnings("unchecked")
     @Logging(Level.INFO)
     @Override
     public T save(T entity) {
-        storage.store(entity);
-
-        return entity;
+        return (T) storage.store(entity);
     }
 
+    @SuppressWarnings("unchecked")
     @Logging(Level.INFO)
     @Override
     public T update(T entity) {
-        storage.update(entity);
-
-        return entity;
+        return (T) storage.update(entity);
     }
 
     @Logging(Level.INFO)

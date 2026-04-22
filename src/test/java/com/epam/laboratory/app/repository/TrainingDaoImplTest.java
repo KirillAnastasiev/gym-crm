@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 
 import static java.time.Duration.ofHours;
@@ -68,13 +69,56 @@ class TrainingDaoImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method findByCondition - should return collection of trainings that satisfy condition")
+    void testFindByCondition_positive() {
+        // given
+        var training1 = createTestTraining();
+        var training2 = createTestTraining();
+        training1.setId(1L);
+        training2.setId(2L);
+
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(List.of(training1, training2));
+
+        // when
+        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        actualResult.forEach(t -> {
+            assertThat(t).isInstanceOf(Training.class);
+            assertThat(t.getTrainingName()).isEqualTo("Test Training");
+        });
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByCondition - should return empty collection if there are no trainings that satisfy condition")
+    void testFindBtCondition_negative() {
+        // given
+        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
+        verifyNoMoreInteractions(storage);
+    }
+
+    @Test
     @DisplayName("Test of the method save - should save training and return it with generated id")
     void testSave() {
         // given
         var training = createTestTraining();
         training.setId(1L);
 
-        doNothing().when(storage).store(any(Training.class));
+        given(storage.store(any(Training.class))).willReturn(training);
 
         // when
         var actualResult = trainingDao.save(training);
@@ -96,7 +140,7 @@ class TrainingDaoImplTest {
         training.setId(1L);
         training.setTrainingType(TrainingType.YOGA);
 
-        doNothing().when(storage).update(any(Training.class));
+        given(storage.update(any(Training.class))).willReturn(training);
 
         // when
         var actualResult = trainingDao.update(training);
@@ -123,44 +167,6 @@ class TrainingDaoImplTest {
 
         // then
         verify(storage, times(1)).remove(any(Training.class));
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findByCondition - should return collection of trainings that satisfy condition")
-    void testFindByCondition_positive() {
-        // given
-        var training = createTestTraining();
-        training.setId(1L);
-
-        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(training));
-
-        // when
-        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isInstanceOf(Collection.class);
-        assertThat(actualResult).contains(training);
-
-        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
-        verifyNoMoreInteractions(storage);
-    }
-
-    @Test
-    @DisplayName("Test of the method findByCondition - should return empty collection if there are no trainings that satisfy condition")
-    void testFindByConditions_negative() {
-        // given
-        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
-
-        // when
-        var actualResult = trainingDao.findByCondition(t -> "Test Training".equals(t.getTrainingName()), Training.class);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
-
-        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
         verifyNoMoreInteractions(storage);
     }
 

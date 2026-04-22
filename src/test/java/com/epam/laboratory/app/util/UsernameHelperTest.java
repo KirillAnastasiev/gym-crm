@@ -1,7 +1,6 @@
 package com.epam.laboratory.app.util;
 
 import com.epam.laboratory.app.domain.Trainee;
-import com.epam.laboratory.app.domain.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -65,7 +64,7 @@ class UsernameHelperTest {
     @DisplayName("Test of the method generateUsername - should generate username in format 'firstName.lastName'")
     void testGenerateUsername(String firstName, String lastName, String expectedUsername) {
         // when
-        var actualResult = usernameHelper.generateUsername(firstName, lastName);
+        var actualResult = UsernameHelper.generateUsername(firstName, lastName);
 
         // then
         assertThat(actualResult).isEqualTo(expectedUsername);
@@ -87,7 +86,7 @@ class UsernameHelperTest {
     @DisplayName("Test of the method generateUsername with suffix - should generate username in format 'firstName.lastNameSuffix'")
     void testGenerateUsernameWithSuffix(String firstName, String lastName, String suffix, String expectedUsername) {
         // when
-        var actualResult = usernameHelper.generateUsername(firstName, lastName, suffix);
+        var actualResult = UsernameHelper.generateUsername(firstName, lastName, suffix);
 
         // then
         assertThat(actualResult).isEqualTo(expectedUsername);

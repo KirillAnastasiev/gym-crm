@@ -1,11 +1,13 @@
 package com.epam.laboratory.app.repository;
 
 import com.epam.laboratory.app.domain.Entity;
+import com.epam.laboratory.app.domain.Trainee;
+import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.domain.Training;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
@@ -18,36 +20,31 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 @Setter
 @Getter
-@PropertySource("classpath:application.properties")
 public class Storage {
     private final JsonMapper jsonMapper;
 
+    private final EntityKeyMapper entityKeyMapper;
+
     private final Map<String, Entity> storageMap = new HashMap<>();
 
-    public void store(Entity entity) {
-        var entityClass = getEntityClass(entity);
-        var keyPrefix = getKeyPrefix(entityClass);
+    public Entity store(Entity entity) {
+        var keyPrefix = entityKeyMapper.getKeyPrefix(entity);
         var id = computeNextId(keyPrefix);
+        var key = entityKeyMapper.getKey(id, entity);
         entity.setId(id);
-        var key = getKey(id, entityClass);
         storageMap.put(key, entity);
+        return entity;
     }
 
-    public void update(Entity entity) {
-        var entityClass = getEntityClass(entity);
-        var key = getKey(entity.getId(), entityClass);
+    public Entity update(Entity entity) {
+        var key = entityKeyMapper.getKey(entity.getId(), entity);
         storageMap.put(key, entity);
+        return entity;
     }
 
     public Entity retrieveById(long id, Class<? extends Entity> clazz) {
-        var key = getKey(id, clazz);
+        var key = entityKeyMapper.getKey(id, clazz);
         return storageMap.get(key);
-    }
-
-    public void remove(Entity entity) {
-        var entityClass = getEntityClass(entity);
-        var key = getKey(entity.getId(), entityClass);
-        storageMap.remove(key);
     }
 
     @SuppressWarnings("unchecked")
@@ -60,30 +57,50 @@ public class Storage {
                 .toList();
     }
 
-    private List<String> getKeysByPrefix(String keyPrefix) {
-        return storageMap.keySet().stream()
-                .filter(key -> key.startsWith(keyPrefix))
-                .toList();
+    public void remove(Entity entity) {
+        var key = entityKeyMapper.getKey(entity.getId(), entity);
+        storageMap.remove(key);
     }
 
     private long computeNextId(String keyPrefix) {
-        List<String> keys = getKeysByPrefix(keyPrefix);
-        return keys.stream()
+        return getKeysByPrefix(keyPrefix)
+                .stream()
                 .map(key -> key.substring(keyPrefix.length() + 1))
                 .mapToLong(Long::parseLong)
                 .max()
                 .orElse(0L) + 1;
     }
 
-    private String getKeyPrefix(Class<?> clazz) {
-        return clazz.getSimpleName().toLowerCase();
+    private List<String> getKeysByPrefix(String keyPrefix) {
+        return storageMap.keySet()
+                .stream()
+                .filter(key -> key.startsWith(keyPrefix))
+                .toList();
     }
 
-    private String getKey(long id, Class<?> clazz) {
-        return getKeyPrefix(clazz) + ":" + id;
-    }
+    @Component
+    public static class EntityKeyMapper {
+        private final Map<Class<? extends Entity>, String> classToKeyPrefixMap = Map.of(
+                Trainee.class, "trainee",
+                Trainer.class, "trainer",
+                Training.class, "training"
+        );
 
-    private Class<? extends Entity> getEntityClass(Entity entity) {
-        return entity.getClass();
+        public String getKey(long id, Entity entity) {
+            return getKeyPrefix(entity) + ":" + id;
+        }
+
+        public String getKey(long id, Class<? extends Entity> clazz) {
+            return classToKeyPrefixMap.get(clazz) + ":" + id;
+        }
+
+        public String getKeyPrefix(Entity entity) {
+            Class<? extends Entity> clazz = entity.getClass();
+            return classToKeyPrefixMap.get(clazz);
+        }
+
+        public String getKeyPrefix(Class<? extends Entity> clazz) {
+            return classToKeyPrefixMap.get(clazz);
+        }
     }
 }
