@@ -42,10 +42,12 @@ class TraineeServiceImplTest {
         var generatedPassword = "1234567890";
         var generatedUsername = "FirstName.LastName";
 
-        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
+                var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsername);
 
-            given(usernameHelper.generateUsername(any(Trainee.class), any(TraineeDao.class))).willReturn(generatedUsername);
+            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsername);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -58,9 +60,8 @@ class TraineeServiceImplTest {
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
-            verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), any(TraineeDao.class));
             verify(traineeDao, times(1)).save(any(Trainee.class));
-            verifyNoMoreInteractions(usernameHelper, traineeDao);
+            verifyNoMoreInteractions(traineeDao);
         }
     }
 
@@ -72,10 +73,11 @@ class TraineeServiceImplTest {
         var generatedPassword = "1234567890";
         var generatedUsernameWithSuffix = "FirstName.LastName2";
 
-        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
+                var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsernameWithSuffix);
 
-            given(usernameHelper.generateUsername(any(Trainee.class), any(TraineeDao.class))).willReturn(generatedUsernameWithSuffix);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -88,9 +90,8 @@ class TraineeServiceImplTest {
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 
-            verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), any(TraineeDao.class));
             verify(traineeDao, times(1)).save(any(Trainee.class));
-            verifyNoMoreInteractions(usernameHelper, traineeDao);
+            verifyNoMoreInteractions(traineeDao);
         }
     }
 
@@ -102,21 +103,25 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsername = "UpdatedFirstName.LastName";
 
-        given(usernameHelper.generateUsername(any(Trainee.class), any(TraineeDao.class))).willReturn(generatedUsername);
-        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
-        // when
-        var actualResult = traineeService.update(trainee);
+        try (var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsername);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainee);
-        assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
-        assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
+            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsername);
+            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), any(TraineeDao.class));
-        verify(traineeDao, times(1)).update(any(Trainee.class));
-        verifyNoMoreInteractions(usernameHelper);
+            // when
+            var actualResult = traineeService.update(trainee);
+
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult).isEqualTo(trainee);
+            assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
+            assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
+
+            verify(traineeDao, times(1)).update(any(Trainee.class));
+            verifyNoMoreInteractions(traineeDao);
+        }
     }
 
     @Test
@@ -127,22 +132,24 @@ class TraineeServiceImplTest {
         trainee.setFirstName("UpdatedFirstName");
         var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
 
-        given(usernameHelper.generateUsername(any(Trainee.class), any(TraineeDao.class))).willReturn(generatedUsernameWithSuffix);
-        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+        try (var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsernameWithSuffix);
 
-        // when
-        var actualResult = traineeService.update(trainee);
+            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsernameWithSuffix);
+            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainee);
-        assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
-        assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+            // when
+            var actualResult = traineeService.update(trainee);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainee.class), any(TraineeDao.class));
-        verify(traineeDao, times(1)).update(any(Trainee.class));
-        verifyNoMoreInteractions(usernameHelper);
-        verifyNoMoreInteractions(traineeDao);
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult).isEqualTo(trainee);
+            assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
+            assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+
+            verify(traineeDao, times(1)).update(any(Trainee.class));
+            verifyNoMoreInteractions(traineeDao);
+        }
     }
 
     @Test

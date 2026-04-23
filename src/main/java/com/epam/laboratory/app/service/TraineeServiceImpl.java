@@ -9,16 +9,15 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TraineeServiceImpl extends AbstractService<Trainee> implements TraineeService {
-    private final UsernameHelper usernameHelper;
 
-    public TraineeServiceImpl(@Autowired TraineeDao traineeDao, UsernameHelper usernameHelper) {
+    public TraineeServiceImpl(@Autowired TraineeDao traineeDao) {
         super(traineeDao);
-        this.usernameHelper = usernameHelper;
     }
 
     @Override
     protected void prepareEntity(Trainee trainee) {
         trainee.setPassword(PasswordGenerator.generatePassword());
-        trainee.setUsername(usernameHelper.generateUsername(trainee, dao));
+        trainee.setUsername(UsernameHelper.generateUsername(trainee, username ->
+                !dao.findByCondition(u -> u.getUsername().equals(username), Trainee.class).isEmpty()));
     }
 }
