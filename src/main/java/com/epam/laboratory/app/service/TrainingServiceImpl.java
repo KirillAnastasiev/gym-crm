@@ -11,4 +11,9 @@ public class TrainingServiceImpl extends AbstractService<Training> implements Tr
     public TrainingServiceImpl(@Autowired TrainingDao trainingDao) {
         super(trainingDao);
     }
+
+    @Override
+    protected void prepareEntity(Training entity) {
+        // dumb method
+    }
 }

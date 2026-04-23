@@ -17,12 +17,14 @@ public abstract class AbstractService<T extends Entity> implements Service<T> {
     @Logging(Level.INFO)
     @Override
     public T create(T entity) {
+        prepareEntity(entity);
         return dao.save(entity);
     }
 
     @Logging(Level.INFO)
     @Override
     public T update(T entity) {
+        prepareEntity(entity);
         return dao.update(entity);
     }
 
@@ -37,4 +39,6 @@ public abstract class AbstractService<T extends Entity> implements Service<T> {
     public Collection<T> selectByCondition(Predicate<T> condition, Class<T> entityClass) {
         return dao.findByCondition(condition, entityClass);
     }
+
+    protected abstract void prepareEntity(T entity);
 }

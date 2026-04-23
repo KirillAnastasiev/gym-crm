@@ -18,8 +18,7 @@ import java.util.Collection;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class StorageTest {
@@ -41,8 +40,8 @@ class StorageTest {
         var storageMap = storage.getStorageMap();
         var trainee = createTestTrainee();
 
-        given(entityKeyMapper.getKeyPrefix(trainee)).willReturn("trainee");
-        given(entityKeyMapper.getKey(anyLong(), any(Trainee.class))).willReturn("trainee:1");
+        given(entityKeyMapper.incrementAndGetLastUsedId(any(Class.class))).willReturn(1L);
+        given(entityKeyMapper.getKey(anyLong(), any(Class.class))).willReturn("trainee:1");
 
         // when
         storage.store(trainee);
@@ -53,8 +52,8 @@ class StorageTest {
         assertThat(storageMap).containsValue(trainee);
         assertThat(storageMap.get("trainee:1")).isSameAs(trainee);
 
-        verify(entityKeyMapper).getKeyPrefix(trainee);
-        verify(entityKeyMapper).getKey(anyLong(), any(Trainee.class));
+        verify(entityKeyMapper).incrementAndGetLastUsedId(any(Class.class));
+        verify(entityKeyMapper).getKey(anyLong(), any(Class.class));
         verifyNoMoreInteractions(entityKeyMapper);
     }
 
@@ -66,7 +65,7 @@ class StorageTest {
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
 
-        given(entityKeyMapper.getKey(anyLong(), any(Trainee.class))).willReturn("trainee:1");
+        given(entityKeyMapper.getKey(anyLong(), any(Class.class))).willReturn("trainee:1");
 
         // when
         storage.update(trainee);
@@ -77,7 +76,7 @@ class StorageTest {
         assertThat(storageMap).containsValue(trainee);
         assertThat(storageMap.get("trainee:1")).isSameAs(trainee);
 
-        verify(entityKeyMapper).getKey(anyLong(), any(Trainee.class));
+        verify(entityKeyMapper).getKey(anyLong(), any(Class.class));
         verifyNoMoreInteractions(entityKeyMapper);
     }
 
@@ -89,7 +88,7 @@ class StorageTest {
         var trainee = createTestTrainee();
         storageMap.put("trainee:1", trainee);
 
-        given(entityKeyMapper.getKey(anyLong(), any(Trainee.class))).willReturn("trainee:1");
+        given(entityKeyMapper.getKey(anyLong(), any(Class.class))).willReturn("trainee:1");
 
         // when
         storage.remove(trainee);
@@ -98,7 +97,7 @@ class StorageTest {
         assertThat(storageMap).doesNotContainKey("trainee:1");
         assertThat(storageMap).doesNotContainValue(trainee);
 
-        verify(entityKeyMapper).getKey(anyLong(), any(Trainee.class));
+        verify(entityKeyMapper).getKey(anyLong(), any(Class.class));
         verifyNoMoreInteractions(entityKeyMapper);
     }
 

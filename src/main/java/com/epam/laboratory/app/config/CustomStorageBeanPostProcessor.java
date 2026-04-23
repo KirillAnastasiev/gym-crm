@@ -23,6 +23,7 @@ import java.util.Map;
 
 import static java.nio.file.StandardOpenOption.CREATE;
 import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
+import static java.util.stream.Collectors.*;
 
 @Component
 @RequiredArgsConstructor
@@ -58,6 +59,16 @@ public class CustomStorageBeanPostProcessor implements DestructionAwareBeanPostP
                 Entity typedValue = convertToConcreteType(key, value);
                 storage.getStorageMap().put(key, typedValue);
             }
+
+            var classToMaxId = storage.getStorageMap()
+                    .values()
+                    .stream()
+                    .collect(groupingBy(Entity::getClass, collectingAndThen(mapping(Entity::getId, maxBy(Long::compare)), optional -> optional.orElse(0L))));
+
+            storage.getEntityKeyMapper()
+                    .getClassToLastUsedId()
+                    .putAll(classToMaxId);
+
         } catch (Exception e) {
             throw new BeanCreationException("Failed to initialize Storage from file", e);
         }

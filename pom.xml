@@ -30,6 +30,13 @@
             <version>6.2.15</version>
         </dependency>
 
+        <!--    Jakarta Annotations API    -->
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+
         <!--    AspectJ    -->
         <dependency>
             <groupId>org.aspectj</groupId>
