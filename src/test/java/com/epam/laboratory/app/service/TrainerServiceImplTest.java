@@ -15,7 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -42,10 +41,11 @@ class TrainerServiceImplTest {
         var password = "generatedPassword";
         var username = "FirstName.LastName";
 
-        try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+        try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class);
+                var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
             mockedStaticPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
+            mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(Trainer.class), any(Predicate.class))).thenReturn(username);
 
-            given(usernameHelper.generateUsername(any(Trainer.class), any(TrainerDao.class))).willReturn(username);
             given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
             // when
@@ -58,9 +58,8 @@ class TrainerServiceImplTest {
             assertThat(actualResult.getPassword()).isEqualTo(password);
             assertThat(actualResult.getUsername()).isEqualTo(username);
 
-            verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), any(TrainerDao.class));
             verify(trainerDao, times(1)).save(any(Trainer.class));
-            verifyNoMoreInteractions(usernameHelper, trainerDao);
+            verifyNoMoreInteractions(trainerDao);
         }
     }
 
@@ -75,22 +74,24 @@ class TrainerServiceImplTest {
         try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class)) {
             mockedStaticPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
 
-            given(usernameHelper.generateUsername(any(Trainer.class), any(TrainerDao.class))).willReturn(usernameWithSuffix);
-            given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
+            try (var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
+                mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(Trainer.class), any(Predicate.class))).thenReturn(usernameWithSuffix);
 
-            // when
-            var actualResult = trainerService.create(trainer);
+                given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
-            // then
-            assertThat(actualResult).isNotNull();
-            assertThat(actualResult.getId()).isNotNull();
-            assertThat(actualResult).isEqualTo(trainer);
-            assertThat(actualResult.getPassword()).isEqualTo(password);
-            assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
+                // when
+                var actualResult = trainerService.create(trainer);
 
-            verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), any(TrainerDao.class));
-            verify(trainerDao, times(1)).save(any(Trainer.class));
-            verifyNoMoreInteractions(usernameHelper, trainerDao);
+                // then
+                assertThat(actualResult).isNotNull();
+                assertThat(actualResult.getId()).isNotNull();
+                assertThat(actualResult).isEqualTo(trainer);
+                assertThat(actualResult.getPassword()).isEqualTo(password);
+                assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
+
+                verify(trainerDao, times(1)).save(any(Trainer.class));
+                verifyNoMoreInteractions(trainerDao);
+            }
         }
     }
 
@@ -102,21 +103,24 @@ class TrainerServiceImplTest {
         trainer.setFirstName("UpdatedFirstName");
         var generatedUsername = "UpdatedFirstName.LastName";
 
-        given(usernameHelper.generateUsername(any(Trainer.class), any(TrainerDao.class))).willReturn(generatedUsername);
-        given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
+        try (var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
+            mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(Trainer.class), any(Predicate.class))).thenReturn(generatedUsername);
 
-        // when
-        var actualResult = trainerService.update(trainer);
+            given(usernameHelper.generateUsername(any(Trainer.class), any(Predicate.class))).willReturn(generatedUsername);
+            given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-        assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
+            // when
+            var actualResult = trainerService.update(trainer);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), any(TrainerDao.class));
-        verify(trainerDao, times(1)).update(any(Trainer.class));
-        verifyNoMoreInteractions(usernameHelper, trainerDao);
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult.getId()).isNotNull();
+            assertThat(actualResult).isEqualTo(trainer);
+            assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
+
+            verify(trainerDao, times(1)).update(any(Trainer.class));
+            verifyNoMoreInteractions(trainerDao);
+        }
     }
 
     @Test
@@ -125,23 +129,25 @@ class TrainerServiceImplTest {
         // given
         var trainer = createTrainer();
         trainer.setFirstName("UpdatedFirstName");
-        var generatedUsernameWithSuffix = "UpdatedFirstName.LastName.2";
+        var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
 
-        given(usernameHelper.generateUsername(any(Trainer.class), any(TrainerDao.class))).willReturn(generatedUsernameWithSuffix);
-        given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
+        try (var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
+            mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(Trainer.class), any(Predicate.class))).thenReturn(generatedUsernameWithSuffix);
 
-        // when
-        var actualResult = trainerService.update(trainer);
+            given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-        assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+            // when
+            var actualResult = trainerService.update(trainer);
 
-        verify(usernameHelper, times(1)).generateUsername(any(Trainer.class), any(TrainerDao.class));
-        verify(trainerDao, times(1)).update(any(Trainer.class));
-        verifyNoMoreInteractions(usernameHelper, trainerDao);
+            // then
+            assertThat(actualResult).isNotNull();
+            assertThat(actualResult.getId()).isNotNull();
+            assertThat(actualResult).isEqualTo(trainer);
+            assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
+
+            verify(trainerDao, times(1)).update(any(Trainer.class));
+            verifyNoMoreInteractions(trainerDao);
+        }
     }
 
     @Test
