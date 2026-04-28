@@ -115,7 +115,7 @@ class CustomStorageBeanPostProcessorTest {
         trainer.setUsername("FirstName.LastName");
         trainer.setPassword("9876543210");
         trainer.setActive(false);
-        trainer.setSpecialization(TrainingType.FITNESS);
+        trainer.setSpecialization(new TrainingType());
 
         return trainer;
     }
@@ -126,7 +126,7 @@ class CustomStorageBeanPostProcessorTest {
         training.setTrainee(createTestTrainee());
         training.setTrainer(createTestTrainer());
         training.setTrainingName("Test Training");
-        training.setTrainingType(TrainingType.FITNESS);
+        training.setTrainingType(new TrainingType());
         training.setTrainingDate(LocalDate.now().atStartOfDay());
         training.setTrainingDuration(java.time.Duration.ofHours(1));
 

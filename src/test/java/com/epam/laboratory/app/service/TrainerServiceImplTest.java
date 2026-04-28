@@ -214,7 +214,7 @@ class TrainerServiceImplTest {
         trainer.setId(1L);
         trainer.setFirstName("FirstName");
         trainer.setLastName("LastName");
-        trainer.setSpecialization(TrainingType.FITNESS);
+        trainer.setSpecialization(new TrainingType());
         trainer.setActive(true);
 
         return trainer;

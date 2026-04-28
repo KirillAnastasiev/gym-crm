@@ -136,7 +136,7 @@ class TrainingServiceImplTest {
         training.setTrainee(new Trainee());
         training.setTrainer(new Trainer());
         training.setTrainingName("Test Training");
-        training.setTrainingType(TrainingType.FITNESS);
+        training.setTrainingType(new TrainingType());
         training.setTrainingDate(LocalDateTime.now());
         training.setTrainingDuration(ofHours(1));
 
