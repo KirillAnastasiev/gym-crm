@@ -9,8 +9,13 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.init.DataSourceInitializer;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.Database;
 import org.springframework.orm.jpa.vendor.HibernateJpaDialect;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -38,6 +43,18 @@ public class AppConfig {
 
     @Value("${datasource.connection-pool.maximum-size}")
     private int maximumPoolSize;
+
+    @Value("${persistence.unit-name}")
+    private String persistenceUnitName;
+
+    @Value("${persistence.show-sql}")
+    private boolean showSql;
+
+    @Value("${persistence.generate-ddl}")
+    private boolean generateDdl;
+
+    @Value("${persistence.database-platform}")
+    private String database;
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertyConfigurer() {
@@ -71,12 +88,29 @@ public class AppConfig {
     }
 
     @Bean
+    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
+        DataSourceInitializer initializer = new DataSourceInitializer();
+        initializer.setDataSource(dataSource);
+        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
+        Resource schemaScript = new ClassPathResource("schema.sql");
+        Resource dataScript = new ClassPathResource("data.sql");
+        populator.addScript(schemaScript);
+        populator.addScript(dataScript);
+        initializer.setDatabasePopulator(populator);
+        return initializer;
+    }
+
+    @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
-        emf.setPersistenceUnitName("gym-crm");
+        emf.setPersistenceUnitName(persistenceUnitName);
         emf.setDataSource(dataSource);
         emf.setPackagesToScan("com.epam.laboratory.app.domain");
-        emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+        HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
+        adapter.setShowSql(showSql);
+        adapter.setGenerateDdl(generateDdl);
+        adapter.setDatabase(Database.valueOf(database.toUpperCase()));
+        emf.setJpaVendorAdapter(adapter);
         emf.setJpaDialect(new HibernateJpaDialect());
         return emf;
     }

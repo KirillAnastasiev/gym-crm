@@ -33,11 +33,11 @@ public class Trainee extends User {
     @JsonProperty(value = "address")
     private String address;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "trainee")
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REMOVE, CascadeType.REFRESH}, orphanRemoval = true, mappedBy = "trainee")
     @Setter(AccessLevel.PRIVATE)
     private Collection<Training> trainings = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "trainees_to_trainers", joinColumns = @JoinColumn(name = "trainee_id"), inverseJoinColumns = @JoinColumn(name = "trainer_id"))
     @Setter(AccessLevel.PRIVATE)
     private Collection<Trainer> trainers = new HashSet<>();
@@ -53,8 +53,10 @@ public class Trainee extends User {
     }
 
     public void removeTraining(Training training) {
-        trainings.remove(training);
-        training.setTrainee(null);
+        if (trainings.contains(training)) {
+            trainings.remove(training);
+            training.setTrainee(null);
+        }
     }
 
     public Collection<Training> getTrainings() {
@@ -78,9 +80,11 @@ public class Trainee extends User {
     }
 
     public void removeTrainer(Trainer trainer) {
-        trainers.remove(trainer);
-        if  (trainer.getTrainees().contains(this)) {
-            trainer.removeTrainee(this);
+        if (trainers.contains(trainer)) {
+            trainers.remove(trainer);
+            if  (trainer.getTrainees().contains(this)) {
+                trainer.removeTrainee(this);
+            }
         }
     }
 

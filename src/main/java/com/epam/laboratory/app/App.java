@@ -4,13 +4,19 @@ import com.epam.laboratory.app.config.AppConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
-import com.epam.laboratory.app.domain.TrainingType;
-import jakarta.persistence.EntityManagerFactory;
+import com.epam.laboratory.app.service.TraineeService;
+import com.epam.laboratory.app.service.TrainerService;
+import com.epam.laboratory.app.service.TrainingService;
+import com.epam.laboratory.app.service.TrainingTypeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.time.LocalDate;
+import java.util.Collection;
+
+import static com.epam.laboratory.app.service.Service.*;
+import static com.epam.laboratory.app.service.TraineeService.*;
 
 public class App {
 
@@ -21,14 +27,9 @@ public class App {
 
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
-        TrainingType trainingType = new TrainingType();
-        trainingType.setTrainingTypeName("Test Training Type");
-
         Trainee trainee = new Trainee();
         trainee.setFirstName("FirstName");
         trainee.setLastName("LastName");
-        trainee.setPassword("password");
-        trainee.setUsername("FirstName.LastName");
         trainee.setAddress("Test Address");
         trainee.setDateOfBirth(LocalDate.now());
         trainee.setActive(true);
@@ -36,74 +37,28 @@ public class App {
         Trainer trainer = new Trainer();
         trainer.setFirstName("FirstName");
         trainer.setLastName("LastName");
-        trainer.setPassword("password");
-        trainer.setUsername("FirstName.LastName1");
         trainer.setActive(false);
-        trainer.setSpecialization(trainingType);
 
         Training training = new Training();
         training.setTrainee(trainee);
         training.setTrainer(trainer);
         training.setTrainingName("Test Training");
-        training.setTrainingType(trainingType);
         training.setTrainingDate(LocalDate.now().atStartOfDay());
         training.setTrainingDuration(java.time.Duration.ofHours(1));
 
-        trainer.addTrainee(trainee);
+        var traineeService = context.getBean(TraineeService.class);
+        var trainerService = context.getBean(TrainerService.class);
+        var trainingTypeService = context.getBean(TrainingTypeService.class);
+        var trainingService = context.getBean(TrainingService.class);
 
-        var emf = context.getBean(EntityManagerFactory.class);
+        Collection<Trainee> traineesWithDateOfBirthFrom = traineeService.selectByCondition(not(dateOfBirthFrom(LocalDate.of(1990, 1, 1))), Trainee.class);
+        logger.info("Trainees with date of birth from {}: {}", LocalDate.now().minusYears(20), traineesWithDateOfBirthFrom);
 
-        try (var entityManager = emf.createEntityManager()) {
-            try {
-                entityManager.getTransaction().begin();
+        Collection<Trainee> traineesWithTrainers = traineeService.selectByCondition(TraineeService.byTrainerUsernames("Sarah.Davis", "Laura.Miller"), Trainee.class);
+        logger.info("Trainees with trainers: {}", traineesWithTrainers);
 
-                entityManager.persist(trainingType);
-                entityManager.persist(trainer);
-                entityManager.persist(trainee);
-                entityManager.persist(training);
-
-                entityManager.getTransaction().commit();
-            } catch (Exception ex) {
-                logger.error("Error during transaction, rolling back", ex);
-                if (entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-            }
-        }
-
-        try (var entityManager = emf.createEntityManager()) {
-            var foundTrainee = entityManager.find(Trainee.class, trainee.getId());
-            logger.info("Found trainee: {}", foundTrainee);
-
-            var trainings = foundTrainee.getTrainings();
-            logger.info("Trainee's trainings: {}", trainings);
-
-            var trainers = foundTrainee.getTrainers();
-            logger.info("Trainee's trainers: {}", trainers);
-        }
-
-        try (var entityManager = emf.createEntityManager()) {
-            try {
-                entityManager.getTransaction().begin();
-
-                var foundTrainee = entityManager.find(Trainee.class, trainee.getId());
-                logger.info("Trainee: {}", foundTrainee);
-
-                entityManager.remove(foundTrainee);
-                entityManager.flush();
-                entityManager.getTransaction().commit();
-            } catch (Exception ex) {
-                logger.error("Error during transaction, rolling back", ex);
-                if (entityManager.getTransaction().isActive()) {
-                    entityManager.getTransaction().rollback();
-                }
-            }
-        }
-
-        try (var entityManager = emf.createEntityManager()) {
-            var foundTrainee = entityManager.find(Trainee.class, trainee.getId());
-            logger.info("Found trainee after deletion: {}", foundTrainee);
-        }
+        Collection<Trainee> traineesByUsername = traineeService.selectByCondition(not(byUsernames("John.Doe", "Jane.Smith")), Trainee.class);
+        logger.info("Trainees by username: {}", traineesByUsername);
 
         context.close();
     }

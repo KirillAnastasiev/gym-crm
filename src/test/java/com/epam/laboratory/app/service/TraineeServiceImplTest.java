@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.function.Predicate;
+import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,9 +27,6 @@ import static org.mockito.Mockito.*;
 class TraineeServiceImplTest {
     @Mock
     private TraineeDao traineeDao;
-
-    @Mock
-    private UsernameHelper usernameHelper;
 
     @InjectMocks
     private TraineeServiceImpl traineeService;
@@ -45,9 +42,8 @@ class TraineeServiceImplTest {
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
                 var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
-            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsername);
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(generatedUsername);
 
-            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsername);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -76,7 +72,7 @@ class TraineeServiceImplTest {
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
                 var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
-            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsernameWithSuffix);
+            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(generatedUsernameWithSuffix);
 
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
@@ -97,59 +93,22 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method update - should update trainee with unique username and return")
-    void testUpdate_uniqueUsername() {
+    void testUpdate() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
-        var generatedUsername = "UpdatedFirstName.LastName";
 
+        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
 
-        try (var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
-            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsername);
+        // when
+        var actualResult = traineeService.update(trainee);
 
-            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsername);
-            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
 
-            // when
-            var actualResult = traineeService.update(trainee);
-
-            // then
-            assertThat(actualResult).isNotNull();
-            assertThat(actualResult).isEqualTo(trainee);
-            assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
-            assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
-
-            verify(traineeDao, times(1)).update(any(Trainee.class));
-            verifyNoMoreInteractions(traineeDao);
-        }
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should update trainee with non-unique username and return")
-    void testUpdate_nonUniqueUsername() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setFirstName("UpdatedFirstName");
-        var generatedUsernameWithSuffix = "UpdatedFirstName.LastName2";
-
-        try (var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
-            staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).thenReturn(generatedUsernameWithSuffix);
-
-            given(usernameHelper.generateUsername(any(Trainee.class), any(Predicate.class))).willReturn(generatedUsernameWithSuffix);
-            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
-
-            // when
-            var actualResult = traineeService.update(trainee);
-
-            // then
-            assertThat(actualResult).isNotNull();
-            assertThat(actualResult).isEqualTo(trainee);
-            assertThat(actualResult.getFirstName()).isEqualTo("UpdatedFirstName");
-            assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
-
-            verify(traineeDao, times(1)).update(any(Trainee.class));
-            verifyNoMoreInteractions(traineeDao);
-        }
+        verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(traineeDao);
     }
 
     @Test
@@ -169,27 +128,62 @@ class TraineeServiceImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method selectById - should return trainee by id")
+    void testSelectById_positive() {
+        // given
+        var trainee = createTestTrainee();
+
+        given(traineeDao.findById(anyLong(), any())).willReturn(Optional.of(trainee));
+
+        // when
+        var actualResult = traineeService.selectById(1L, Trainee.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(trainee);
+
+        verify(traineeDao, times(1)).findById(anyLong(), any());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectById - should return empty optional if there is no trainee with given id")
+    void testSelectById_negative() {
+        // given
+        given(traineeDao.findById(anyLong(), any())).willReturn(Optional.empty());
+
+        // when
+        var actualResult = traineeService.selectById(1L, Trainee.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isNotPresent();
+
+        verify(traineeDao, times(1)).findById(anyLong(), any());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
     @DisplayName("Test of the method selectByCondition - should return collection of trainees that satisfy condition")
     void testSelectByCondition_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setUsername("FirstName.LastName");
 
-        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.singletonList(trainee));
+        given(traineeDao.findByCondition(any(), any())).willReturn(Collections.singletonList(trainee));
 
         // when
-        var actualResult = traineeService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainee.class);
+        var actualResult = traineeService.selectByCondition((cb, root) ->
+                cb.equal(root.get("username"), "FirstName.LastName"), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).hasSize(1);
-        actualResult.forEach(t -> {
-            assertThat(t).isInstanceOf(Trainee.class);
-            assertThat(t.getUsername()).isEqualTo("FirstName.LastName");
-        });
+        assertThat(actualResult.iterator().next()).isEqualTo(trainee);
 
-        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(traineeDao, times(1)).findByCondition(any(), any());
         verifyNoMoreInteractions(traineeDao);
     }
 
@@ -197,17 +191,171 @@ class TraineeServiceImplTest {
     @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainees that satisfy condition")
     void testSelectByCondition_negative() {
         // given
-        given(traineeDao.findByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        given(traineeDao.findByCondition(any(), any())).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = traineeService.selectByCondition(t -> "FirstName.LastName".equals(t.getUsername()), Trainee.class);
+        var actualResult = traineeService.selectByCondition((cb, root) ->
+                cb.equal(root.get("username"), "NonExistingUsername"), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(traineeDao, times(1)).findByCondition(any(Predicate.class), any(Class.class));
+        verify(traineeDao, times(1)).findByCondition(any(), any());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectByUsername - should return trainee by username")
+    void testSelectByUsername_positive() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
+
+        // when
+        var actualResult = traineeService.selectByUsername("FirstName.LastName");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(trainee);
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method selectByUsername - should return empty optional if there is no trainee with given username")
+    void testSelectByUsername_negative() {
+        // given
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
+
+        // when
+        var actualResult = traineeService.selectByUsername("NonExistingUsername");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isNotPresent();
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method checkPasswordForUsername - should return true if password is correct for given username")
+    void testCheckPasswordForUsername_positive() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+        trainee.setPassword("password");
+
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
+
+        // when
+        var actualResult = traineeService.checkPasswordForUsername("FirstName.LastName", "password");
+
+        // then
+        assertThat(actualResult).isTrue();
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method checkPasswordForUsername - should return false if password is incorrect for given username")
+    void testCheckPasswordForUsername_negative() {
+        // given
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
+
+        // when
+        var actualResult = traineeService.checkPasswordForUsername("FirstName.LastName", "wrongPassword");
+
+        // then
+        assertThat(actualResult).isFalse();
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method changePassword - should change password for given trainee")
+    void testChangePassword_withValidPassword() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+        trainee.setPassword("oldPassword");
+
+        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        traineeService.changePassword(trainee, "newPassword");
+
+        // then
+        assertThat(trainee.getPassword()).isEqualTo("newPassword");
+
+        verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method changePassword - should change password to generated one if given password is null")
+    void testChangePassword_withNullPassword() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+        trainee.setPassword("oldPassword");
+
+        var generatedPassword = "generatedPassword";
+
+        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
+            staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
+
+            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+
+            // when
+            traineeService.changePassword(trainee, null);
+
+            // then
+            assertThat(trainee.getPassword()).isEqualTo(generatedPassword);
+
+            verify(traineeDao, times(1)).update(any(Trainee.class));
+            verifyNoMoreInteractions(traineeDao);
+        }
+    }
+
+    @Test
+    @DisplayName("Test of the method changeStatus - should change status for given trainee")
+    void testChangeStatus() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setActive(true);
+
+        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        traineeService.changeStatus(trainee, false);
+
+        // then
+        assertThat(trainee.isActive()).isFalse();
+
+        verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method deleteByUsername - should delete trainee by username")
+    void testDeleteByUsername() {
+        // given
+        doNothing().when(traineeDao).deleteByUsername(anyString());
+
+        // when
+        traineeService.deleteByUsername("FirstName.LastName");
+
+        // then
+        verify(traineeDao, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(traineeDao);
     }
 

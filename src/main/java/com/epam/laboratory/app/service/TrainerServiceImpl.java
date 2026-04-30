@@ -1,23 +1,44 @@
 package com.epam.laboratory.app.service;
 
+import com.epam.laboratory.app.aspect.Logging;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.repository.TrainerDao;
-import com.epam.laboratory.app.util.PasswordGenerator;
-import com.epam.laboratory.app.util.UsernameHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+import static org.slf4j.event.Level.INFO;
 
 @Service
-public class TrainerServiceImpl extends AbstractService<Trainer> implements TrainerService {
+@Transactional(rollbackFor = Exception.class)
+public class TrainerServiceImpl extends AbstractUserService<Trainer> implements TrainerService {
 
     public TrainerServiceImpl(@Autowired TrainerDao trainerDao) {
         super(trainerDao);
     }
 
+    @Logging(INFO)
+    @Transactional(readOnly = true)
     @Override
-    protected void prepareEntity(Trainer trainer) {
-        trainer.setPassword(PasswordGenerator.generatePassword());
-        trainer.setUsername(UsernameHelper.generateUsername(trainer, username ->
-                !dao.findByCondition(u -> u.getUsername().equals(username), Trainer.class).isEmpty()));
+    public Optional<Trainer> selectByUsername(String username) {
+        return ((TrainerDao) dao).findByUsername(username);
     }
+
+    @Logging(INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public boolean checkPasswordForUsername(String userName, String password) {
+        var trainerOptional = ((TrainerDao) dao).findByUsername(userName);
+        return trainerOptional.map(Trainer::getPassword)
+                .filter(password::equals)
+                .isPresent();
+    }
+
+    @Override
+    public void deleteByUsername(String username) {
+        ((TrainerDao) dao).deleteByUsername(username);
+    }
+
 }

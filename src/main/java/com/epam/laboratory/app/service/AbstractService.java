@@ -3,15 +3,21 @@ package com.epam.laboratory.app.service;
 import com.epam.laboratory.app.aspect.Logging;
 import com.epam.laboratory.app.domain.Entity;
 import com.epam.laboratory.app.repository.Dao;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
-import java.util.function.Predicate;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 @org.springframework.stereotype.Service
 @RequiredArgsConstructor
 public abstract class AbstractService<T extends Entity> implements Service<T> {
+
     protected final Dao<T> dao;
 
     @Logging(Level.INFO)
@@ -24,7 +30,6 @@ public abstract class AbstractService<T extends Entity> implements Service<T> {
     @Logging(Level.INFO)
     @Override
     public T update(T entity) {
-        prepareEntity(entity);
         return dao.update(entity);
     }
 
@@ -35,8 +40,16 @@ public abstract class AbstractService<T extends Entity> implements Service<T> {
     }
 
     @Logging(Level.INFO)
+    @Transactional(readOnly = true)
     @Override
-    public Collection<T> selectByCondition(Predicate<T> condition, Class<T> entityClass) {
+    public Optional<T> selectById(Long id, Class<T> entityClass) {
+        return dao.findById(id, entityClass);
+    }
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass) {
         return dao.findByCondition(condition, entityClass);
     }
 

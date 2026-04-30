@@ -29,11 +29,11 @@ public class Trainer extends User {
     @JsonProperty(value = "specialization", required = true)
     private TrainingType specialization;
 
-    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainer")
+    @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainer")
     @Setter(AccessLevel.PRIVATE)
     private Collection<Training> trainings = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainers")
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainers")
     private Collection<Trainee> trainees = new HashSet<>();
 
     public void addTraining(Training training) {
@@ -47,8 +47,10 @@ public class Trainer extends User {
     }
 
     public void removeTraining(Training training) {
-        trainings.remove(training);
-        training.setTrainer(null);
+        if (trainings.contains(training)) {
+            trainings.remove(training);
+            training.setTrainer(null);
+        }
     }
 
     public Collection<Training> getTrainings() {
@@ -72,9 +74,11 @@ public class Trainer extends User {
     }
 
     public void removeTrainee(Trainee trainee) {
-        trainees.remove(trainee);
-        if (trainee.getTrainers().contains(this)) {
-            trainee.removeTrainer(this);
+        if (trainees.contains(trainee)) {
+            trainees.remove(trainee);
+            if (trainee.getTrainers().contains(this)) {
+                trainee.removeTrainer(this);
+            }
         }
     }
 

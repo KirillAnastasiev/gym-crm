@@ -27,12 +27,12 @@ public class Training implements  Entity {
     @JsonProperty(value = "id", required = true)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "trainee_id", nullable = false)
     @JsonProperty(value = "trainee", required = true)
     private Trainee trainee;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinColumn(name = "trainer_id", nullable = false)
     @JsonProperty(value = "trainer", required = true)
     private Trainer trainer;

@@ -18,6 +18,14 @@ import org.springframework.stereotype.Service;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "trainingTypeName"})
 public class TrainingType implements Entity {
+    public static final String FITNESS = "Fitness";
+    public static final String YOGA = "Yoga";
+    public static final String ZUMBA = "Zumba";
+    public static final String STRETCHING = "Stretching";
+    public static final String CROSSFIT = "Crossfit";
+    public static final String PILATES = "Pilates";
+    public static final String CARDIO = "Cardio";
+    public static final String RESISTANCE = "Resistance";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
