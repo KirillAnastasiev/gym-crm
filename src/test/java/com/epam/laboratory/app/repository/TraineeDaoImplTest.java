@@ -1,6 +1,13 @@
 package com.epam.laboratory.app.repository;
 
+
 import com.epam.laboratory.app.domain.Trainee;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,50 +15,48 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TraineeDaoImplTest {
+
     @Mock
-    private Storage storage;
+    private EntityManager em;
 
     @InjectMocks
     private TraineeDaoImpl traineeDao;
 
     @Test
-    @DisplayName("Test of the method findById - should return trainee when trainee with given id exists")
+    @DisplayName("Test of the method findById - should return trainee wrapped in Optional when trainee with given ID exists")
     void testFindById_positive() {
         // given
-        var trainee = createTestTrainee();
-        trainee.setId(1L);
+        var trainee = getTestTrainee();
 
-        given(storage.retrieveById(anyLong(), any())).willReturn(trainee);
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(trainee);
 
         // when
-        var actualResult = traineeDao.findById(1L, Trainee.class);
+        var actualResult = traineeDao.findById(trainee.getId(), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isPresent();
         assertThat(actualResult).contains(trainee);
 
-        verify(storage, times(1)).retrieveById(anyLong(), any());
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verifyNoMoreInteractions(em);
     }
 
     @Test
-    @DisplayName("Test of the method findById - should return empty optional when trainee with given id does not exist")
+    @DisplayName("Test of the method findById - should return empty Optional when trainee with given ID does not exist")
     void testFindById_negative() {
         // given
-        given(storage.retrieveById(anyLong(), any())).willReturn(null);
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(null);
 
         // when
         var actualResult = traineeDao.findById(1L, Trainee.class);
@@ -60,82 +65,187 @@ class TraineeDaoImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).retrieveById(anyLong(), any());
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verifyNoMoreInteractions(em);
     }
 
     @Test
-    @DisplayName("Test of the method findByCondition - should return collection of trainees that satisfy the condition")
+    @DisplayName("Test of the method findByCondition - should return list of trainees matching condition")
     void testFindByCondition_positive() {
         // given
-        var trainee1 = createTestTrainee();
-        var trainee2 = createTestTrainee();
-        trainee1.setId(1L);
-        trainee2.setId(2L);
+        var trainee = getTestTrainee();
 
-        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(List.of(trainee1, trainee2));
+        CriteriaBuilder mockCriteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery<Trainee> mockCriteriaQuery = mock(CriteriaQuery.class);
+        Root<Trainee> mockRoot = mock(Root.class);
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
+        given(mockCriteriaBuilder.createQuery(eq(Trainee.class))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.from(Trainee.class)).willReturn(mockRoot);
+        given(em.createQuery(any(CriteriaQuery.class))).willReturn(mockTypedQuery);
+        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainee));
 
         // when
-        var actualResult = traineeDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainee.class);
+        var actualResult = traineeDao.findByCondition((cb, root) ->
+                cb.equal(root.get("firstName"), "FirstName"), Trainee.class);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Collection.class);
-        actualResult.forEach(t -> {
-            assertThat(t).isInstanceOf(Trainee.class);
-            assertThat(t.getFirstName()).isEqualTo("FirstName");
-        });
+        assertThat(actualResult).isNotEmpty();
+        assertThat(actualResult).contains(trainee);
 
-        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).getCriteriaBuilder();
+        verify(em, times(1)).createQuery(any(CriteriaQuery.class));
+        verify(mockCriteriaBuilder, times(1)).createQuery(eq(Trainee.class));
+        verify(mockCriteriaQuery, times(1)).from(Trainee.class);
+        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockTypedQuery, times(1)).getResultList();
     }
 
     @Test
-    @DisplayName("Test of the method findByCondition - should return empty collection when no trainees satisfy the condition")
-    void testFindByCondition_negative() {
+    @DisplayName("Test of the method findByCondition - should return empty list when no trainees match the condition")
+    void testFindByCondition_negative_noMatchingTrainees() {
         // given
-        given(storage.retrieveByCondition(any(Predicate.class), any(Class.class))).willReturn(Collections.emptyList());
+        CriteriaBuilder mockCriteriaBuilder = mock(CriteriaBuilder.class);
+        CriteriaQuery<Trainee> mockCriteriaQuery = mock(CriteriaQuery.class);
+        Root<Trainee> mockRoot = mock(Root.class);
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
+        given(mockCriteriaBuilder.createQuery(eq(Trainee.class))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.from(Trainee.class)).willReturn(mockRoot);
+        given(em.createQuery(any(CriteriaQuery.class))).willReturn(mockTypedQuery);
+        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
 
         // when
-        var actualResult = traineeDao.findByCondition(t -> t.getFirstName().equals("FirstName"), Trainee.class);
+        var actualResult = traineeDao.findByCondition((cb, root) -> cb.equal(root.get("firstName"), "NonExistentFirstName"), Trainee.class);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isEmpty();
+
+        verify(em, times(1)).getCriteriaBuilder();
+        verify(em, times(1)).createQuery(any(CriteriaQuery.class));
+        verify(mockCriteriaBuilder, times(1)).createQuery(eq(Trainee.class));
+        verify(mockCriteriaQuery, times(1)).from(Trainee.class);
+        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockTypedQuery, times(1)).getResultList();
+    }
+
+    @Test
+    @DisplayName("Test of the method findByUsername - should return trainee wrapped in Optional when trainee with given username exists")
+    void testFindByUsername_positive() {
+        // given
+        var trainee = getTestTrainee();
+
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(Trainee.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(eq("username"), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willReturn(trainee);
+
+        // when
+        var actualResult = traineeDao.findByUsername(trainee.getUsername());
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(trainee);
+
+        verify(em, times(1)).createQuery(anyString(), eq(Trainee.class));
+        verify(mockTypedQuery, times(1)).setParameter(eq("username"), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByUsername - should return empty Optional when trainee with given username does not exist")
+    void testFindByUsername_negative() {
+        // given
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(Trainee.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(eq("username"), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willThrow(new NoResultException());
+
+        // when
+        var actualResult = traineeDao.findByUsername("NonExistentUsername");
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEmpty();
 
-        verify(storage, times(1)).retrieveByCondition(any(Predicate.class), any(Class.class));
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).createQuery(anyString(), eq(Trainee.class));
+        verify(mockTypedQuery, times(1)).setParameter(eq("username"), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
+        verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
     @Test
-    @DisplayName("Test of the method save - should save trainee and return it with generated id")
-    void testSave() {
+    @DisplayName("Test of the method save - should persist trainee and return it when trainee with given ID does not exist")
+    void testSave_positive_notExistedTrainee() {
         // given
-        var trainee = createTestTrainee();
-        trainee.setId(1L);
+        var trainee = getTestTrainee();
+        trainee.setId(null);
 
-        given(storage.store(any(Trainee.class))).willReturn(trainee);
+        doNothing().when(em).persist(any(Trainee.class));
 
         // when
         var actualResult = traineeDao.save(trainee);
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getId()).isEqualTo(1L);
         assertThat(actualResult).isEqualTo(trainee);
 
-        verify(storage, times(1)).store(any(Trainee.class));
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).persist(any(Trainee.class));
+        verifyNoMoreInteractions(em);
     }
 
     @Test
-    @DisplayName("Test of the method update - should update trainee and return it")
-    void testUpdate() {
+    @DisplayName("Test of the method save - should merge trainee and return it when trainee with given ID exists")
+    void testSave_positive_existedTrainee() {
         // given
-        var trainee = createTestTrainee();
-        trainee.setId(1L);
+        var trainee = getTestTrainee();
 
-        given(storage.update(any(Trainee.class))).willReturn(trainee);
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(trainee);
+        given(em.merge(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        var actualResult = traineeDao.save(trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verify(em, times(1)).merge(any(Trainee.class));
+        verifyNoMoreInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method save - should throw IllegalArgumentException when trainee is null")
+    void testSave_negative_nullTrainee() {
+        // when & then
+        assertThatThrownBy(() -> traineeDao.save(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity must not be null");
+
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method update - should merge trainee and return it when trainee with given ID exists")
+    void testUpdate_positive() {
+        // given
+        var trainee = getTestTrainee();
+
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(trainee);
+        given(em.merge(any(Trainee.class))).willReturn(trainee);
 
         // when
         var actualResult = traineeDao.update(trainee);
@@ -144,36 +254,254 @@ class TraineeDaoImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(trainee);
 
-        verify(storage, times(1)).update(any(Trainee.class));
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verify(em, times(1)).merge(any(Trainee.class));
+        verifyNoMoreInteractions(em);
     }
 
     @Test
-    @DisplayName("Test of the method delete - should delete trainee")
-    void testDelete() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setId(1L);
+    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainee is null")
+    void testUpdate_negative_nullTrainee() {
+        // when & then
+        assertThatThrownBy(() -> traineeDao.update(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity must not be null and must have an ID");
 
-        doNothing().when(storage).remove(any(Trainee.class));
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainee does not have ID")
+    void testUpdate_negative_traineeWithoutId() {
+        // given
+        var trainee = getTestTrainee();
+        trainee.setId(null);
+
+        // when & then
+        assertThatThrownBy(() -> traineeDao.update(trainee))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity must not be null and must have an ID");
+
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainee with given ID does not exist")
+    void testUpdate_negative_notExistedTrainee() {
+        // given
+        var trainee = getTestTrainee();
+
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(null);
+
+        // when & then
+        assertThatThrownBy(() -> traineeDao.update(trainee))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity with ID " + trainee.getId() + " does not exist");
+
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verifyNoMoreInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method changePassword - should execute update query to change password of trainee with given ID")
+    void testChangePassword() {
+        // given
+        var trainee = getTestTrainee();
+        var newPassword = "newPassword";
+
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), any(Class.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyLong())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.executeUpdate()).willReturn(1);
+
+        // when
+        traineeDao.changePassword(trainee.getId(), newPassword);
+
+        // then
+        verify(em, times(1)).createQuery(anyString(), any());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyLong());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).executeUpdate();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method changeStatus - should execute update query to change status of trainee with given ID")
+    void testChangeStatus() {
+        // given
+        var trainee = getTestTrainee();
+        var newStatus = false;
+
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), any(Class.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyBoolean())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyLong())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.executeUpdate()).willReturn(1);
+
+        // when
+        traineeDao.changeStatus(trainee.getId(), newStatus);
+
+        // then
+        verify(em, times(1)).createQuery(anyString(), any());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyBoolean());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyLong());
+        verify(mockTypedQuery, times(1)).executeUpdate();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method delete - should remove trainee when trainee with given ID exists")
+    void testDelete_positive() {
+        // given
+        var trainee = getTestTrainee();
+
+        given(em.find(eq(Trainee.class), anyLong())).willReturn(trainee);
+        doNothing().when(em).remove(any(Trainee.class));
+        doNothing().when(em).flush();
 
         // when
         traineeDao.delete(trainee);
 
         // then
-        verify(storage, times(1)).remove(any(Trainee.class));
-        verifyNoMoreInteractions(storage);
+        verify(em, times(1)).find(eq(Trainee.class), anyLong());
+        verify(em, times(1)).remove(any(Trainee.class));
+        verify(em, times(1)).flush();
+        verifyNoMoreInteractions(em);
     }
 
-    private Trainee createTestTrainee() {
-        Trainee trainee = new Trainee();
+    @Test
+    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainee is null")
+    void testDelete_negative_nullTrainee() {
+        // when & then
+        assertThatThrownBy(() -> traineeDao.delete(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity must not be null and must have an ID");
+
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainee does not have ID")
+    void testDelete_negative_traineeWithoutId() {
+        // given
+        var trainee = getTestTrainee();
+        trainee.setId(null);
+
+        // when & then
+        assertThatThrownBy(() -> traineeDao.delete(trainee))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Entity must not be null and must have an ID");
+
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method deleteByUsername - should execute delete query to delete trainee with given username")
+    void testDeleteByUsername() {
+        // given
+        var username = "FirstName.LastName";
+
+        TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), any(Class.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.executeUpdate()).willReturn(1);
+
+        // when
+        traineeDao.deleteByUsername(username);
+
+        // then
+        verify(em, times(1)).createQuery(anyString(), any());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).executeUpdate();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return true when trainee with given username exists")
+    void testIsExistingByUsername_positive() {
+        // given
+        var username = "FirstName.LastName";
+
+        TypedQuery<Boolean> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(Boolean.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willReturn(true);
+
+        // when
+        boolean actualResult = traineeDao.existsByUsername(username);
+
+        // then
+        assertThat(actualResult).isTrue();
+
+        verify(em, times(1)).createQuery(anyString(), eq(Boolean.class));
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return false when trainee with given username does not exist")
+    void testIsExistingByUsername_negative_noExistingTrainee() {
+        // given
+        var username = "NonExistentUsername";
+
+        TypedQuery<Boolean> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(Boolean.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willReturn(false);
+
+        // when
+        var actualResult = traineeDao.existsByUsername(username);
+
+        // then
+        assertThat(actualResult).isFalse();
+
+        verify(em, times(1)).createQuery(anyString(), eq(Boolean.class));
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should throw IllegalArgumentException when username is null")
+    void testExistsByUsername_negative_nullUsername() {
+        // when & then
+        assertThatThrownBy(() -> traineeDao.existsByUsername(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Username must not be null");
+
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    @DisplayName("Test of the method existsByUsername - should return false when username is blank")
+    void testExistsByUsername_negative_blankUsername() {
+        // when
+        var actualResult = traineeDao.existsByUsername("   ");
+
+        // then
+        assertThat(actualResult).isFalse();
+
+        verifyNoInteractions(em);
+    }
+
+    private Trainee getTestTrainee() {
+        var trainee = new Trainee();
+        trainee.setId(1L);
         trainee.setFirstName("FirstName");
         trainee.setLastName("LastName");
-        trainee.setPassword("1234567890");
+        trainee.setUsername("FirstName.LastName");
+        trainee.setPassword("password");
         trainee.setAddress("Test Address");
-        trainee.setDateOfBirth(LocalDate.now());
+        trainee.setDateOfBirth(java.time.LocalDate.now());
         trainee.setActive(true);
-
         return trainee;
     }
+
 }

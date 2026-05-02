@@ -16,4 +16,5 @@ public class TrainingServiceImpl extends AbstractService<Training> implements Tr
     protected void prepareEntity(Training entity) {
         // dumb method
     }
+
 }

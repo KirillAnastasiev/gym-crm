@@ -1,12 +1,40 @@
 package com.epam.laboratory.app.domain;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import jakarta.persistence.*;
+import lombok.*;
+import org.springframework.stereotype.Service;
 
+@jakarta.persistence.Entity
+@Table(name = "training_types", schema = "public")
+@NoArgsConstructor
+@Getter
+@Setter
+@Service
+@EqualsAndHashCode(of = "id")
+@ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public enum TrainingType {
-    FITNESS,
-    YOGA,
-    ZUMBA,
-    STRETCHING,
-    RESISTANCE
+@JsonPropertyOrder({"id", "trainingTypeName"})
+public class TrainingType implements Entity {
+    public static final String FITNESS = "Fitness";
+    public static final String YOGA = "Yoga";
+    public static final String ZUMBA = "Zumba";
+    public static final String STRETCHING = "Stretching";
+    public static final String CROSSFIT = "Crossfit";
+    public static final String PILATES = "Pilates";
+    public static final String CARDIO = "Cardio";
+    public static final String RESISTANCE = "Resistance";
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, unique = true, updatable = false)
+    @JsonProperty(value = "id", required = true)
+    private Long id;
+
+    @Column(name = "training_type_name", nullable = false, updatable = false, unique = true, length = 50)
+    @JsonProperty(value = "trainingTypeName", required = true)
+    private String trainingTypeName;
+
 }
