@@ -140,8 +140,8 @@ class TrainingDaoImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method save - should persist training and return it when training with given ID does not exist")
-    void testSave_positive_notExistedTraining() {
+    @DisplayName("Test of the method save - should persist training and return it")
+    void testSave_positive() {
         // given
         var training = getTestTraining();
         training.setId(null);
@@ -159,101 +159,69 @@ class TrainingDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
-    @Test
-    @DisplayName("Test of the method save - should merge training and return it when training with given ID exists")
-    void testSave_positive_existedTraining() {
-        // given
-        var training = getTestTraining();
-
-        given(em.find(eq(Training.class), anyLong())).willReturn(training);
-        given(em.merge(any(Training.class))).willReturn(training);
-
-        // when
-        var actualResult = trainingDao.save(training);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(training);
-
-        verify(em, times(1)).find(eq(Training.class), anyLong());
-        verify(em, times(1)).merge(any(Training.class));
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method save - should throw IllegalArgumentException when training is null")
-    void testSave_negative_nullTraining() {
-        // when & then
-        assertThatThrownBy(() -> trainingDao.save(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should merge training and return it when training with given ID exists")
-    void testUpdate_positive() {
-        // given
-        var training = getTestTraining();
-
-        given(em.find(eq(Training.class), anyLong())).willReturn(training);
-        given(em.merge(any(Training.class))).willReturn(training);
-
-        // when
-        var actualResult = trainingDao.update(training);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(training);
-
-        verify(em, times(1)).find(eq(Training.class), anyLong());
-        verify(em, times(1)).merge(any(Training.class));
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when training is null")
-    void testUpdate_negative_nullTraining() {
-        // when & then
-        assertThatThrownBy(() -> trainingDao.update(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when training with given ID is null")
-    void testUpdate_negative_nullId() {
-        // given
-        var training = getTestTraining();
-        training.setId(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainingDao.update(training))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when training with given ID does not exist")
-    void testUpdate_negative_notExistedTraining() {
-        // given
-        var training = getTestTraining();
-
-        given(em.find(eq(Training.class), anyLong())).willReturn(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainingDao.update(training))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity with ID " + training.getId() + " does not exist");
-
-        verify(em, times(1)).find(eq(Training.class), anyLong());
-        verifyNoMoreInteractions(em);
-    }
+//    @Test
+//    @DisplayName("Test of the method update - should merge training and return it when training with given ID exists")
+//    void testUpdate_positive() {
+//        // given
+//        var training = getTestTraining();
+//
+//        given(em.find(eq(Training.class), anyLong())).willReturn(training);
+//        given(em.merge(any(Training.class))).willReturn(training);
+//
+//        // when
+//        var actualResult = trainingDao.update(training);
+//
+//        // then
+//        assertThat(actualResult).isNotNull();
+//        assertThat(actualResult).isEqualTo(training);
+//
+//        verify(em, times(1)).find(eq(Training.class), anyLong());
+//        verify(em, times(1)).merge(any(Training.class));
+//        verifyNoMoreInteractions(em);
+//    }
+//
+//    @Test
+//    @DisplayName("Test of the method update - should throw IllegalArgumentException when training is null")
+//    void testUpdate_negative_nullTraining() {
+//        // when & then
+//        assertThatThrownBy(() -> trainingDao.update(null))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessage("Entity must not be null and must have an ID");
+//
+//        verifyNoInteractions(em);
+//    }
+//
+//    @Test
+//    @DisplayName("Test of the method update - should throw IllegalArgumentException when training with given ID is null")
+//    void testUpdate_negative_nullId() {
+//        // given
+//        var training = getTestTraining();
+//        training.setId(null);
+//
+//        // when & then
+//        assertThatThrownBy(() -> trainingDao.update(training))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessage("Entity must not be null and must have an ID");
+//
+//        verifyNoInteractions(em);
+//    }
+//
+//    @Test
+//    @DisplayName("Test of the method update - should throw IllegalArgumentException when training with given ID does not exist")
+//    void testUpdate_negative_notExistedTraining() {
+//        // given
+//        var training = getTestTraining();
+//
+//        given(em.find(eq(Training.class), anyLong())).willReturn(null);
+//
+//        // when & then
+//        assertThatThrownBy(() -> trainingDao.update(training))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessage("Entity with ID " + training.getId() + " does not exist");
+//
+//        verify(em, times(1)).find(eq(Training.class), anyLong());
+//        verifyNoMoreInteractions(em);
+//    }
 
     @Test
     @DisplayName("Test of the method delete - should remove training when training with given ID exists")

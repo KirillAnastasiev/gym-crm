@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public interface TrainingService extends Service<Training> {
+public interface TrainingService extends EntityService<Training> {
 
     static BiFunction<CriteriaBuilder, Root<Training>, Predicate> byTrainerUsernames(String... username) {
         return (cb, root) -> cb.and(root.get("trainer").get("username").in(List.of(username)));

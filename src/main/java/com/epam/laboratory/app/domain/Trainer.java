@@ -34,6 +34,7 @@ public class Trainer extends User {
     private Collection<Training> trainings = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainers")
+    @Setter(AccessLevel.PRIVATE)
     private Collection<Trainee> trainees = new HashSet<>();
 
     public void addTraining(Training training) {

@@ -4,7 +4,7 @@ import com.epam.laboratory.app.domain.TrainingType;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class TrainingTypeDaoImpl extends AbstractDao<TrainingType> implements TrainingTypeDao {
+public class TrainingTypeDaoImpl extends AbstractEntityDao<TrainingType> implements TrainingTypeDao {
     @Override
     public TrainingType save(TrainingType entity) {
         throw new UnsupportedOperationException("Not supported operation.");

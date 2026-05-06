@@ -5,14 +5,28 @@ DROP TABLE IF EXISTS trainees;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS training_types;
 
+DROP SEQUENCE IF EXISTS training_types_id_seq;
+DROP SEQUENCE IF EXISTS users_id_seq;
+DROP SEQUENCE IF EXISTS trainees_id_seq;
+DROP SEQUENCE IF EXISTS trainers_id_seq;
+DROP SEQUENCE IF EXISTS trainings_id_seq;
+DROP SEQUENCE IF EXISTS trainees_to_trainers_id_seq;
+
+CREATE SEQUENCE training_types_id_seq START WITH 1;
+CREATE SEQUENCE users_id_seq START WITH 1;
+CREATE SEQUENCE trainees_id_seq START WITH 1;
+CREATE SEQUENCE trainers_id_seq START WITH 1;
+CREATE SEQUENCE trainings_id_seq START WITH 1;
+CREATE SEQUENCE trainees_to_trainers_id_seq START WITH 1;
+
 CREATE TABLE IF NOT EXISTS training_types (
-    id                      SERIAL                              NOT NULL                            UNIQUE,
+    id                      BIGINT                              NOT NULL                            DEFAULT NEXTVAL('training_types_id_seq'),
     training_type_name      VARCHAR(50)                         NOT NULL                            UNIQUE,
     CONSTRAINT              training_types_pk                   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    id                      SERIAL                              NOT NULL                            UNIQUE,
+    id                      BIGINT                              NOT NULL                            DEFAULT NEXTVAL('users_id_seq'),
     first_name              VARCHAR(50)                         NOT NULL,
     last_name               VARCHAR(50)                         NOT NULL,
     username                VARCHAR(110)                        NOT NULL                            UNIQUE,
@@ -22,7 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS trainees (
-    id                      SERIAL                              NOT NULL                            UNIQUE,
+    id                      BIGINT                              NOT NULL                            DEFAULT NEXTVAL('trainees_id_seq'),
     date_of_birth           DATE,
     address                 VARCHAR(200),
     CONSTRAINT              trainees_pk                         PRIMARY KEY (id),
@@ -30,7 +44,7 @@ CREATE TABLE IF NOT EXISTS trainees (
 );
 
 CREATE TABLE IF NOT EXISTS trainers (
-    id                      SERIAL                              NOT NULL                            UNIQUE,
+    id                      BIGINT                              NOT NULL                            DEFAULT NEXTVAL('trainers_id_seq'),
     training_type_id        BIGINT                              NOT NULL,
     CONSTRAINT              trainers_pk                         PRIMARY KEY (id),
     CONSTRAINT              trainers_users_fk                   FOREIGN KEY (id)                    REFERENCES users(id)                ON DELETE CASCADE,
@@ -38,7 +52,7 @@ CREATE TABLE IF NOT EXISTS trainers (
 );
 
 CREATE TABLE IF NOT EXISTS trainings (
-    id                      SERIAL                              NOT NULL                            UNIQUE,
+    id                      BIGINT                              NOT NULL                            DEFAULT NEXTVAL('trainings_id_seq'),
     trainee_id              BIGINT                              NOT NULL,
     trainer_id              BIGINT                              NOT NULL,
     training_name           VARCHAR(100)                        NOT NULL,
@@ -52,7 +66,7 @@ CREATE TABLE IF NOT EXISTS trainings (
 );
 
 CREATE TABLE IF NOT EXISTS trainees_to_trainers (
-    id                     SERIAL                              NOT NULL                            UNIQUE,
+    id                     BIGINT                              NOT NULL                             DEFAULT NEXTVAL('trainees_to_trainers_id_seq'),
     trainee_id             BIGINT                              NOT NULL,
     trainer_id             BIGINT                              NOT NULL,
     CONSTRAINT             trainees_to_trainers_pk             PRIMARY KEY (id),

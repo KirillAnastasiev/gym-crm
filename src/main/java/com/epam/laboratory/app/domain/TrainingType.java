@@ -7,7 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.stereotype.Service;
 
-@jakarta.persistence.Entity
+@Entity
 @Table(name = "training_types", schema = "public")
 @NoArgsConstructor
 @Getter
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "trainingTypeName"})
-public class TrainingType implements Entity {
+public class TrainingType implements BaseEntity {
     public static final String FITNESS = "Fitness";
     public static final String YOGA = "Yoga";
     public static final String ZUMBA = "Zumba";
@@ -28,7 +28,8 @@ public class TrainingType implements Entity {
     public static final String RESISTANCE = "Resistance";
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "training_types_id_seq_gen")
+    @SequenceGenerator(name = "training_types_id_seq_gen", sequenceName = "training_types_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false, unique = true, updatable = false)
     @JsonProperty(value = "id", required = true)
     private Long id;

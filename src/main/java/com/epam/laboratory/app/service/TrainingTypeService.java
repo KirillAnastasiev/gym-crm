@@ -8,7 +8,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public interface TrainingTypeService extends Service<TrainingType> {
+public interface TrainingTypeService extends EntityService<TrainingType> {
 
     static BiFunction<CriteriaBuilder, Root<TrainingType>, Predicate> byTrainingTypeNames(String... trainingTypeName) {
         return (cb, root) -> cb.and(root.get("trainingTypeName").in(List.of(trainingTypeName)));

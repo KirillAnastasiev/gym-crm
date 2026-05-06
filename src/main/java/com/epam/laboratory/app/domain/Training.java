@@ -9,7 +9,7 @@ import lombok.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-@jakarta.persistence.Entity
+@Entity
 @Table(name = "trainings", schema = "public")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,10 +19,11 @@ import java.time.LocalDateTime;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "trainee", "trainer", "trainingName", "trainingType", "trainingDate", "trainingDuration"})
-public class Training implements  Entity {
+public class Training implements BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trainings_id_seq_gen")
+    @SequenceGenerator(name = "trainings_id_seq_gen", sequenceName = "trainings_id_seq", allocationSize = 1)
     @Column(name = "id", nullable = false, unique = true)
     @JsonProperty(value = "id", required = true)
     private Long id;

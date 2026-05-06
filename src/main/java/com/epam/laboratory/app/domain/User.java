@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.*;
 import lombok.*;
 
-@jakarta.persistence.Entity
+@Entity
 @Table(name = "users", schema = "public")
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor
@@ -17,11 +17,12 @@ import lombok.*;
 @ToString
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonPropertyOrder({"id", "firstName", "lastName", "username", "password", "active"})
-public abstract class User implements Entity {
+public abstract class User implements BaseEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, unique = true)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_seq_gen")
+    @SequenceGenerator(name = "users_id_seq_gen", sequenceName = "users_id_seq", allocationSize = 1)
+    @Column(name = "id", nullable = false)
     @JsonProperty(value = "id", required = true)
     protected Long id;
 
@@ -44,6 +45,6 @@ public abstract class User implements Entity {
 
     @Column(name = "is_active", nullable = false)
     @JsonProperty(value = "active", required = true)
-    protected boolean active;
+    protected Boolean active;
 
 }

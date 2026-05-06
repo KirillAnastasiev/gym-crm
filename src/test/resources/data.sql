@@ -46,3 +46,10 @@ INSERT INTO trainees_to_trainers VALUES
     (3, 3, 7),
     (4, 4, 8);
 
+-- Reset sequences to ensure next auto-generated IDs start from 9
+SELECT SETVAL('training_types_id_seq', 8, true);
+SELECT SETVAL('users_id_seq', 8, true);
+SELECT SETVAL('trainees_id_seq', 4, true);
+SELECT SETVAL('trainers_id_seq', 8, true);
+SELECT SETVAL('trainings_id_seq', 8, true);
+SELECT SETVAL('trainees_to_trainers_id_seq', 4, true);

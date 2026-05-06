@@ -32,15 +32,15 @@ class TrainingServiceImplTest {
     private TrainingServiceImpl trainingServiceImpl;
 
     @Test
-    @DisplayName("Test of the method create - should create training")
-    void testCreate() {
+    @DisplayName("Test of the method registerNew - should create training")
+    void testRegisterNew() {
         // given
         var training = createTestTraining();
 
         given(trainingDao.save(any(Training.class))).willReturn(training);
 
         // when
-        var actualResult = trainingServiceImpl.create(training);
+        var actualResult = trainingServiceImpl.registerNew(training);
 
         // then
         assertThat(actualResult).isNotNull();

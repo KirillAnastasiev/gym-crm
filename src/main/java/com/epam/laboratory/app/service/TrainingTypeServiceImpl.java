@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @org.springframework.stereotype.Service
 @Transactional(rollbackFor = Exception.class)
-public class TrainingTypeServiceImpl extends AbstractService<TrainingType> implements TrainingTypeService {
+public class TrainingTypeServiceImpl extends AbstractEntityService<TrainingType> implements TrainingTypeService {
 
     public TrainingTypeServiceImpl(@Autowired TrainingTypeDao dao) {
         super(dao);
