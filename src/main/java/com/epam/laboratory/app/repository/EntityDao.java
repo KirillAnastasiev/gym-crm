@@ -14,5 +14,4 @@ public interface EntityDao<T extends BaseEntity> {
     Collection<T> findByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> clazz);
     T save(T entity);
     T update(T entity);
-    void delete(T entity);
 }

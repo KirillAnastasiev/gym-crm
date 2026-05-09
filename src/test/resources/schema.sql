@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS trainings (
     trainer_id              BIGINT                              NOT NULL,
     training_name           VARCHAR(100)                        NOT NULL,
     training_type_id        BIGINT                              NOT NULL,
-    training_date           DATE                                NOT NULL,
+    training_date           TIMESTAMP                           NOT NULL,
     training_duration       BIGINT                              NOT NULL,
     CONSTRAINT              trainings_pk                        PRIMARY KEY (id),
     CONSTRAINT              trainings_trainers_fk               FOREIGN KEY (trainer_id)            REFERENCES trainers(id)             ON DELETE CASCADE,

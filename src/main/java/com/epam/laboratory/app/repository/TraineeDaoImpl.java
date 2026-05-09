@@ -49,7 +49,7 @@ public class TraineeDaoImpl extends AbstractEntityDao<Trainee> implements Traine
 
     @Logging(INFO)
     @Override
-    public void changeStatus(String username, boolean isActive) {
+    public void changeStatusByUsername(String username, boolean isActive) {
         var query = em.createQuery(CHANGE_STATUS_BY_USERNAME_QUERY);
         query.setParameter("isActive", isActive);
         query.setParameter("username", username);

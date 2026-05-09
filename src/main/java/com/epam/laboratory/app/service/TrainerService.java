@@ -1,14 +1,17 @@
 package com.epam.laboratory.app.service;
 
+import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.BiFunction;
 
 public interface TrainerService extends UserService<Trainer> {
+    Collection<Trainee> updateTrainees(String trainerUsername, Collection<Trainee> trainees);
 
     static BiFunction<CriteriaBuilder, Root<Trainer>, Predicate> byUsernames(String... usernames) {
         return (cb, root) -> cb.and(root.get("username").in(List.of(usernames)));

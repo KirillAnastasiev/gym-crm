@@ -31,14 +31,14 @@ INSERT INTO trainers VALUES
     (8, 4);
 
 INSERT INTO trainings VALUES
-    (1, 1, 5, 'Morning Fitness', 1, '2024-07-01', 60),
-    (2, 2, 6, 'Evening Yoga', 2, '2024-07-02', 45),
-    (3, 3, 7, 'Afternoon Zumba', 3, '2024-07-03', 50),
-    (4, 4, 8, 'Night Stretching', 4, '2024-07-04', 30),
-    (5, 1, 5, 'Weekend Crossfit', 5, '2024-07-05', 90),
-    (6, 2, 6, 'Morning Pilates', 6, '2024-07-06', 60),
-    (7, 3, 7, 'Evening Cardio', 7, '2024-07-07', 45),
-    (8, 4, 8, 'Afternoon Resistance', 8, '2024-07-08', 50);
+    (1, 1, 5, 'Morning Fitness', 1, '2024-07-01 8:00', 3.6E12),
+    (2, 2, 6, 'Evening Yoga', 2, '2024-07-02 15:30', 2.7E12),
+    (3, 3, 7, 'Afternoon Zumba', 3, '2024-07-03 18:00', 3.0E12),
+    (4, 4, 8, 'Night Stretching', 4, '2024-07-04 12:00', 1.8E12),
+    (5, 1, 5, 'Weekend Crossfit', 5, '2024-07-05 12:30', 5.4E12),
+    (6, 2, 6, 'Morning Pilates', 6, '2024-07-06 8:00', 5.4E12),
+    (7, 3, 7, 'Evening Cardio', 7, '2024-07-07 18:00', 2.7E12),
+    (8, 4, 8, 'Afternoon Resistance', 8, '2024-07-08 15:30', 3.0E12);
 
 INSERT INTO trainees_to_trainers VALUES
     (1, 1, 5),

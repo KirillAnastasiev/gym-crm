@@ -1,6 +1,5 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -19,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collection;
 import java.util.Collections;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -87,7 +85,7 @@ class TrainerDaoImplTest {
         given(mockCriteriaBuilder.createQuery(Trainer.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainer.class)).willReturn(mockRoot);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainer));
 
         // when
@@ -103,7 +101,7 @@ class TrainerDaoImplTest {
         verify(mockCriteriaBuilder, times(1)).createQuery(Trainer.class);
         verify(mockCriteriaQuery, times(1)).from(Trainer.class);
         verify(em, times(1)).createQuery(mockCriteriaQuery);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
@@ -120,7 +118,7 @@ class TrainerDaoImplTest {
         given(mockCriteriaBuilder.createQuery(Trainer.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainer.class)).willReturn(mockRoot);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
 
         // when
@@ -242,7 +240,7 @@ class TrainerDaoImplTest {
 
     @Test
     @DisplayName("Test of the method changeStatus - should change status of trainer when trainer with given ID exists")
-    void testChangeStatus() {
+    void testChangeStatusByUsername() {
         // given
         var username = "FirstName.LastName";
         var isActive = false;
@@ -255,7 +253,7 @@ class TrainerDaoImplTest {
         given(mockTypedQuery.executeUpdate()).willReturn(1);
 
         // when
-        trainerDao.changeStatus(username, isActive);
+        trainerDao.changeStatusByUsername(username, isActive);
 
         // then
         verify(em, times(1)).createQuery(anyString());
@@ -263,52 +261,6 @@ class TrainerDaoImplTest {
         verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
         verify(mockTypedQuery, times(1)).executeUpdate();
         verifyNoMoreInteractions(em, mockTypedQuery);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should remove trainer when trainer with given ID exists")
-    void testDelete_positive() {
-        // given
-        var trainer = getTestTrainer();
-
-        given(em.find(eq(Trainer.class), anyLong())).willReturn(trainer);
-        doNothing().when(em).remove(any(Trainer.class));
-        doNothing().when(em).flush();
-
-        // when
-        trainerDao.delete(trainer);
-
-        // then
-        verify(em, times(1)).find(eq(Trainer.class), anyLong());
-        verify(em, times(1)).remove(any(Trainer.class));
-        verify(em, times(1)).flush();
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainer is null")
-    void testDelete_negative_nullTrainer() {
-        // when & then
-        assertThatThrownBy(() -> trainerDao.delete(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainer without ID is passed")
-    void testDelete_negative_trainerWithoutId() {
-        // given
-        var trainer = getTestTrainer();
-        trainer.setId(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainerDao.delete(trainer))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
     }
 
     @Test

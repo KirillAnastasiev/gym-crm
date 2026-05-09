@@ -2,6 +2,7 @@ package com.epam.laboratory.app.config;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,6 +19,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 @Configuration
 @ComponentScan(basePackages = "com.epam.laboratory.app.repository")
@@ -26,6 +28,9 @@ public class PersistenceConfig {
 
     @Value("${datasource.url}")
     private String databaseUrl;
+
+    @Value("${datasource.schema}")
+    private String databaseSchema;
 
     @Value("${datasource.username}")
     private String databaseUsername;
@@ -43,7 +48,10 @@ public class PersistenceConfig {
     private String persistenceUnitName;
 
     @Value("${persistence.show-sql}")
-    private boolean showSql;
+    private String showSql;
+
+    @Value("${persistence.format-sql}")
+    private String formatSql;
 
     @Value("${persistence.generate-ddl}")
     private boolean generateDdl;
@@ -51,15 +59,20 @@ public class PersistenceConfig {
     @Value("${persistence.database-platform}")
     private String database;
 
+    @Value("${persistence.sql-dialect}")
+    private String sqlDialect;
+
     @Bean
     public DataSource dataSource() {
         HikariConfig hc = new HikariConfig();
         hc.setPoolName("HikariCP Pool");
         hc.setDriverClassName(databaseDriver);
         hc.setJdbcUrl(databaseUrl);
+        hc.setSchema(databaseSchema);
         hc.setUsername(databaseUsername);
         hc.setPassword(databasePassword);
         hc.setMaximumPoolSize(maximumPoolSize);
+        hc.setAutoCommit(false);
         return new HikariDataSource(hc);
     }
 
@@ -77,24 +90,33 @@ public class PersistenceConfig {
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory(DataSource dataSource) {
+    public LocalContainerEntityManagerFactoryBean entityManagerFactoryBean(DataSource dataSource) {
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceUnitName(persistenceUnitName);
         emf.setDataSource(dataSource);
         emf.setPackagesToScan("com.epam.laboratory.app.domain");
+
         HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
-        adapter.setShowSql(showSql);
         adapter.setGenerateDdl(generateDdl);
         adapter.setDatabase(Database.valueOf(database.toUpperCase()));
         emf.setJpaVendorAdapter(adapter);
         emf.setJpaDialect(new HibernateJpaDialect());
+
+        Properties jpaProperties = new Properties();
+        jpaProperties.put("hibernate.dialect", sqlDialect);
+        jpaProperties.put("hibernate.show_sql", showSql);
+        jpaProperties.put("hibernate.format_sql", formatSql);
+        jpaProperties.put("hibernate.connection.characterEncoding", "UTF-8");
+        jpaProperties.put("hibernate.connection.useUnicode", "true");
+        emf.setJpaProperties(jpaProperties);
         return emf;
     }
 
     @Bean
-    public JpaTransactionManager transactionManager(LocalContainerEntityManagerFactoryBean entityManagerFactory) {
+    public JpaTransactionManager transactionManager(EntityManagerFactory entityManagerFactory, DataSource dataSource) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(entityManagerFactory.getObject());
+        transactionManager.setEntityManagerFactory(entityManagerFactory);
+        transactionManager.setDataSource(dataSource);
         return transactionManager;
     }
 

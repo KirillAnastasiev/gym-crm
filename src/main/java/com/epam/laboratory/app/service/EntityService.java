@@ -14,7 +14,6 @@ public interface EntityService<T extends BaseEntity> {
     Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass);
     T registerNew(T entity);
     T update(T entity);
-    void delete(T entity);
 
     @SafeVarargs
     static <T extends BaseEntity>BiFunction<CriteriaBuilder, Root<T>, Predicate> conditionJoiner(BiFunction<CriteriaBuilder, Root<T>, Predicate>... conditions) {

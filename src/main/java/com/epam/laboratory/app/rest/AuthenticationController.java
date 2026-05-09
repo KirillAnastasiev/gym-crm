@@ -14,7 +14,7 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @GetMapping("/login")
+    @GetMapping(path = "/login", consumes = "application/json", produces = "application/json")
     ResponseEntity<String> login(@RequestBody CredentialsDto credentialsDto) {
         var username = credentialsDto.username();
         var password = credentialsDto.password();
@@ -22,7 +22,7 @@ public class AuthenticationController {
         return ResponseEntity.ok("Logged in successfully");
     }
 
-    @PutMapping("/change-password")
+    @PutMapping(path = "/change-password", consumes = "application/json", produces = "application/json")
     ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequestDto requestDto) {
         var username = requestDto.username();
         var oldPassword = requestDto.oldPassword();

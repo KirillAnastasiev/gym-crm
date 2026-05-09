@@ -6,6 +6,6 @@ import java.util.Optional;
 
 public interface UserDao<T extends User> extends EntityDao<T> {
     Optional<T> findByUsername(String username);
-    void changeStatus(String username, boolean isActive);
+    void changeStatusByUsername(String username, boolean isActive);
     void deleteByUsername(String username);
 }

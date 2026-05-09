@@ -39,12 +39,6 @@ public abstract class AbstractEntityService<T extends BaseEntity> implements Ent
     }
 
     @Logging(Level.INFO)
-    @Override
-    public void delete(T entity) {
-        dao.delete(entity);
-    }
-
-    @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
     public Optional<T> selectById(Long id, Class<T> entityClass) {

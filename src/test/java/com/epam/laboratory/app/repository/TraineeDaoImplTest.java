@@ -18,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collection;
 import java.util.Collections;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -81,10 +80,10 @@ class TraineeDaoImplTest {
         TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
 
         given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
-        given(mockCriteriaBuilder.createQuery(eq(Trainee.class))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaBuilder.createQuery(Trainee.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainee.class)).willReturn(mockRoot);
         given(em.createQuery(any(CriteriaQuery.class))).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainee));
 
         // when
@@ -99,9 +98,9 @@ class TraineeDaoImplTest {
 
         verify(em, times(1)).getCriteriaBuilder();
         verify(em, times(1)).createQuery(any(CriteriaQuery.class));
-        verify(mockCriteriaBuilder, times(1)).createQuery(eq(Trainee.class));
+        verify(mockCriteriaBuilder, times(1)).createQuery(Trainee.class);
         verify(mockCriteriaQuery, times(1)).from(Trainee.class);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
@@ -115,10 +114,10 @@ class TraineeDaoImplTest {
         TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
 
         given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
-        given(mockCriteriaBuilder.createQuery(eq(Trainee.class))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaBuilder.createQuery(Trainee.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainee.class)).willReturn(mockRoot);
         given(em.createQuery(any(CriteriaQuery.class))).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
 
         // when
@@ -131,9 +130,9 @@ class TraineeDaoImplTest {
 
         verify(em, times(1)).getCriteriaBuilder();
         verify(em, times(1)).createQuery(any(CriteriaQuery.class));
-        verify(mockCriteriaBuilder, times(1)).createQuery(eq(Trainee.class));
+        verify(mockCriteriaBuilder, times(1)).createQuery(Trainee.class);
         verify(mockCriteriaQuery, times(1)).from(Trainee.class);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
@@ -240,7 +239,7 @@ class TraineeDaoImplTest {
 
     @Test
     @DisplayName("Test of the method changeStatus - should execute update query to change status of trainee with given ID")
-    void testChangeStatus() {
+    void testChangeStatusByUsername() {
         // given
         var username = "FirstName.LastName";
         var newStatus = false;
@@ -253,7 +252,7 @@ class TraineeDaoImplTest {
         given(mockTypedQuery.executeUpdate()).willReturn(1);
 
         // when
-        traineeDao.changeStatus(username, newStatus);
+        traineeDao.changeStatusByUsername(username, newStatus);
 
         // then
         verify(em, times(1)).createQuery(anyString());
@@ -261,52 +260,6 @@ class TraineeDaoImplTest {
         verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
         verify(mockTypedQuery, times(1)).executeUpdate();
         verifyNoMoreInteractions(em, mockTypedQuery);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should remove trainee when trainee with given ID exists")
-    void testDelete_positive() {
-        // given
-        var trainee = getTestTrainee();
-
-        given(em.find(eq(Trainee.class), anyLong())).willReturn(trainee);
-        doNothing().when(em).remove(any(Trainee.class));
-        doNothing().when(em).flush();
-
-        // when
-        traineeDao.delete(trainee);
-
-        // then
-        verify(em, times(1)).find(eq(Trainee.class), anyLong());
-        verify(em, times(1)).remove(any(Trainee.class));
-        verify(em, times(1)).flush();
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainee is null")
-    void testDelete_negative_nullTrainee() {
-        // when & then
-        assertThatThrownBy(() -> traineeDao.delete(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainee does not have ID")
-    void testDelete_negative_traineeWithoutId() {
-        // given
-        var trainee = getTestTrainee();
-        trainee.setId(null);
-
-        // when & then
-        assertThatThrownBy(() -> traineeDao.delete(trainee))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
     }
 
     @Test

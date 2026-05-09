@@ -1,8 +1,8 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingType;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -84,7 +84,7 @@ class TrainingTypeDaoImplTest {
         given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
         given(mockCriteriaBuilder.createQuery(TrainingType.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(TrainingType.class)).willReturn(mockRoot);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainingType));
 
@@ -100,7 +100,7 @@ class TrainingTypeDaoImplTest {
         verify(em, times(1)).getCriteriaBuilder();
         verify(mockCriteriaBuilder, times(1)).createQuery(TrainingType.class);
         verify(mockCriteriaQuery, times(1)).from(TrainingType.class);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(em, times(1)).createQuery(mockCriteriaQuery);
         verify(mockTypedQuery, times(1)).getResultList();
     }
@@ -117,7 +117,7 @@ class TrainingTypeDaoImplTest {
         given(em.getCriteriaBuilder()).willReturn(mockCriteriaBuilder);
         given(mockCriteriaBuilder.createQuery(TrainingType.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(TrainingType.class)).willReturn(mockRoot);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
 
@@ -133,9 +133,103 @@ class TrainingTypeDaoImplTest {
         verify(em, times(1)).getCriteriaBuilder();
         verify(mockCriteriaBuilder, times(1)).createQuery(TrainingType.class);
         verify(mockCriteriaQuery, times(1)).from(TrainingType.class);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(em, times(1)).createQuery(mockCriteriaQuery);
         verify(mockTypedQuery, times(1)).getResultList();
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return collection with TrainingType when entities exist")
+    void testFindAll_positive() {
+        // given
+        var trainingType = getTestTrainingType();
+
+        TypedQuery<TrainingType> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(TrainingType.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainingType));
+
+        // when
+        var actualResult = dao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isNotEmpty();
+        assertThat(actualResult).contains(trainingType);
+
+        verify(em, times(1)).createQuery(anyString(), eq(TrainingType.class));
+        verify(mockTypedQuery, times(1)).getResultList();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method findAll - should return empty collection when no entities exist")
+    void testFindAll_negative() {
+        // given
+        TypedQuery<TrainingType> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(TrainingType.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
+
+        // when
+        var actualResult = dao.findAll();
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isEmpty();
+
+        verify(em, times(1)).createQuery(anyString(), eq(TrainingType.class));
+        verify(mockTypedQuery, times(1)).getResultList();
+        verifyNoMoreInteractions(em, mockTypedQuery);
+    }
+
+    @Test
+    @DisplayName("Test of the method findByTrainingTypeName - should return Optional with TrainingType when entity exists")
+    void testFindByTrainingTypeName_positive() {
+        // given
+        var trainingType = getTestTrainingType();
+
+        TypedQuery<TrainingType> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(TrainingType.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willReturn(trainingType);
+
+        // when
+        var actualResult = dao.findByTrainingTypeName("Test Training Type");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult).contains(trainingType);
+
+        verify(em, times(1)).createQuery(anyString(), eq(TrainingType.class));
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
+    }
+
+    @Test
+    @DisplayName("Test of the method findByTrainingTypeName - should return empty Optional when entity does not exist")
+    void testFindByTrainingTypeName_negative_notExistingTrainingType() {
+        // given
+        TypedQuery<TrainingType> mockTypedQuery = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString(), eq(TrainingType.class))).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.getSingleResult()).willThrow(new NoResultException());
+
+        // when
+        var actualResult = dao.findByTrainingTypeName("Nonexistent Training Type");
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(em, times(1)).createQuery(anyString(), eq(TrainingType.class));
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery, times(1)).getSingleResult();
     }
 
     @Test
@@ -160,20 +254,6 @@ class TrainingTypeDaoImplTest {
 
         // when & then
         assertThatThrownBy(() -> dao.update(trainingType))
-                .isInstanceOf(UnsupportedOperationException.class)
-                .hasMessage("Not supported operation.");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw UnsupportedOperationException when trying to delete a TrainingType")
-    void testDelete_negative_notSupportedOperation() {
-        // given
-        var trainingType = getTestTrainingType();
-
-        // when & then
-        assertThatThrownBy(() -> dao.delete(trainingType))
                 .isInstanceOf(UnsupportedOperationException.class)
                 .hasMessage("Not supported operation.");
 

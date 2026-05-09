@@ -64,16 +64,4 @@ public abstract class AbstractEntityDao<T extends BaseEntity> implements EntityD
         return em.merge(entity);
     }
 
-    @Logging(Level.INFO)
-    @Override
-    public void  delete(T entity) {
-        if (entity == null || entity.getId() == null) {
-            throw new IllegalArgumentException("Entity must not be null and must have an ID");
-        }
-        var managedEntity = em.find(entity.getClass(), entity.getId());
-        if (managedEntity != null) {
-            em.remove(managedEntity);
-            em.flush();
-        }
-    }
 }
