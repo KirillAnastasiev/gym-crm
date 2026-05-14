@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainee;
 import jakarta.persistence.NoResultException;
 import lombok.RequiredArgsConstructor;
@@ -35,16 +35,16 @@ public class TraineeDaoImpl extends AbstractEntityDao<Trainee> implements Traine
 
     @Logging(INFO)
     @Override
-    public Trainee update(Trainee entity) {
+    public Trainee updateByUsername(String username, Trainee entity) {
         var query = em.createQuery(UPDATE_BY_USERNAME_QUERY);
         query.setParameter("firstName", entity.getFirstName());
         query.setParameter("lastName", entity.getLastName());
         query.setParameter("dateOfBirth", entity.getDateOfBirth());
         query.setParameter("address", entity.getAddress());
         query.setParameter("isActive", entity.getActive());
-        query.setParameter("username", entity.getUsername());
+        query.setParameter("username", username);
         query.executeUpdate();
-        return findByUsername(entity.getUsername()).get();
+        return findByUsername(username).get();
     }
 
     @Logging(INFO)

@@ -1,13 +1,14 @@
 package com.epam.laboratory.app.dto;
 
+import com.epam.laboratory.app.dto.annotation.Required;
+import com.epam.laboratory.app.dto.annotation.Sensitive;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({"username", "oldPassword", "newPassword"})
+@JsonPropertyOrder({"oldPassword", "newPassword"})
 public record ChangePasswordRequestDto(
-        @JsonProperty(value = "username", required = true) String username,
-        @JsonProperty(value = "oldPassword", required = true) String oldPassword,
-        @JsonProperty(value = "newPassword", required = true) String newPassword
+        @Required @JsonProperty("oldPassword") @Sensitive String oldPassword,
+        @Required @JsonProperty("newPassword") @Sensitive String newPassword
 ) {}

@@ -134,6 +134,49 @@ class TraineeServiceImplTest {
     }
 
     @Test
+    @DisplayName("Test of the method updateByUsername - should update trainee by username and return updated trainee")
+    void testUpdateByUsername_positive() {
+        // given
+        var trainee = createTestTrainee();
+        var username = "FirstName.LastName";
+        trainee.setFirstName("UpdatedFirstName");
+        trainee.setUsername(username);
+        trainee.addTrainers(Collections.emptyList());
+
+        given(traineeDao.updateByUsername(eq(username), any(Trainee.class))).willReturn(trainee);
+
+        // when
+        var actualResult = traineeService.updateByUsername(username, trainee);
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+        assertThat(actualResult.getUsername()).isEqualTo(username);
+        assertThat(actualResult.getTrainers()).isNotNull();
+        assertThat(actualResult.getTrainers()).isInstanceOf(Collection.class);
+        assertThat(actualResult.getTrainers()).isEmpty();
+
+        verify(traineeDao, times(1)).updateByUsername(anyString(), any(Trainee.class));
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "NULL, Trainee username must not be null",
+        "'', Trainee username must not be blank",
+        "'   ', Trainee username must not be blank"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method updateByUsername - should throw exception if input is invalid")
+    void testUpdateByUsername_negative_invalidInput(String username, String expectedMessage) {
+        // when & then
+        assertThatThrownBy(() -> traineeService.updateByUsername(username, createTestTrainee()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
+
+        verifyNoInteractions(traineeDao);
+    }
+
+    @Test
     @DisplayName("Test of the method selectById - should return trainee by id")
     void testSelectById_positive() {
         // given

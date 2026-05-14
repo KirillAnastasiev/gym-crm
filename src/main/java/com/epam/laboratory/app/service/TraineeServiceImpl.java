@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
@@ -21,17 +21,27 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
 
     private final TrainerService trainerService;
 
-    public TraineeServiceImpl(@Autowired TraineeDao traineeDao,
-                              @Autowired AuthenticationService authenticationService,
-                              @Autowired @Lazy TrainerService trainerService) {
+    @Autowired
+    public TraineeServiceImpl(TraineeDao traineeDao,
+                              AuthenticationService authenticationService,
+                              @Lazy TrainerService trainerService) {
         super(traineeDao, authenticationService);
         this.trainerService = trainerService;
     }
 
     @Logging(INFO)
     @Override
-    public Trainee update(Trainee entity) {
-        var updatedTrainee = super.update(entity);
+    public Trainee updateByUsername(String username, Trainee entity) {
+        if (username == null) {
+            throw new IllegalArgumentException("Trainee username must not be null");
+        }
+        if (username.isBlank()) {
+            throw new IllegalArgumentException("Trainee username must not be blank");
+        }
+        if (entity == null) {
+            throw new IllegalArgumentException("Trainee must not be null");
+        }
+        var updatedTrainee = ((TraineeDao) dao).updateByUsername(username, entity);
         updatedTrainee.getTrainers();
         return updatedTrainee;
     }

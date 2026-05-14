@@ -2,6 +2,7 @@ package com.epam.laboratory.app.dto.mapper;
 
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.dto.TraineeDto;
+import com.epam.laboratory.app.dto.UserDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -28,4 +29,7 @@ public interface TraineeMapper {
     @Mapping(source = "active", target = "active")
     @Mapping(source = "trainers", target = "trainers")
     Trainee toEntity(TraineeDto traineeDto);
+
+    @Mapping(source = "username", target = "username")
+    Trainee toEntity(UserDto userDto);
 }

@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.dto;
 
+import com.epam.laboratory.app.dto.annotation.Required;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;

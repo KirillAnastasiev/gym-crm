@@ -207,10 +207,11 @@ class TrainerDaoImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method update - should update trainer and return updated trainer when trainer with given username exists")
-    void testUpdate() {
+    @DisplayName("Test of the method updateByUsername - should update trainer and return updated trainer when trainer with given username exists")
+    void testUpdateByUsername() {
         // given
         var trainer = getTestTrainer();
+        var username = trainer.getUsername();
 
         TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
         TypedQuery<Trainer> mockTypedQuery2 = mock(TypedQuery.class);
@@ -223,7 +224,7 @@ class TrainerDaoImplTest {
         given(mockTypedQuery2.getSingleResult()).willReturn(trainer);
 
         // when
-        var actualResult = trainerDao.update(trainer);
+        var actualResult = trainerDao.updateByUsername(username, trainer);
 
         // then
         AssertionsForClassTypes.assertThat(actualResult).isNotNull();

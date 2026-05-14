@@ -210,6 +210,7 @@ class TraineeDaoImplTest {
     void testUpdate() {
         // given
         var trainee = getTestTrainee();
+        var username = trainee.getUsername();
 
         TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
         TypedQuery<Trainee> mockTypedQuery2 = mock(TypedQuery.class);
@@ -222,7 +223,7 @@ class TraineeDaoImplTest {
         given(mockTypedQuery2.getSingleResult()).willReturn(trainee);
 
         // when
-        var actualResult = traineeDao.update(trainee);
+        var actualResult = traineeDao.updateByUsername(username, trainee);
 
         // then
         assertThat(actualResult).isNotNull();

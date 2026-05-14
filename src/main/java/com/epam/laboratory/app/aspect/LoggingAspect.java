@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.aspect;
 
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -28,51 +29,61 @@ public class LoggingAspect {
     @Pointcut("execution(* *.*(..)) && !execution(void *.*(..))")
     public void executeNotVoidMethod() {}
 
-    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithArgs()",
-            argNames = "joinPoint, logging")
+    @Before(
+            value = "executeLoggingAdvice(logging) && executeMethodWithArgs()",
+            argNames = "joinPoint, logging"
+    )
     public void logMethodEntryWithArguments(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        Object[] args = joinPoint.getArgs();
-        String logMessage = String.format("Entering method: %s.%s with arguments: %s", className, methodName, Arrays.toString(args));
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var args = joinPoint.getArgs();
+        var logMessage = "Entering method: %s.%s with arguments: %s".formatted(className, methodName, Arrays.toString(args));
         logByLevel(logging.value(), logMessage);
     }
 
-    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithoutArgs()",
-            argNames = "joinPoint, logging")
+    @Before(
+            value = "executeLoggingAdvice(logging) && executeMethodWithoutArgs()",
+            argNames = "joinPoint, logging"
+    )
     public void logMethodEntryWithoutArguments(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Entering method: %s.%s", className, methodName);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Entering method: %s.%s".formatted(className, methodName);
         logByLevel(logging.value(), logMessage);
     }
 
-    @AfterReturning(pointcut = "executeLoggingAdvice(logging) && executeNotVoidMethod()",
-                    argNames = "joinPoint, logging, result",
-                    returning = "result")
+    @AfterReturning(
+            pointcut = "executeLoggingAdvice(logging) && executeNotVoidMethod()",
+            argNames = "joinPoint, logging, result",
+            returning = "result"
+    )
     public void logMethodExitWithResult(JoinPoint joinPoint, Logging logging, Object result) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Exiting method: %s.%s with result: %s", className, methodName, result);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Exiting method: %s.%s with result: %s".formatted(className, methodName, result);
         logByLevel(logging.value(), logMessage);
     }
 
-    @AfterReturning(value = "executeLoggingAdvice(logging) && executeVoidMethod()",
-                    argNames = "joinPoint, logging")
+    @AfterReturning(
+            value = "executeLoggingAdvice(logging) && executeVoidMethod()",
+            argNames = "joinPoint, logging"
+    )
     public void logVoidMethodExit(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Exiting method: %s.%s", className, methodName);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Exiting method: %s.%s".formatted(className, methodName);
         logByLevel(logging.value(), logMessage);
     }
 
-    @AfterThrowing(value = "executeLoggingAdvice(logging)",
-                   argNames = "joinPoint, logging, exception",
-                   throwing = "exception")
+    @AfterThrowing(
+            value = "executeLoggingAdvice(logging)",
+            argNames = "joinPoint, logging, exception",
+            throwing = "exception"
+    )
     public void logMethodException(JoinPoint joinPoint, Logging logging, Throwable exception) {
-        String methodName = getMethodName(joinPoint);
-        String className = getClassName(joinPoint);
-        String logMessage = String.format("Exception in method: %s.%s with message: %s", className, methodName, exception.getMessage());
+        var methodName = getMethodName(joinPoint);
+        var className = getClassName(joinPoint);
+        var logMessage = "Exception in method: %s.%s with message: %s".formatted(className, methodName, exception.getMessage());
         log.error(logMessage, exception);
     }
 

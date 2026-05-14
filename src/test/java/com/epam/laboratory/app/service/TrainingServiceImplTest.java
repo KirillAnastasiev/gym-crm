@@ -48,11 +48,9 @@ class TrainingServiceImplTest {
         var training = createTestTraining();
         var trainee = training.getTrainee();
         var trainer = training.getTrainer();
-        var trainingType = training.getTrainingType();
 
         given(traineeService.selectByUsername(anyString())).willReturn(trainee);
         given(trainerService.selectByUsername(anyString())).willReturn(trainer);
-        given(trainingTypeService.selectByTrainingTypeName(anyString())).willReturn(trainingType);
         given(trainingDao.save(any(Training.class))).willReturn(training);
 
         // when
@@ -64,7 +62,6 @@ class TrainingServiceImplTest {
 
         verify(traineeService, times(1)).selectByUsername(anyString());
         verify(trainerService, times(1)).selectByUsername(anyString());
-        verify(trainingTypeService, times(1)).selectByTrainingTypeName(anyString());
         verify(trainingDao, times(1)).save(any(Training.class));
         verifyNoMoreInteractions(traineeService, trainerService, trainingTypeService, trainingDao);
     }

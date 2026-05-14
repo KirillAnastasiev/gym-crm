@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainer;
 import jakarta.persistence.NoResultException;
 import org.springframework.stereotype.Repository;
@@ -33,15 +33,15 @@ public class TrainerDaoImpl extends AbstractEntityDao<Trainer> implements Traine
 
     @Logging(INFO)
     @Override
-    public Trainer update(Trainer entity) {
+    public Trainer updateByUsername(String username, Trainer entity) {
         var query = em.createQuery(UPDATE_BY_USERNAME_QUERY);
         query.setParameter("firstName", entity.getFirstName());
         query.setParameter("lastName", entity.getLastName());
         query.setParameter("specialization", entity.getSpecialization());
         query.setParameter("isActive", entity.getActive());
-        query.setParameter("username", entity.getUsername());
+        query.setParameter("username", username);
         query.executeUpdate();
-        return findByUsername(entity.getUsername()).get();
+        return findByUsername(username).get();
     }
 
     @Logging(INFO)

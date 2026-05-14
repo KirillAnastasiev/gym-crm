@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.BaseEntity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

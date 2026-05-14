@@ -59,9 +59,6 @@ public class PersistenceConfig {
     @Value("${persistence.database-platform}")
     private String database;
 
-    @Value("${persistence.sql-dialect}")
-    private String sqlDialect;
-
     @Bean
     public DataSource dataSource() {
         HikariConfig hc = new HikariConfig();
@@ -103,7 +100,6 @@ public class PersistenceConfig {
         emf.setJpaDialect(new HibernateJpaDialect());
 
         Properties jpaProperties = new Properties();
-        jpaProperties.put("hibernate.dialect", sqlDialect);
         jpaProperties.put("hibernate.show_sql", showSql);
         jpaProperties.put("hibernate.format_sql", formatSql);
         jpaProperties.put("hibernate.connection.characterEncoding", "UTF-8");

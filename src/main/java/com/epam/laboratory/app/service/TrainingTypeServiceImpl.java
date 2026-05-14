@@ -12,7 +12,8 @@ import java.util.Collection;
 @Transactional(rollbackFor = Exception.class)
 public class TrainingTypeServiceImpl extends AbstractEntityService<TrainingType> implements TrainingTypeService {
 
-    public TrainingTypeServiceImpl(@Autowired TrainingTypeDao dao) {
+    @Autowired
+    public TrainingTypeServiceImpl(TrainingTypeDao dao) {
         super(dao);
     }
 

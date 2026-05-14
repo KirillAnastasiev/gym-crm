@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.BaseEntity;
 import com.epam.laboratory.app.repository.EntityDao;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -8,6 +8,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,7 @@ import java.util.function.BiFunction;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public abstract class AbstractEntityService<T extends BaseEntity> implements EntityService<T> {
 
     protected final EntityDao<T> dao;

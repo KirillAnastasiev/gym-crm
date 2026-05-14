@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 
 public interface TrainerService extends UserService<Trainer> {
     Collection<Trainee> updateTrainees(String trainerUsername, Collection<Trainee> trainees);
+    Trainer updateByUsername(String username, Trainer trainer);
 
     static BiFunction<CriteriaBuilder, Root<Trainer>, Predicate> byUsernames(String... usernames) {
         return (cb, root) -> cb.and(root.get("username").in(List.of(usernames)));

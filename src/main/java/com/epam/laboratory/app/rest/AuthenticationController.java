@@ -1,30 +1,60 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
+import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
 import com.epam.laboratory.app.dto.ChangePasswordRequestDto;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
 
-    @GetMapping(path = "/login", consumes = "application/json", produces = "application/json")
-    ResponseEntity<String> login(@RequestBody CredentialsDto credentialsDto) {
+    @GetMapping(
+            path = "/login",
+            consumes = "application/json",
+            produces = "application/json"
+    )
+    @ValidateArguments
+    @RestCallLogging
+    ResponseEntity<Map<String, String>> login(@RequestBody CredentialsDto credentialsDto) {
         var username = credentialsDto.username();
         var password = credentialsDto.password();
         authenticationService.validateUser(username, password);
-        return ResponseEntity.ok("Logged in successfully");
+        var tokens = authenticationService.getUserTokens(username);
+        return ResponseEntity.ok(tokens);
     }
 
-    @PutMapping(path = "/change-password", consumes = "application/json", produces = "application/json")
-    ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequestDto requestDto) {
-        var username = requestDto.username();
+    @GetMapping(
+            path = "/refresh-token",
+            consumes = "application/json",
+            produces = "application/json"
+    )
+    @ValidateArguments
+    @RestCallLogging
+    ResponseEntity<Map<String, String>> refreshAccessToken(@RequestBody String refreshToken) {
+        var newAccessToken = authenticationService.refreshAccessToken(refreshToken);
+        return ResponseEntity.ok(newAccessToken);
+    }
+
+    @PutMapping(
+            path = "/{username}/change-password",
+            consumes = "application/json",
+            produces = "application/json"
+    )
+    @ValidateArguments
+    @RestCallLogging
+    ResponseEntity<String> changePassword(@PathVariable String username,
+                                          @RequestBody ChangePasswordRequestDto requestDto) {
         var oldPassword = requestDto.oldPassword();
         var newPassword = requestDto.newPassword();
         authenticationService.changePassword(username, oldPassword, newPassword);

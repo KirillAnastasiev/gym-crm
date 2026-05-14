@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingFilter;
 import com.epam.laboratory.app.repository.TrainingDao;
@@ -27,16 +27,14 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
 
     private final TraineeService traineeService;
     private final TrainerService trainerService;
-    private final TrainingTypeService trainingTypeService;
 
-    public TrainingServiceImpl(@Autowired TrainingDao trainingDao,
-                               @Autowired TraineeService traineeService,
-                               @Autowired TrainerService trainerService,
-                               @Autowired TrainingTypeService trainingTypeService) {
+    @Autowired
+    public TrainingServiceImpl(TrainingDao trainingDao,
+                               TraineeService traineeService,
+                               TrainerService trainerService) {
         super(trainingDao);
         this.traineeService = traineeService;
         this.trainerService = trainerService;
-        this.trainingTypeService = trainingTypeService;
     }
 
     @Override
@@ -49,15 +47,12 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
     public Training registerNew(Training entity) {
         var traineeUsername = entity.getTrainee().getUsername();
         var trainerUsername = entity.getTrainer().getUsername();
-        var trainingTypeName = entity.getTrainingType().getTrainingTypeName();
 
         var trainee = traineeService.selectByUsername(traineeUsername);
         var trainer = trainerService.selectByUsername(trainerUsername);
-        var trainingType = trainingTypeService.selectByTrainingTypeName(trainingTypeName);
 
         entity.setTrainee(trainee);
         entity.setTrainer(trainer);
-        entity.setTrainingType(trainingType);
 
         return dao.save(entity);
     }

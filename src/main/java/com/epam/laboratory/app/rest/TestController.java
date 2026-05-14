@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.rest;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
@@ -8,7 +8,7 @@ import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.dto.TrainingDto;
 import com.epam.laboratory.app.dto.mapper.TrainingMapper;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.event.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,12 +18,11 @@ import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/")
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class TestController {
 
     private final TrainingMapper mapper;
 
-    @Logging(Level.INFO)
     @GetMapping
     public TrainingDto getTestTraining() {
         TrainingType trainingType = new TrainingType();

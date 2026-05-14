@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.aspect;
 
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
