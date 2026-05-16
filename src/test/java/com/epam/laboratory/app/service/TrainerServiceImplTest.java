@@ -27,6 +27,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainerServiceImpl test suite")
 class TrainerServiceImplTest {
     @Mock
     private TrainerDao trainerDao;
@@ -39,6 +40,9 @@ class TrainerServiceImplTest {
 
     @InjectMocks
     private TrainerServiceImpl trainerService;
+
+
+    // ==================== REGISTER NEW TESTS ====================
 
     @Test
     @DisplayName("Test of the method registerNew - should create trainer with generated password")
@@ -100,6 +104,9 @@ class TrainerServiceImplTest {
         }
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
     @DisplayName("Test of the method update - should update trainer with unique username and return updated trainer")
     void testUpdate_positive() {
@@ -119,6 +126,20 @@ class TrainerServiceImplTest {
         verify(trainerDao, times(1)).update(any(Trainer.class));
         verifyNoMoreInteractions(trainerDao);
     }
+
+    @Test
+    @DisplayName("Test of the method update - should throw exception if input is null")
+    void testUpdate_negative_nullTrainer() {
+        // when & then
+        assertThatThrownBy(() -> trainerService.update(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Entity must not be null");
+
+        verifyNoInteractions(trainerDao);
+    }
+
+
+    // ==================== UPDATE BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method updateByUsername - should update trainer with unique username and return updated trainer")
@@ -163,16 +184,8 @@ class TrainerServiceImplTest {
         verifyNoInteractions(trainerDao);
     }
 
-    @Test
-    @DisplayName("Test of the method update - should throw exception if input is null")
-    void testUpdate_negative_nullTrainer() {
-        // when & then
-        assertThatThrownBy(() -> trainerService.update(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Entity must not be null");
 
-        verifyNoInteractions(trainerDao);
-    }
+    // ==================== SELECT BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectById - should return trainer if it exists")
@@ -210,6 +223,9 @@ class TrainerServiceImplTest {
         verify(trainerDao, times(1)).findById(anyLong(), any());
         verifyNoMoreInteractions(trainerDao);
     }
+
+
+    // ==================== SELECT BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByCondition - should return collection of trainers that satisfy condition")
@@ -251,6 +267,9 @@ class TrainerServiceImplTest {
         verify(trainerDao, times(1)).findByCondition(any(), any());
         verifyNoMoreInteractions(trainerDao);
     }
+
+
+    // ==================== SELECT BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByUsername - should return trainer if it exists")
@@ -303,6 +322,8 @@ class TrainerServiceImplTest {
     }
 
 
+    // ==================== DELETE BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method deleteByUsername - should delete trainer by username")
     void testDeleteByUsername_positive() {
@@ -353,6 +374,9 @@ class TrainerServiceImplTest {
 
         verifyNoInteractions(trainerDao);
     }
+
+
+    // ==================== CHANGE STATUS TESTS ====================
 
     @Test
     @DisplayName("Test of the method changeStatus - should change status of trainer")
@@ -410,6 +434,9 @@ class TrainerServiceImplTest {
         verifyNoMoreInteractions(authenticationService);
         verifyNoInteractions(trainerDao);
     }
+
+
+    // ==================== UPDATE TRAINERS TESTS ====================
 
     @Test
     @DisplayName("Test of the method updateTrainees - should update trainer's trainees and return updated collection of trainees")
@@ -498,7 +525,7 @@ class TrainerServiceImplTest {
         verifyNoMoreInteractions(trainerDao, traineeService);
     }
 
-    private Trainer createTestTrainer() {
+    private static Trainer createTestTrainer() {
         var trainer = new Trainer();
         trainer.setId(1L);
         trainer.setFirstName("FirstName");
@@ -508,4 +535,5 @@ class TrainerServiceImplTest {
 
         return trainer;
     }
+
 }

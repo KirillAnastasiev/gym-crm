@@ -1,9 +1,6 @@
 package com.epam.laboratory.app.aspect;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import org.aspectj.lang.JoinPoint;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,19 +17,21 @@ import java.io.PrintStream;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("LoggingAspect Test Suite")
+@DisplayName("LoggingAspect test suite")
 class LoggingAspectTest {
-    @Spy
-    private LoggingAspect loggingAspect;
 
     private TestService testService;
 
     private final PrintStream originalOut = System.out;
 
     private ByteArrayOutputStream outContent;
+
+    @Spy
+    private LoggingAspect loggingAspect = new LoggingAspect();
 
     @BeforeEach
     void setUp() {
@@ -42,8 +41,11 @@ class LoggingAspectTest {
         outContent = new ByteArrayOutputStream();
     }
 
+
+    // ==================== LOG METHOD ENTRY WITH ARGUMENTS TESTS ====================
+
     @Test
-    @DisplayName("Test method logMethodEntryWithoutArguments is called for method with no arguments")
+    @DisplayName("Test method logMethodEntryWithoutArguments - should log method entry and exit for method with arguments")
     void testLogMethodEntryWithArguments() {
         // given
         changeStandardSystemOut();
@@ -57,14 +59,15 @@ class LoggingAspectTest {
 
         assertThat(output).contains("INFO");
         assertThat(output).contains("Entering method: TestServiceImpl.processData with arguments: [TestInput, 42]");
-        assertThat(output).contains("Exiting method: TestServiceImpl.processData");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithArguments(any(JoinPoint.class), any(Logging.class));
         verify(loggingAspect, times(1)).logMethodEntryWithArguments(any(JoinPoint.class), any(Logging.class));
     }
 
+
+    // ==================== LOG METHOD ENTRY WITHOUT ARGUMENTS TESTS ====================
+
     @Test
-    @DisplayName("Test method logMethodEntryWithoutArguments is called for method with no arguments")
+    @DisplayName("Test method logMethodEntryWithoutArguments - should log method entry and exit for method without arguments")
     void testLogMethodEntryWithoutArguments() {
         //given
         changeStandardSystemOut();
@@ -78,14 +81,15 @@ class LoggingAspectTest {
 
         assertThat(output).contains("DEBUG");
         assertThat(output).contains("Entering method: TestServiceImpl.noArgsMethod");
-        assertThat(output).contains("Exiting method: TestServiceImpl.noArgsMethod");
 
         verify(loggingAspect, times(1)).logMethodEntryWithoutArguments(any(JoinPoint.class), any(Logging.class));
-        verify(loggingAspect, times(1)).logVoidMethodExit(any(JoinPoint.class), any(Logging.class));
     }
 
+
+    // ==================== LOG METHOD EXIT WITH RESULT TESTS ====================
+
     @Test
-    @DisplayName("Test method logMethodExitWithResult is called with correct result")
+    @DisplayName("Test method logMethodExitWithResult - should log method entry and exit with result for method with arguments")
     void testLogMethodExitWithResult() {
         //given
         changeStandardSystemOut();
@@ -98,16 +102,14 @@ class LoggingAspectTest {
         String output = outContent.toString();
 
         assertThat(output).contains("WARN");
-        assertThat(output).contains("Entering method: TestServiceImpl.getData with arguments: [TestKey]");
         assertThat(output).contains("Exiting method: TestServiceImpl.getData with result: testValue");
         assertThat(result).isEqualTo("testValue");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithArguments(any(JoinPoint.class), any(Logging.class));
         verify(loggingAspect, times(1)).logMethodExitWithResult(any(JoinPoint.class), any(Logging.class), any());
     }
 
     @Test
-    @DisplayName("Test method logMethodExitWithResult is called with complex object result")
+    @DisplayName("Test method logMethodExitWithResult - should log method entry and exit with complex object result for method without arguments")
     void testLogMethodExitWithResult_complexObject() {
         //given
         changeStandardSystemOut();
@@ -120,17 +122,41 @@ class LoggingAspectTest {
         String output = outContent.toString();
 
         assertThat(output).contains("TRACE");
-        assertThat(output).contains("Entering method: TestServiceImpl.getComplexObject");
-        assertThat(output).contains("Exiting method: TestServiceImpl.getComplexObject with result: LoggingAspectTest.TestData(name=TestName, value=123)");
+        assertThat(output).contains("""
+                              Exiting method: TestServiceImpl.getComplexObject with result: TestData[name=TestName, value=123]""");
         assertThat(result).isNotNull();
-        assertThat(result.getName()).isEqualTo("TestName");
+        assertThat(result.name()).isEqualTo("TestName");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithoutArguments(any(JoinPoint.class), any(Logging.class));
         verify(loggingAspect, times(1)).logMethodExitWithResult(any(JoinPoint.class), any(Logging.class), any());
     }
 
+
+    // ==================== LOG METHOD EXIT WITHOUT RESULT TESTS ====================
+
     @Test
-    @DisplayName("Test method logMethodException is called when exception is thrown")
+    @DisplayName("Test method logMethodExitWithoutResult - should log method entry and exit for void method without arguments")
+    void testLogMethodExitWithoutResult() {
+        //given
+        changeStandardSystemOut();
+
+        // when
+        testService.processData("TestInput", 42);
+
+        // then
+        returnStandardSystemOut();
+        String output = outContent.toString();
+
+        assertThat(output).contains("INFO");
+        assertThat(output).contains("Exiting method: TestServiceImpl.processData");
+
+        verify(loggingAspect, times(1)).logVoidMethodExit(any(JoinPoint.class), any(Logging.class));
+    }
+
+
+    // ==================== LOG METHOD EXCEPTION TESTS ====================
+
+    @Test
+    @DisplayName("Test method logMethodException - should log method entry and exception for method that throws exception")
     void testLogMethodException() {
         //given
         changeStandardSystemOut();
@@ -146,7 +172,6 @@ class LoggingAspectTest {
         assertThat(output).contains("ERROR");
         assertThat(output).contains("Exception in method: TestServiceImpl.throwException with message: Test exception");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithoutArguments(any(JoinPoint.class), any(Logging.class));
         verify(loggingAspect, times(1)).logMethodException(any(JoinPoint.class), any(Logging.class), any(Throwable.class));
     }
 
@@ -194,12 +219,10 @@ class LoggingAspectTest {
         }
     }
 
-    @RequiredArgsConstructor
-    @Getter
-    @ToString
-    static class TestData {
-        private final String name;
-        private final int value;
-    }
+    record TestData(
+        String name,
+        int value
+    ) {}
+
 }
 

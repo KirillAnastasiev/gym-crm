@@ -1,98 +1,119 @@
 package com.epam.laboratory.app.aspect;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
-import com.epam.laboratory.app.dto.annotation.Sensitive;
+import com.epam.laboratory.app.exception.ApplicationException;
+import com.epam.laboratory.app.util.SensitiveDataMasker;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.lang.reflect.Field;
-import java.util.Collection;
-
 @Aspect
 @Component
-@Slf4j
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class RestCallLoggingAspect {
 
     private final ObjectMapper objectMapper;
+    protected final SensitiveDataMasker sensitiveDataMasker;
 
     @Pointcut("@annotation(restCallLogging)")
     public void restCallLoggingPointcut(RestCallLogging restCallLogging) {
     }
 
-    @Around(
+    @Before(
             value = "restCallLoggingPointcut(restCallLogging)",
             argNames = "joinPoint, restCallLogging"
     )
-    public Object logRestCall(ProceedingJoinPoint joinPoint, RestCallLogging restCallLogging) throws Throwable {
+    public void logRestCallRequest(JoinPoint joinPoint, RestCallLogging restCallLogging) {
         var request = getCurrentRequest();
-
         if (request != null) {
-            logRequestInfo(request, joinPoint);
+            logRequestInfo(joinPoint, request, restCallLogging.value());
         }
-
-        Object result;
-        try {
-            result = joinPoint.proceed();
-            logResponseInfo(result);
-        } catch (Throwable t) {
-            log.error("REST call failed with exception: {}", t.getMessage());
-            throw t;
-        }
-
-        return result;
     }
 
-    private void logRequestInfo(HttpServletRequest request, ProceedingJoinPoint joinPoint) {
-        var endpoint = request.getRequestURI();
-        var httpMethod = request.getMethod();
-        var args = joinPoint.getArgs();
+    @AfterReturning(
+            value = "restCallLoggingPointcut(restCallLogging)",
+            returning = "result",
+            argNames = "joinPoint, restCallLogging, result"
+    )
+    public void logRestCallResponse(JoinPoint joinPoint, RestCallLogging restCallLogging, Object result) {
+        logResponseInfo(joinPoint, result, restCallLogging.value());
+    }
 
-        var requestInfo = new StringBuilder();
-        requestInfo.append("REST Call - Endpoint: %s, HTTP Method: %s".formatted(endpoint, httpMethod));
+    @AfterThrowing(
+            value = "restCallLoggingPointcut(restCallLogging)",
+            throwing = "exception",
+            argNames = "joinPoint, restCallLogging, exception"
+    )
+    public void logRestCallException(JoinPoint joinPoint, RestCallLogging restCallLogging, Throwable exception) {
+        var logger = getLogger(joinPoint);
+        var logMessage = "REST call resulted in exception: %s".formatted(exception.getMessage());
+        logError(logger, logMessage, exception);
+    }
 
+    private void logRequestInfo(JoinPoint joinPoint, HttpServletRequest request, Level level) {
+        var logger = getLogger(joinPoint);
+        var endpoint = getRequestURI(request);
+        var httpMethod = getRequestMethod(request);
+        var args = getRequestArgs(joinPoint);
+
+        var requestInfo = new StringBuilder("REST Call - Endpoint: %s, HTTP Method: %s".formatted(endpoint, httpMethod));
         if (args != null && args.length > 0) {
             try {
-                var argsToLog = args.length == 1 ? args[0] : args;
-                argsToLog = maskSensitiveData(argsToLog);
+                var argsToLog = sensitiveDataMasker.maskSensitiveData(args);
                 var requestBody = objectMapper.writeValueAsString(argsToLog);
                 requestInfo.append(", Request Body: %s".formatted(requestBody));
             } catch (Exception e) {
-                requestInfo.append(", Request Body: [Unable to serialize]");
+                requestInfo.append(", Request Body: [Unable to serialize] - %s".formatted(e.getMessage()));
             }
         }
-
-        log.info(requestInfo.toString());
+        logByLevel(logger, level, requestInfo.toString());
     }
 
-    private void logResponseInfo(Object result) {
+    private void logResponseInfo(JoinPoint joinPoint, Object result, Level level) {
+        var logger = getLogger(joinPoint);
         int statusCode = 200;
         Object responseBody;
 
         if (result instanceof ResponseEntity<?> responseEntity) {
-            statusCode = responseEntity.getStatusCode().value();
-            responseBody = maskSensitiveData(responseEntity.getBody());
+            statusCode = getStatusCode(responseEntity);
+            responseBody = sensitiveDataMasker.maskSensitiveData(responseEntity.getBody());
         } else {
-            responseBody = maskSensitiveData(result);
+            responseBody = sensitiveDataMasker.maskSensitiveData(result);
         }
 
         try {
             String responseBodyStr = responseBody != null ? objectMapper.writeValueAsString(responseBody) : "null";
-            log.info("REST Call Response - Status Code: {}, Response Body: {}", statusCode, responseBodyStr);
+            var logMessage = "REST Call Response - Status Code: %d, Response Body: %s".formatted(statusCode, responseBodyStr);
+            logByLevel(logger, level, logMessage);
         } catch (Exception e) {
-            log.info("REST Call Response - Status Code: {}, Response Body: [Unable to serialize]", statusCode);
+            var logMessage = "REST Call Response - Status Code: %d, Response Body: [Unable to serialize] - %s".formatted(statusCode, e.getMessage());
+            logByLevel(logger, level, logMessage);
+        }
+    }
+
+    private Logger getLogger(JoinPoint joinPoint) {
+        return LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+    }
+
+    private void logByLevel(Logger logger, Level level, String message) {
+        logger.makeLoggingEventBuilder(level).log(message);
+    }
+
+    private void logError(Logger logger, String message, Throwable exception) {
+        if (exception instanceof ApplicationException) {
+            logger.warn(message, exception);
+        } else {
+            logger.error(message, exception);
         }
     }
 
@@ -101,48 +122,20 @@ public class RestCallLoggingAspect {
         return attributes != null ? attributes.getRequest() : null;
     }
 
-    private Object maskSensitiveData(Object obj) {
-        if (obj == null) {
-            return null;
-        }
+    private static Object[] getRequestArgs(JoinPoint joinPoint) {
+        return joinPoint.getArgs();
+    }
 
-        try {
-            if (obj.getClass().isArray()) {
-                Object[] array = (Object[]) obj;
-                for (int i = 0; i < array.length; i++) {
-                    array[i] = maskSensitiveData(array[i]);
-                }
-                return array;
-            } else if (obj instanceof Collection<?> collection) {
-                return collection.stream()
-                        .map(this::maskSensitiveData)
-                        .toList();
-            } else {
-                ObjectNode jsonNode = objectMapper.valueToTree(obj);
-                Field[] fields = obj.getClass().getDeclaredFields();
+    private static String getRequestMethod(HttpServletRequest request) {
+        return request.getMethod();
+    }
 
-                for (var field : fields) {
-                    if (field.getType().isArray()
-                            || Collection.class.isAssignableFrom(field.getType())) {
-                        field.setAccessible(true);
-                        var fieldValue = field.get(obj);
-                        if (fieldValue != null) {
-                            var maskedValue = maskSensitiveData(fieldValue);
-                            jsonNode.putPOJO(field.getName(), maskedValue);
-                        }
-                        field.setAccessible(false);
-                    } else if (field.isAnnotationPresent(Sensitive.class)) {
-                        field.setAccessible(true);
-                        jsonNode.put(field.getName(), "*".repeat(field.get(obj).toString().length()));
-                        field.setAccessible(false);
-                    }
-                }
-                return jsonNode;
-            }
-        } catch (Exception e) {
-            return obj;
-        }
+    private static String getRequestURI(HttpServletRequest request) {
+        return request.getRequestURI();
+    }
+
+    private static int getStatusCode(ResponseEntity<?> responseEntity) {
+        return responseEntity.getStatusCode().value();
     }
 
 }
-

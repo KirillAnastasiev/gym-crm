@@ -25,6 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainingDaoImpl test suite")
 class TrainingDaoImplTest {
 
     @Mock
@@ -32,6 +33,9 @@ class TrainingDaoImplTest {
 
     @InjectMocks
     private  TrainingDaoImpl trainingDao;
+
+
+    // ==================== FIND BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method findById - should return training wrapped in Optional when training with given ID exists")
@@ -69,6 +73,9 @@ class TrainingDaoImplTest {
         verify(em, times(1)).find(eq(Training.class), anyLong());
         verifyNoMoreInteractions(em);
     }
+
+
+    // ==================== FIND BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByCondition - should return collection with training when training with given condition exists")
@@ -138,6 +145,9 @@ class TrainingDaoImplTest {
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
+
+    // ==================== SAVE TESTS ====================
+
     @Test
     @DisplayName("Test of the method save - should persist training and return it")
     void testSave_positive() {
@@ -158,7 +168,7 @@ class TrainingDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
-    private Training getTestTraining() {
+    private static Training getTestTraining() {
         var training = new Training();
         training.setId(1L);
         training.setTrainingName("Test Training");

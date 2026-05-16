@@ -6,6 +6,7 @@ import com.epam.laboratory.app.dto.ChangePasswordRequestDto;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +26,7 @@ public class AuthenticationController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     ResponseEntity<Map<String, String>> login(@RequestBody CredentialsDto credentialsDto) {
         var username = credentialsDto.username();
         var password = credentialsDto.password();
@@ -40,7 +41,7 @@ public class AuthenticationController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     ResponseEntity<Map<String, String>> refreshAccessToken(@RequestBody String refreshToken) {
         var newAccessToken = authenticationService.refreshAccessToken(refreshToken);
         return ResponseEntity.ok(newAccessToken);
@@ -52,7 +53,7 @@ public class AuthenticationController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     ResponseEntity<String> changePassword(@PathVariable String username,
                                           @RequestBody ChangePasswordRequestDto requestDto) {
         var oldPassword = requestDto.oldPassword();

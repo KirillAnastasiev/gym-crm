@@ -25,6 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainingTypeDaoImpl test suite")
 class TrainingTypeDaoImplTest {
 
     @Mock
@@ -32,6 +33,9 @@ class TrainingTypeDaoImplTest {
 
     @InjectMocks
     private TrainingTypeDaoImpl dao;
+
+
+    // ==================== FIND BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method findById - should return Optional with TrainingType when entity exists")
@@ -69,6 +73,9 @@ class TrainingTypeDaoImplTest {
         verify(em, times(1)).find(eq(TrainingType.class), anyLong());
         verifyNoMoreInteractions(em);
     }
+
+
+    // ==================== FIND BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByCondition - should return collection with TrainingType when entity exists")
@@ -138,6 +145,9 @@ class TrainingTypeDaoImplTest {
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
+
+    // ==================== FIND ALL TESTS ====================
+
     @Test
     @DisplayName("Test of the method findAll - should return collection with TrainingType when entities exist")
     void testFindAll_positive() {
@@ -184,6 +194,9 @@ class TrainingTypeDaoImplTest {
         verify(mockTypedQuery, times(1)).getResultList();
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
+
+
+    // ==================== FIND BY TRAINING TYPE NAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByTrainingTypeName - should return Optional with TrainingType when entity exists")
@@ -232,6 +245,9 @@ class TrainingTypeDaoImplTest {
         verify(mockTypedQuery, times(1)).getSingleResult();
     }
 
+
+    // ==================== SAVE TESTS ====================
+
     @Test
     @DisplayName("Test of the method save - should throw UnsupportedOperationException when trying to save a TrainingType")
     void testSave_negative_notSupportedOperation() {
@@ -245,6 +261,9 @@ class TrainingTypeDaoImplTest {
 
         verifyNoInteractions(em);
     }
+
+
+    // ==================== UPDATE TESTS ====================
 
     @Test
     @DisplayName("Test of the method update - should throw UnsupportedOperationException when trying to update a TrainingType")
@@ -260,7 +279,7 @@ class TrainingTypeDaoImplTest {
         verifyNoInteractions(em);
     }
 
-    private TrainingType getTestTrainingType() {
+    private static TrainingType getTestTrainingType() {
         TrainingType trainingType = new TrainingType();
         trainingType.setId(1L);
         trainingType.setTrainingTypeName("Test Training Type");

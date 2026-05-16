@@ -15,7 +15,7 @@ public interface TrainerMapper {
     @Mapping(source = "password", target = "password")
     @Mapping(source = "specialization", target = "specialization")
     @Mapping(source = "active", target = "active")
-    @Mapping(source = "trainees", target = "trainees")
+    @Mapping(source = "trainees", target = "trainees", defaultExpression = "java(new java.util.ArrayList<>())")
     TrainerDto toDto(Trainer trainer);
 
     @Mapping(source = "id", target = "id")
@@ -25,7 +25,7 @@ public interface TrainerMapper {
     @Mapping(source = "password", target = "password")
     @Mapping(source = "specialization", target = "specialization")
     @Mapping(source = "active", target = "active")
-    @Mapping(source = "trainees", target = "trainees")
+    @Mapping(source = "trainees", target = "trainees", defaultExpression = "java(new java.util.ArrayList<>())")
     Trainer toEntity(TrainerDto trainerDto);
 
     @Mapping(source = "username", target = "username")

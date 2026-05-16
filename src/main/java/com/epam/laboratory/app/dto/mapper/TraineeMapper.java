@@ -16,7 +16,7 @@ public interface TraineeMapper {
     @Mapping(source = "dateOfBirth", target = "dateOfBirth")
     @Mapping(source = "address", target = "address")
     @Mapping(source = "active", target = "active")
-    @Mapping(source = "trainers", target = "trainers")
+    @Mapping(source = "trainers", target = "trainers", defaultExpression = "java(new java.util.ArrayList<>())")
     TraineeDto toDto(Trainee trainee);
 
     @Mapping(source = "id", target = "id")
@@ -27,7 +27,7 @@ public interface TraineeMapper {
     @Mapping(source = "dateOfBirth", target = "dateOfBirth")
     @Mapping(source = "address", target = "address")
     @Mapping(source = "active", target = "active")
-    @Mapping(source = "trainers", target = "trainers")
+    @Mapping(source = "trainers", target = "trainers", defaultExpression = "java(new java.util.ArrayList<>())")
     Trainee toEntity(TraineeDto traineeDto);
 
     @Mapping(source = "username", target = "username")

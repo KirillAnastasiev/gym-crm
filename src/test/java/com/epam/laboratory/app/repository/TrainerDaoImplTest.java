@@ -25,6 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainerDaoImpl test suite")
 class TrainerDaoImplTest {
 
     @Mock
@@ -32,6 +33,9 @@ class TrainerDaoImplTest {
 
     @InjectMocks
     private TrainerDaoImpl trainerDao;
+
+
+    // ==================== FIND BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method findById - should return trainer wrapped in Optional when trainer with given ID exists")
@@ -69,6 +73,8 @@ class TrainerDaoImplTest {
         verify(em, times(1)).find(eq(Trainer.class), anyLong());
         verifyNoMoreInteractions(em);
     }
+
+    // ==================== FIND BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByCondition - should return collection with trainer when trainer with given condition exists")
@@ -138,6 +144,9 @@ class TrainerDaoImplTest {
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
+
+    // ==================== FIND BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method findByUsername - should return trainer wrapped in Optional when trainer with given username exists")
     void testFindByUsername_positive() {
@@ -186,6 +195,9 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
+
+    // ==================== SAVE TESTS ====================
+
     @Test
     @DisplayName("Test of the method save - should persist trainer and return it")
     void testSave() {
@@ -206,12 +218,15 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
     @DisplayName("Test of the method updateByUsername - should update trainer and return updated trainer when trainer with given username exists")
     void testUpdateByUsername() {
         // given
+        var username = "FirstName.LastName";
         var trainer = getTestTrainer();
-        var username = trainer.getUsername();
 
         TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
         TypedQuery<Trainer> mockTypedQuery2 = mock(TypedQuery.class);
@@ -239,6 +254,9 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery, mockTypedQuery2);
     }
 
+
+    // ==================== CHANGE STATUS BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method changeStatus - should change status of trainer when trainer with given ID exists")
     void testChangeStatusByUsername() {
@@ -264,6 +282,9 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
+
+    // ==================== DELETE BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method deleteByUsername - should delete trainer when trainer with given username exists")
     void testDeleteByUsername() {
@@ -286,7 +307,7 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
-    private Trainer getTestTrainer() {
+    private static Trainer getTestTrainer() {
         var trainer = new Trainer();
         trainer.setId(1L);
         trainer.setFirstName("FirstName");

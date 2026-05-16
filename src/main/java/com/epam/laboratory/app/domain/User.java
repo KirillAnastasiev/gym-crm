@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.domain;
 
+import com.epam.laboratory.app.dto.annotation.Sensitive;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,6 +33,7 @@ public abstract class User implements BaseEntity {
 
     @Column(name = "password", nullable = false, length = 100)
     @ToString.Exclude
+    @Sensitive
     protected String password;
 
     @Column(name = "is_active", nullable = false)

@@ -16,6 +16,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("AuthenticationDaoImpl test suite")
 class AuthenticationDaoImplTest {
 
     @Mock
@@ -23,6 +24,9 @@ class AuthenticationDaoImplTest {
 
     @InjectMocks
     private AuthenticationDaoImpl authenticationDao;
+
+
+    // ==================== CHECK EXISTS BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method checkExistsByUsername - should return true when user with given username exists")
@@ -71,6 +75,9 @@ class AuthenticationDaoImplTest {
         verify(mockTypedQuery, times(1)).getSingleResult();
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
+
+
+    // ==================== CHECK PASSWORD FOR USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method checkPasswordForUsername - should return true when password for given username is correct")
@@ -122,6 +129,9 @@ class AuthenticationDaoImplTest {
         verify(mockTypedQuery, times(1)).getSingleResult();
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
+
+
+    // ==================== CHANGE PASSWORD FOR USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method changePasswordForUsername - should change password for given username")

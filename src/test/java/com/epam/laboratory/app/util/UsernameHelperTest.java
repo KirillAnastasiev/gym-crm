@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("UsernameHelper test suite")
 class UsernameHelperTest {
     @Mock
     private TraineeDao traineeDao;
@@ -22,6 +23,9 @@ class UsernameHelperTest {
 
     @InjectMocks
     private UsernameHelper usernameHelper;
+
+
+    // ==================== FETCH USERNAME TESTS ====================
 
     @ParameterizedTest
     @CsvSource({
@@ -45,6 +49,9 @@ class UsernameHelperTest {
         assertThat(actualResult).isEqualTo(expectedUsername);
     }
 
+
+    // ==================== FETCH USERNAME WITH SUFFIX TESTS ====================
+
     @ParameterizedTest
     @CsvSource({
             "John, Doe, 123, John.Doe123",
@@ -66,4 +73,5 @@ class UsernameHelperTest {
         // then
         assertThat(actualResult).isEqualTo(expectedUsername);
     }
+
 }

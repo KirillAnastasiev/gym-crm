@@ -24,6 +24,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainingServiceImpl test suite")
 class TrainingServiceImplTest {
 
     @Mock
@@ -40,6 +41,9 @@ class TrainingServiceImplTest {
 
     @InjectMocks
     private TrainingServiceImpl trainingServiceImpl;
+
+
+    // ==================== REGISTER NEW TESTS ====================
 
     @Test
     @DisplayName("Test of the method registerNew - should register new training")
@@ -66,6 +70,9 @@ class TrainingServiceImplTest {
         verifyNoMoreInteractions(traineeService, trainerService, trainingTypeService, trainingDao);
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
     @DisplayName("Test of the method update - should update training")
     void testUpdate() {
@@ -86,6 +93,9 @@ class TrainingServiceImplTest {
         verify(trainingDao, times(1)).update(any(Training.class));
         verifyNoMoreInteractions(trainingDao);
     }
+
+
+    // ==================== SELECT BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectById - should return training by id")
@@ -123,6 +133,9 @@ class TrainingServiceImplTest {
         verify(trainingDao, times(1)).findById(anyLong(), any());
         verifyNoMoreInteractions(trainingDao);
     }
+
+
+    // ==================== SELECT BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByCondition - should return collection of trainings that satisfy condition")
@@ -167,6 +180,9 @@ class TrainingServiceImplTest {
         verify(trainingDao, times(1)).findByCondition(any(), any());
         verifyNoMoreInteractions(trainingDao);
     }
+
+
+    // ==================== SELECT FOR TRAINEE TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectForTrainee - should return collection of trainings for trainee that satisfy filter")
@@ -230,6 +246,9 @@ class TrainingServiceImplTest {
         verifyNoInteractions(trainingDao);
     }
 
+
+    // ==================== SELECT FOR TRAINER TESTS ====================
+
     @Test
     @DisplayName("Test of the method selectForTrainer - should return collection of trainings for trainer that satisfy filter")
     void testSelectForTrainer_positive() {
@@ -292,7 +311,7 @@ class TrainingServiceImplTest {
         verifyNoInteractions(trainingDao);
     }
 
-    private Training createTestTraining() {
+    private static Training createTestTraining() {
         Trainee trainee = new Trainee();
         trainee.setId(1L);
         trainee.setFirstName("FirstName");

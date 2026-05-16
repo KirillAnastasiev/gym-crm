@@ -8,6 +8,7 @@ import com.epam.laboratory.app.dto.mapper.TraineeMapper;
 import com.epam.laboratory.app.dto.mapper.TrainerWithoutTraineesMapper;
 import com.epam.laboratory.app.service.TraineeService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     TraineeDto getProfile(@PathVariable String username) {
         var trainee = traineeService.selectByUsername(username);
         return traineeMapper.toDto(trainee);
@@ -40,7 +41,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     CredentialsDto registerTrainee(@RequestBody TraineeDto traineeDto) {
         var trainee = traineeService.registerNew(traineeMapper.toEntity(traineeDto));
         return credentialsMapper.toDto(trainee);
@@ -52,7 +53,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     TraineeDto updateTrainee(@PathVariable String username,
                              @RequestBody TraineeDto traineeDto) {
         var trainee = traineeService.updateByUsername(username, traineeMapper.toEntity(traineeDto));
@@ -64,7 +65,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     ResponseEntity<String> deleteTrainee(@PathVariable String username) {
         traineeService.deleteByUsername(username);
         return ResponseEntity.ok("Trainee with username " + username + " was deleted");
@@ -76,7 +77,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     ResponseEntity<String> changeTraineeStatus(@PathVariable String username,
                                                @RequestBody ChangeStatusRequestDto requestDto) {
         boolean isActive = requestDto.active();
@@ -90,7 +91,7 @@ class TraineeController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     Collection<TrainerDto> updateTraineeTrainers(@PathVariable String username,
                                                  @RequestBody Collection<UserDto> trainerUsernames) {
         var trainers = trainerUsernames.stream()

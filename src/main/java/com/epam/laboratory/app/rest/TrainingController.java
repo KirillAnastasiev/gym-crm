@@ -9,6 +9,7 @@ import com.epam.laboratory.app.dto.mapper.TrainingMapper;
 import com.epam.laboratory.app.service.TrainingService;
 import com.epam.laboratory.app.util.DtoValidator;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class TrainingController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     public Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
                                                        @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
@@ -46,7 +47,7 @@ public class TrainingController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     public Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
                                                        @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
@@ -61,7 +62,7 @@ public class TrainingController {
             produces = "application/json"
     )
     @ValidateArguments
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     public ResponseEntity<String> registerTraining(@RequestBody TrainingDto trainingDto) {
         var training = trainingMapper.toEntity(trainingDto);
         trainingService.registerNew(training);

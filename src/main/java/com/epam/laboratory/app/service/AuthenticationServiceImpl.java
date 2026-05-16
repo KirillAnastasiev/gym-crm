@@ -35,7 +35,6 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         return authenticationDao.checkExistsByUsername(username);
     }
 
-    @Logging(INFO)
     @Transactional(readOnly = true)
     @Override
     public boolean checkPasswordForUsername(String username, String password) {
@@ -102,7 +101,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
 
         var optionalUsername = jwtUtil.getUsernameFromToken(refreshToken);
-        var username = optionalUsername.orElseThrow(() -> new AuthenticationException("Username not found in refresh token"));
+        var username = optionalUsername.orElseThrow(() ->
+                new AuthenticationException("Username not found in refresh token"));
 
         var newAccessToken = jwtUtil.generateAccessToken(username);
         Map<String, String> newToken = new HashMap<>();

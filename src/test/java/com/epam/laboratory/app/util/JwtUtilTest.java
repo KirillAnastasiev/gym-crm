@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
+@DisplayName("JwtUtil test suite")
 class JwtUtilTest {
 
     private JwtUtil jwtUtil;
@@ -20,6 +21,9 @@ class JwtUtilTest {
         jwtUtil.setAccessTokenExpirationSeconds(3600);
         jwtUtil.setRefreshTokenExpirationSeconds(86400);
     }
+
+
+    // ==================== GENERATE ACCESS TOKEN TESTS ====================
 
     @Test
     @DisplayName("Test of the method generateAccessToken - should generate non-null string access token")
@@ -49,6 +53,9 @@ class JwtUtilTest {
                 .hasMessage(errorMessage);
     }
 
+
+    // ==================== GENERATE REFRESH TOKEN TESTS ====================
+
     @Test
     @DisplayName("Test of the method generateRefreshToken - should generate non-null string refresh token")
     void testGenerateRefreshToken_positive() {
@@ -77,6 +84,9 @@ class JwtUtilTest {
                 .hasMessage(errorMessage);
     }
 
+
+    // ==================== VALIDATE TOKEN TESTS ====================
+
     @Test
     @DisplayName("Test of the method validateToken - should return true for valid token")
     void testValidateToken_positive() {
@@ -103,6 +113,9 @@ class JwtUtilTest {
         // then
         assertThat(actualResult).isFalse();
     }
+
+
+    // ==================== GET USERNAME FROM TOKEN TESTS ====================
 
     @Test
     @DisplayName("Test of the method getUsernameFromToken - should return correct username from token")

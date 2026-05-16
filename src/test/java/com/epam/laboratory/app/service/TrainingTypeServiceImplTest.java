@@ -22,6 +22,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainingTypeServiceImpl test suite")
 class TrainingTypeServiceImplTest {
 
     @Mock
@@ -29,6 +30,9 @@ class TrainingTypeServiceImplTest {
 
     @InjectMocks
     private TrainingTypeServiceImpl trainingTypeService;
+
+
+    // ==================== SELECT ALL TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectAll - should return collection of training types")
@@ -71,6 +75,9 @@ class TrainingTypeServiceImplTest {
         verify(trainingTypeDao, times(1)).findAll();
         verifyNoMoreInteractions(trainingTypeDao);
     }
+
+
+    // ==================== SELECT BY TRAINING TYPE NAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByTrainingTypeName - should return training type if it exists")
@@ -126,7 +133,7 @@ class TrainingTypeServiceImplTest {
         verifyNoInteractions(trainingTypeDao);
     }
 
-    private TrainingType getTestTrainingType() {
+    private static TrainingType getTestTrainingType() {
         var trainingType = new TrainingType();
         trainingType.setId(1L);
         trainingType.setTrainingTypeName("Test Training Type");

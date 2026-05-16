@@ -5,6 +5,7 @@ import com.epam.laboratory.app.dto.TrainingTypeDto;
 import com.epam.laboratory.app.dto.mapper.TrainingTypeMapper;
 import com.epam.laboratory.app.service.TrainingTypeService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,7 +22,7 @@ public class TrainingTypeController {
     private final TrainingTypeMapper trainingTypeMapper;
 
     @GetMapping(produces = "application/json")
-    @RestCallLogging
+    @RestCallLogging(Level.INFO)
     Collection<TrainingTypeDto> getAllTrainingTypes() {
         var trainingTypes = trainingTypeService.selectAll();
         return trainingTypes.stream()

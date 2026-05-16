@@ -7,7 +7,6 @@ import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,8 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@Nested
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TraineeServiceImpl test suite")
 class TraineeServiceImplTest {
     @Mock
     private TraineeDao traineeDao;
@@ -42,9 +41,12 @@ class TraineeServiceImplTest {
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
+
+    // ==================== REGISTER NEW TESTS ====================
+
     @Test
     @DisplayName("Test of the method registerNew - should create trainee with unique username and return updated trainee")
-    void testRegisterNew_uniqueUsername() {
+    void testRegisterNew_positive_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -74,7 +76,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method registerNew - should create trainee with non-unique username and return")
-    void testRegisterNew_nonUniqueUsername() {
+    void testRegisterNew_positive_nonUniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -101,6 +103,9 @@ class TraineeServiceImplTest {
             verifyNoMoreInteractions(traineeDao);
         }
     }
+
+
+    // ==================== UPDATE TESTS ====================
 
     @Test
     @DisplayName("Test of the method update - should update trainee with unique username and return updated trainee")
@@ -132,6 +137,9 @@ class TraineeServiceImplTest {
 
         verifyNoInteractions(traineeDao);
     }
+
+
+    // ==================== UPDATE BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method updateByUsername - should update trainee by username and return updated trainee")
@@ -176,6 +184,9 @@ class TraineeServiceImplTest {
         verifyNoInteractions(traineeDao);
     }
 
+
+    // ==================== SELECT BY ID TESTS ====================
+
     @Test
     @DisplayName("Test of the method selectById - should return trainee by id")
     void testSelectById_positive() {
@@ -212,6 +223,9 @@ class TraineeServiceImplTest {
         verify(traineeDao, times(1)).findById(anyLong(), any());
         verifyNoMoreInteractions(traineeDao);
     }
+
+
+    // ==================== SELECT BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByCondition - should return collection of trainees that satisfy condition")
@@ -254,6 +268,9 @@ class TraineeServiceImplTest {
         verify(traineeDao, times(1)).findByCondition(any(), any());
         verifyNoMoreInteractions(traineeDao);
     }
+
+
+    // ==================== SELECT BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByUsername - should return trainee by username")
@@ -309,6 +326,7 @@ class TraineeServiceImplTest {
     }
 
 
+    // ==================== DELETE BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method deleteByUsername - should delete trainee by username")
@@ -359,6 +377,9 @@ class TraineeServiceImplTest {
 
         verifyNoInteractions(traineeDao);
     }
+
+
+    // ==================== CHANGE STATUS TESTS ====================
 
     @Test
     @DisplayName("Test of the method changeStatusByUsername - should change trainee status")
@@ -418,6 +439,9 @@ class TraineeServiceImplTest {
         verifyNoMoreInteractions(authenticationService);
         verifyNoInteractions(traineeDao);
     }
+
+
+    // ==================== UPDATE TRAINERS TESTS ====================
 
     @Test
     @DisplayName("Test of the method updateTrainers - should update trainee's trainers and return updated collection of trainers")
@@ -506,7 +530,7 @@ class TraineeServiceImplTest {
         verifyNoMoreInteractions(traineeDao, trainerService);
     }
 
-    private Trainee createTestTrainee() {
+    private static Trainee createTestTrainee() {
         var trainee = new Trainee();
         trainee.setId(1L);
         trainee.setFirstName("FirstName");
@@ -516,4 +540,5 @@ class TraineeServiceImplTest {
 
         return trainee;
     }
+
 }

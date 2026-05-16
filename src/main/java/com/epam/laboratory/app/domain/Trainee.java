@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "trainees")
@@ -54,7 +54,7 @@ public class Trainee extends User {
     }
 
     public Collection<Training> getTrainings() {
-        return Set.copyOf(trainings);
+        return new ArrayList<>(trainings);
     }
 
     public void addTrainer(Trainer trainer) {
@@ -83,6 +83,6 @@ public class Trainee extends User {
     }
 
      public Collection<Trainer> getTrainers() {
-        return Set.copyOf(trainers);
+        return new ArrayList<>(trainers);
     }
 }

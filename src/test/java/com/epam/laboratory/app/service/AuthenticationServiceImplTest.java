@@ -22,6 +22,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("AuthenticationServiceImpl test suite")
 class AuthenticationServiceImplTest {
 
     @Mock
@@ -32,6 +33,9 @@ class AuthenticationServiceImplTest {
 
     @InjectMocks
     private AuthenticationServiceImpl authenticationService;
+
+
+    // ==================== CHECK EXISTS BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method checkExistsByUsername - should return true when user exists")
@@ -83,6 +87,9 @@ class AuthenticationServiceImplTest {
 
         verifyNoInteractions(authenticationDao);
     }
+
+
+    // ==================== CHECK PASSWORD FOR USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method checkPasswordForUsername - should return true if password is correct for given username")
@@ -138,6 +145,9 @@ class AuthenticationServiceImplTest {
 
         verifyNoInteractions(authenticationDao);
     }
+
+
+    // ==================== VALIDATE USER TESTS ====================
 
     @Test
     @DisplayName("Test of the method validateUser - should not throw exception when user exists and password is correct")
@@ -196,6 +206,9 @@ class AuthenticationServiceImplTest {
         verifyNoMoreInteractions(authenticationDao);
     }
 
+
+    // ==================== GET USER TOKENS TESTS ====================
+
     @Test
     @DisplayName("Test of the method getUserTokens - should return access token and refresh token when username is valid")
     void testGetUserTokens_positive() {
@@ -236,6 +249,9 @@ class AuthenticationServiceImplTest {
 
         verifyNoInteractions(authenticationDao, jwtUtil);
     }
+
+
+    // ==================== REFRESH ACCESS TOKEN TESTS ====================
 
     @Test
     @DisplayName("Test of the method refreshAccessToken - should return new access token when refresh token is valid")
@@ -315,6 +331,9 @@ class AuthenticationServiceImplTest {
         verifyNoMoreInteractions(jwtUtil);
     }
 
+
+    // ==================== CHANGE PASSWORD TESTS ====================
+
     @Test
     @DisplayName("Test of the method changePassword - should change password successfully when username, old password and new password are valid")
     void testChangePassword_positive() {
@@ -355,4 +374,5 @@ class AuthenticationServiceImplTest {
 
         verifyNoInteractions(authenticationDao);
     }
+
 }

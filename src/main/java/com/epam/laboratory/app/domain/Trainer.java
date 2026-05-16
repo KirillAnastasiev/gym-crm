@@ -3,9 +3,9 @@ package com.epam.laboratory.app.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "trainers")
@@ -50,7 +50,7 @@ public class Trainer extends User {
     }
 
     public Collection<Training> getTrainings() {
-        return Set.copyOf(trainings);
+        return new ArrayList<>(trainings);
     }
 
     public void addTrainee(Trainee trainee) {
@@ -79,7 +79,7 @@ public class Trainer extends User {
     }
 
     public Collection<Trainee> getTrainees() {
-        return Set.copyOf(trainees);
+        return new ArrayList<>(trainees);
     }
 
 }

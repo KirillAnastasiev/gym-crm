@@ -23,6 +23,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TraineeDaoImpl test suite")
 class TraineeDaoImplTest {
 
     @Mock
@@ -30,6 +31,9 @@ class TraineeDaoImplTest {
 
     @InjectMocks
     private TraineeDaoImpl traineeDao;
+
+
+    // ==================== FIND BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method findById - should return trainee wrapped in Optional when trainee with given ID exists")
@@ -67,6 +71,9 @@ class TraineeDaoImplTest {
         verify(em, times(1)).find(eq(Trainee.class), anyLong());
         verifyNoMoreInteractions(em);
     }
+
+
+    // ==================== FIND BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByCondition - should return list of trainees matching condition")
@@ -136,6 +143,9 @@ class TraineeDaoImplTest {
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
+
+    // ==================== FIND BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method findByUsername - should return trainee wrapped in Optional when trainee with given username exists")
     void testFindByUsername_positive() {
@@ -185,6 +195,9 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
+
+    // ==================== SAVE TESTS ====================
+
     @Test
     @DisplayName("Test of the method save - should persist trainee and return it")
     void testSave() {
@@ -205,12 +218,15 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
     @DisplayName("Test of the method update - should execute update query and return updated trainee when trainee with given username exists")
     void testUpdate() {
         // given
+        var username = "FirstName.LastName";
         var trainee = getTestTrainee();
-        var username = trainee.getUsername();
 
         TypedQuery<Trainee> mockTypedQuery = mock(TypedQuery.class);
         TypedQuery<Trainee> mockTypedQuery2 = mock(TypedQuery.class);
@@ -238,6 +254,9 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery, mockTypedQuery2);
     }
 
+
+    // ==================== CHANGE STATUS BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method changeStatus - should execute update query to change status of trainee with given ID")
     void testChangeStatusByUsername() {
@@ -263,6 +282,9 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
+
+    // ==================== DELETE BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method deleteByUsername - should execute delete query to delete trainee with given username")
     void testDeleteByUsername() {
@@ -285,7 +307,7 @@ class TraineeDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
-    private Trainee getTestTrainee() {
+    private static Trainee getTestTrainee() {
         var trainee = new Trainee();
         trainee.setId(1L);
         trainee.setFirstName("FirstName");

@@ -8,7 +8,11 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
+@DisplayName("DtoValidator test suite")
 class DtoValidatorTest {
+
+
+    // ==================== VALIDATE TESTS ====================
 
     @Test
     @DisplayName("Test of the method validate - should not throw an exception when all required fields are present")
