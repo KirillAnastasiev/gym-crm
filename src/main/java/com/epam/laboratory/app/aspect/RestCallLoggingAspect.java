@@ -5,6 +5,7 @@ import com.epam.laboratory.app.exception.ApplicationException;
 import com.epam.laboratory.app.util.SensitiveDataMasker;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
@@ -16,6 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+
+import java.util.Optional;
 
 @Aspect
 @Component
@@ -34,10 +37,8 @@ public class RestCallLoggingAspect {
             argNames = "joinPoint, restCallLogging"
     )
     public void logRestCallRequest(JoinPoint joinPoint, RestCallLogging restCallLogging) {
-        var request = getCurrentRequest();
-        if (request != null) {
-            logRequestInfo(joinPoint, request, restCallLogging.value());
-        }
+        getCurrentRequest().ifPresent(request ->
+                logRequestInfo(joinPoint, request, restCallLogging.value()));
     }
 
     @AfterReturning(
@@ -46,7 +47,8 @@ public class RestCallLoggingAspect {
             argNames = "joinPoint, restCallLogging, result"
     )
     public void logRestCallResponse(JoinPoint joinPoint, RestCallLogging restCallLogging, Object result) {
-        logResponseInfo(joinPoint, result, restCallLogging.value());
+        getCurrentResponse().ifPresent(response ->
+                logResponseInfo(joinPoint, response, result, restCallLogging.value()));
     }
 
     @AfterThrowing(
@@ -62,8 +64,8 @@ public class RestCallLoggingAspect {
 
     private void logRequestInfo(JoinPoint joinPoint, HttpServletRequest request, Level level) {
         var logger = getLogger(joinPoint);
-        var endpoint = getRequestURI(request);
-        var httpMethod = getRequestMethod(request);
+        var endpoint = request.getRequestURI();
+        var httpMethod = request.getMethod();
         var args = getRequestArgs(joinPoint);
 
         var requestInfo = new StringBuilder("REST Call - Endpoint: %s, HTTP Method: %s".formatted(endpoint, httpMethod));
@@ -79,20 +81,15 @@ public class RestCallLoggingAspect {
         logByLevel(logger, level, requestInfo.toString());
     }
 
-    private void logResponseInfo(JoinPoint joinPoint, Object result, Level level) {
+    private void logResponseInfo(JoinPoint joinPoint, HttpServletResponse response, Object result, Level level) {
         var logger = getLogger(joinPoint);
-        int statusCode = 200;
-        Object responseBody;
-
-        if (result instanceof ResponseEntity<?> responseEntity) {
-            statusCode = getStatusCode(responseEntity);
-            responseBody = sensitiveDataMasker.maskSensitiveData(responseEntity.getBody());
-        } else {
-            responseBody = sensitiveDataMasker.maskSensitiveData(result);
-        }
+        var statusCode = response.getStatus();
+        var responseBody = result instanceof  ResponseEntity<?> responseEntity
+                ? sensitiveDataMasker.maskSensitiveData(responseEntity.getBody())
+                : sensitiveDataMasker.maskSensitiveData(result);
 
         try {
-            String responseBodyStr = responseBody != null ? objectMapper.writeValueAsString(responseBody) : "null";
+            var responseBodyStr = responseBody != null ? objectMapper.writeValueAsString(responseBody) : "null";
             var logMessage = "REST Call Response - Status Code: %d, Response Body: %s".formatted(statusCode, responseBodyStr);
             logByLevel(logger, level, logMessage);
         } catch (Exception e) {
@@ -117,25 +114,18 @@ public class RestCallLoggingAspect {
         }
     }
 
-    private HttpServletRequest getCurrentRequest() {
-        var attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        return attributes != null ? attributes.getRequest() : null;
+    private Optional<HttpServletRequest> getCurrentRequest() {
+        return Optional.ofNullable((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                .map(ServletRequestAttributes::getRequest);
+    }
+
+    private Optional<HttpServletResponse> getCurrentResponse() {
+        return Optional.ofNullable((ServletRequestAttributes) RequestContextHolder.getRequestAttributes())
+                .map(ServletRequestAttributes::getResponse);
     }
 
     private static Object[] getRequestArgs(JoinPoint joinPoint) {
         return joinPoint.getArgs();
-    }
-
-    private static String getRequestMethod(HttpServletRequest request) {
-        return request.getMethod();
-    }
-
-    private static String getRequestURI(HttpServletRequest request) {
-        return request.getRequestURI();
-    }
-
-    private static int getStatusCode(ResponseEntity<?> responseEntity) {
-        return responseEntity.getStatusCode().value();
     }
 
 }

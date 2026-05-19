@@ -66,11 +66,12 @@ class TrainingControllerTest {
     @MockitoBean
     private TrainingService trainingService;
 
+    @Autowired
+    private TrainingMapper trainingMapper;
+
     private TrainingController trainingController;
 
     private MockMvc mockMvc;
-    @Autowired
-    private TrainingMapper trainingMapper;
 
     @BeforeEach
     void setUp() {

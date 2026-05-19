@@ -1,11 +1,14 @@
 package com.epam.laboratory.app.aspect;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
+import com.epam.laboratory.app.exception.ApplicationException;
 import org.aspectj.lang.JoinPoint;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.event.Level;
@@ -38,9 +41,14 @@ class LoggingAspectTest {
         AspectJProxyFactory factory = new AspectJProxyFactory(new TestServiceImpl());
         factory.addAspect(loggingAspect);
         testService = factory.getProxy();
-        outContent = new ByteArrayOutputStream();
+
+        changeStandardSystemOut();
     }
 
+    @AfterEach
+    void tearDown() {
+        returnStandardSystemOut();
+    }
 
     // ==================== LOG METHOD ENTRY WITH ARGUMENTS TESTS ====================
 
@@ -48,19 +56,25 @@ class LoggingAspectTest {
     @DisplayName("Test method logMethodEntryWithoutArguments - should log method entry and exit for method with arguments")
     void testLogMethodEntryWithArguments() {
         // given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
 
         // when
         testService.processData("TestInput", 42);
 
         // then
-        returnStandardSystemOut();
         String output = outContent.toString();
 
         assertThat(output).contains("INFO");
         assertThat(output).contains("Entering method: TestServiceImpl.processData with arguments: [TestInput, 42]");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithArguments(any(JoinPoint.class), any(Logging.class));
+        verify(loggingAspect, times(1)).logMethodEntryWithArguments(joinPointCaptor.capture(), loggingCaptor.capture());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("processData");
+        assertThat(capturedLogging.value()).isEqualTo(Level.INFO);
     }
 
 
@@ -70,19 +84,24 @@ class LoggingAspectTest {
     @DisplayName("Test method logMethodEntryWithoutArguments - should log method entry and exit for method without arguments")
     void testLogMethodEntryWithoutArguments() {
         //given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
 
         // when
         testService.noArgsMethod();
 
         // then
-        returnStandardSystemOut();
         String output = outContent.toString();
 
-        assertThat(output).contains("DEBUG");
         assertThat(output).contains("Entering method: TestServiceImpl.noArgsMethod");
 
-        verify(loggingAspect, times(1)).logMethodEntryWithoutArguments(any(JoinPoint.class), any(Logging.class));
+        verify(loggingAspect, times(1)).logMethodEntryWithoutArguments(joinPointCaptor.capture(), loggingCaptor.capture());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("noArgsMethod");
+        assertThat(capturedLogging.value()).isEqualTo(Level.DEBUG);
     }
 
 
@@ -92,42 +111,55 @@ class LoggingAspectTest {
     @DisplayName("Test method logMethodExitWithResult - should log method entry and exit with result for method with arguments")
     void testLogMethodExitWithResult() {
         //given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
+        ArgumentCaptor<Object> resultCaptor = ArgumentCaptor.forClass(Object.class);
 
         // when
         String result = testService.getData("TestKey");
 
         // then
-        returnStandardSystemOut();
         String output = outContent.toString();
 
-        assertThat(output).contains("WARN");
         assertThat(output).contains("Exiting method: TestServiceImpl.getData with result: testValue");
         assertThat(result).isEqualTo("testValue");
 
-        verify(loggingAspect, times(1)).logMethodExitWithResult(any(JoinPoint.class), any(Logging.class), any());
+        verify(loggingAspect, times(1)).logMethodExitWithResult(joinPointCaptor.capture(), loggingCaptor.capture(), resultCaptor.capture());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+        Object capturedResult = resultCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("getData");
+        assertThat(capturedLogging.value()).isEqualTo(Level.WARN);
+        assertThat(capturedResult).isEqualTo("testValue");
     }
 
     @Test
     @DisplayName("Test method logMethodExitWithResult - should log method entry and exit with complex object result for method without arguments")
     void testLogMethodExitWithResult_complexObject() {
         //given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
 
         // when
         TestData result = testService.getComplexObject();
 
         // then
-        returnStandardSystemOut();
         String output = outContent.toString();
 
-        assertThat(output).contains("TRACE");
         assertThat(output).contains("""
                               Exiting method: TestServiceImpl.getComplexObject with result: TestData[name=TestName, value=123]""");
         assertThat(result).isNotNull();
         assertThat(result.name()).isEqualTo("TestName");
 
-        verify(loggingAspect, times(1)).logMethodExitWithResult(any(JoinPoint.class), any(Logging.class), any());
+        verify(loggingAspect, times(1)).logMethodExitWithResult(joinPointCaptor.capture(), loggingCaptor.capture(), any());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("getComplexObject");
+        assertThat(capturedLogging.value()).isEqualTo(Level.TRACE);
     }
 
 
@@ -137,19 +169,24 @@ class LoggingAspectTest {
     @DisplayName("Test method logMethodExitWithoutResult - should log method entry and exit for void method without arguments")
     void testLogMethodExitWithoutResult() {
         //given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
 
         // when
         testService.processData("TestInput", 42);
 
         // then
-        returnStandardSystemOut();
         String output = outContent.toString();
 
-        assertThat(output).contains("INFO");
         assertThat(output).contains("Exiting method: TestServiceImpl.processData");
 
-        verify(loggingAspect, times(1)).logVoidMethodExit(any(JoinPoint.class), any(Logging.class));
+        verify(loggingAspect, times(1)).logVoidMethodExit(joinPointCaptor.capture(), loggingCaptor.capture());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("processData");
+        assertThat(capturedLogging.value()).isEqualTo(Level.INFO);
     }
 
 
@@ -159,23 +196,33 @@ class LoggingAspectTest {
     @DisplayName("Test method logMethodException - should log method entry and exception for method that throws exception")
     void testLogMethodException() {
         //given
-        changeStandardSystemOut();
+        ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
+        ArgumentCaptor<Logging> loggingCaptor = ArgumentCaptor.forClass(Logging.class);
+        ArgumentCaptor<Throwable> exceptionCaptor = ArgumentCaptor.forClass(Throwable.class);
 
         // when & then
         assertThatThrownBy(() -> testService.throwException())
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Test exception");
 
-        returnStandardSystemOut();
         String output = outContent.toString();
 
-        assertThat(output).contains("ERROR");
+        assertThat(output).contains("WARN");
         assertThat(output).contains("Exception in method: TestServiceImpl.throwException with message: Test exception");
 
-        verify(loggingAspect, times(1)).logMethodException(any(JoinPoint.class), any(Logging.class), any(Throwable.class));
+        verify(loggingAspect, times(1)).logMethodException(joinPointCaptor.capture(), loggingCaptor.capture(), exceptionCaptor.capture());
+
+        JoinPoint capturedJoinPoint = joinPointCaptor.getValue();
+        Logging capturedLogging = loggingCaptor.getValue();
+        Throwable capturedException = exceptionCaptor.getValue();
+
+        assertThat(capturedJoinPoint.getSignature().getName()).isEqualTo("throwException");
+        assertThat(capturedLogging.value()).isEqualTo(Level.INFO);
+        assertThat(capturedException.getMessage()).isEqualTo("Test exception");
     }
 
     private void changeStandardSystemOut() {
+        outContent = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outContent));
     }
 
@@ -205,7 +252,7 @@ class LoggingAspectTest {
         @Override
         @Logging(Level.INFO)
         public void throwException() {
-            throw new RuntimeException("Test exception");
+            throw new ApplicationException("Test exception");
         }
 
         @Override
