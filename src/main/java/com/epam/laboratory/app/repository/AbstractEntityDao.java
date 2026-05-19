@@ -1,7 +1,7 @@
 package com.epam.laboratory.app.repository;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
-import com.epam.laboratory.app.domain.BaseEntity;
+import com.epam.laboratory.app.domain.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -20,7 +20,7 @@ import java.util.function.BiFunction;
 @Repository
 @Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor
-public abstract class AbstractEntityDao<T extends BaseEntity> implements EntityDao<T> {
+public abstract class AbstractEntityDao<T extends Entity> implements EntityDao<T> {
 
     @PersistenceContext
     protected EntityManager em;

@@ -3,14 +3,14 @@ package com.epam.laboratory.app.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "training_types")
 @NoArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id")
 @ToString
-public class TrainingType implements BaseEntity {
+public class TrainingType implements Entity {
     public static final String FITNESS = "Fitness";
     public static final String YOGA = "Yoga";
     public static final String ZUMBA = "Zumba";

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "trainers")
 @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
 @NoArgsConstructor

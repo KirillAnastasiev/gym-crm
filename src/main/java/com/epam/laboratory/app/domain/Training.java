@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "trainings")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @EqualsAndHashCode(of = "id")
 @ToString
-public class Training implements BaseEntity {
+public class Training implements Entity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "trainings_id_seq_gen")

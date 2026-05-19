@@ -1,11 +1,10 @@
 package com.epam.laboratory.app.domain;
 
 import com.epam.laboratory.app.dto.annotation.Sensitive;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Entity
+@jakarta.persistence.Entity
 @Table(name = "users")
 @Inheritance(strategy = InheritanceType.JOINED)
 @NoArgsConstructor
@@ -14,7 +13,7 @@ import lombok.*;
 @Setter
 @EqualsAndHashCode(of = "id")
 @ToString
-public abstract class User implements BaseEntity {
+public abstract class User implements Entity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "users_id_seq_gen")
