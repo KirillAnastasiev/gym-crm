@@ -7,6 +7,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +18,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collection;
 import java.util.Collections;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,6 +25,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainerDaoImpl test suite")
 class TrainerDaoImplTest {
 
     @Mock
@@ -32,6 +33,9 @@ class TrainerDaoImplTest {
 
     @InjectMocks
     private TrainerDaoImpl trainerDao;
+
+
+    // ==================== FIND BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method findById - should return trainer wrapped in Optional when trainer with given ID exists")
@@ -70,6 +74,8 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
+    // ==================== FIND BY CONDITION TESTS ====================
+
     @Test
     @DisplayName("Test of the method findByCondition - should return collection with trainer when trainer with given condition exists")
     void testFindByCondition_positive() {
@@ -85,7 +91,7 @@ class TrainerDaoImplTest {
         given(mockCriteriaBuilder.createQuery(Trainer.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainer.class)).willReturn(mockRoot);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.singletonList(trainer));
 
         // when
@@ -101,7 +107,7 @@ class TrainerDaoImplTest {
         verify(mockCriteriaBuilder, times(1)).createQuery(Trainer.class);
         verify(mockCriteriaQuery, times(1)).from(Trainer.class);
         verify(em, times(1)).createQuery(mockCriteriaQuery);
-        verify(mockCriteriaQuery, times(1)).select(eq(mockRoot));
+        verify(mockCriteriaQuery, times(1)).select(mockRoot);
         verify(mockTypedQuery, times(1)).getResultList();
     }
 
@@ -118,7 +124,7 @@ class TrainerDaoImplTest {
         given(mockCriteriaBuilder.createQuery(Trainer.class)).willReturn(mockCriteriaQuery);
         given(mockCriteriaQuery.from(Trainer.class)).willReturn(mockRoot);
         given(em.createQuery(mockCriteriaQuery)).willReturn(mockTypedQuery);
-        given(mockCriteriaQuery.select(eq(mockRoot))).willReturn(mockCriteriaQuery);
+        given(mockCriteriaQuery.select(mockRoot)).willReturn(mockCriteriaQuery);
         given(mockTypedQuery.getResultList()).willReturn(Collections.emptyList());
 
         // when
@@ -137,6 +143,9 @@ class TrainerDaoImplTest {
         verify(mockCriteriaQuery, times(1)).select(any());
         verify(mockTypedQuery, times(1)).getResultList();
     }
+
+
+    // ==================== FIND BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method findByUsername - should return trainer wrapped in Optional when trainer with given username exists")
@@ -186,9 +195,12 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
+
+    // ==================== SAVE TESTS ====================
+
     @Test
-    @DisplayName("Test of the method save - should persist trainer and return it when trainer with given ID does not exist")
-    void testSave_positive_notExistedTrainer() {
+    @DisplayName("Test of the method save - should persist trainer and return it")
+    void testSave() {
         // given
         var trainer = getTestTrainer();
         trainer.setId(null);
@@ -206,197 +218,72 @@ class TrainerDaoImplTest {
         verifyNoMoreInteractions(em);
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
-    @DisplayName("Test of the method save - should merge trainer and return it when trainer with given ID exists")
-    void testSave_positive_existedTrainer() {
+    @DisplayName("Test of the method updateByUsername - should update trainer and return updated trainer when trainer with given username exists")
+    void testUpdateByUsername() {
         // given
+        var username = "FirstName.LastName";
         var trainer = getTestTrainer();
 
-        given(em.find(eq(Trainer.class), anyLong())).willReturn(trainer);
-        given(em.merge(any(Trainer.class))).willReturn(trainer);
+        TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
+        TypedQuery<Trainer> mockTypedQuery2 = mock(TypedQuery.class);
+
+        given(em.createQuery(anyString())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), any())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.executeUpdate()).willReturn(1);
+        given(em.createQuery(anyString(), eq(Trainer.class))).willReturn(mockTypedQuery2);
+        given(mockTypedQuery2.setParameter(anyString(), anyString())).willReturn(mockTypedQuery2);
+        given(mockTypedQuery2.getSingleResult()).willReturn(trainer);
 
         // when
-        var actualResult = trainerDao.save(trainer);
+        var actualResult = trainerDao.updateByUsername(username, trainer);
 
         // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
+        AssertionsForClassTypes.assertThat(actualResult).isNotNull();
+        AssertionsForClassTypes.assertThat(actualResult).isEqualTo(trainer);
 
-        verify(em, times(1)).find(eq(Trainer.class), anyLong());
-        verify(em, times(1)).merge(any(Trainer.class));
-        verifyNoMoreInteractions(em);
+        verify(em, times(1)).createQuery(anyString());
+        verify(mockTypedQuery, times(5)).setParameter(anyString(), any());
+        verify(mockTypedQuery, times(1)).executeUpdate();
+        verify(em, times(1)).createQuery(anyString(), eq(Trainer.class));
+        verify(mockTypedQuery2, times(1)).setParameter(anyString(), anyString());
+        verify(mockTypedQuery2, times(1)).getSingleResult();
+        verifyNoMoreInteractions(em, mockTypedQuery, mockTypedQuery2);
     }
 
-    @Test
-    @DisplayName("Test of the method save - should throw IllegalArgumentException when trainer is null")
-    void testSave_negative_nullTrainer() {
-        // when & then
-        assertThatThrownBy(() -> trainerDao.save(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null");
 
-        verifyNoInteractions(em);
-    }
+    // ==================== CHANGE STATUS BY USERNAME TESTS ====================
 
     @Test
-    @DisplayName("Test of the method update - should merge trainer and return it when trainer with given ID exists")
-    void testUpdate_positive() {
+    @DisplayName("Test of the method changeStatus - should change status of trainer when trainer with given ID exists")
+    void testChangeStatusByUsername() {
         // given
-        var trainer = getTestTrainer();
-
-        given(em.find(eq(Trainer.class), anyLong())).willReturn(trainer);
-        given(em.merge(any(Trainer.class))).willReturn(trainer);
-
-        // when
-        var actualResult = trainerDao.update(trainer);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEqualTo(trainer);
-
-        verify(em, times(1)).find(eq(Trainer.class), anyLong());
-        verify(em, times(1)).merge(any(Trainer.class));
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainer is null")
-    void testUpdate_negative_nullTrainer() {
-        // when & then
-        assertThatThrownBy(() -> trainerDao.update(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainer without ID is passed")
-    void testUpdate_negative_trainerWithoutId() {
-        // given
-        var trainer = getTestTrainer();
-        trainer.setId(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainerDao.update(trainer))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method update - should throw IllegalArgumentException when trainer with given ID does not exist")
-    void testUpdate_negative_notExistedTrainer() {
-        // given
-        var trainer = getTestTrainer();
-
-        given(em.find(eq(Trainer.class), anyLong())).willReturn(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainerDao.update(trainer))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity with ID " + trainer.getId() + " does not exist");
-
-        verify(em, times(1)).find(eq(Trainer.class), anyLong());
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method changePassword - should change password of trainer when trainer with given ID exists")
-    void testChangePassword() {
-        // given
-        var trainer = getTestTrainer();
-        var newPassword = "newPassword";
+        var username = "FirstName.LastName";
+        var isActive = false;
 
         TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
 
         given(em.createQuery(anyString())).willReturn(mockTypedQuery);
-        given(mockTypedQuery.setParameter(anyString(), anyLong())).willReturn(mockTypedQuery);
+        given(mockTypedQuery.setParameter(anyString(), anyBoolean())).willReturn(mockTypedQuery);
         given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
         given(mockTypedQuery.executeUpdate()).willReturn(1);
 
         // when
-        trainerDao.changePassword(trainer.getId(), newPassword);
+        trainerDao.changeStatusByUsername(username, isActive);
 
         // then
         verify(em, times(1)).createQuery(anyString());
-        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyLong());
+        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyBoolean());
         verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
         verify(mockTypedQuery, times(1)).executeUpdate();
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
-    @Test
-    @DisplayName("Test of the method changeStatus - should change status of trainer when trainer with given ID exists")
-    void testChangeStatus() {
-        // given
-        var trainer = getTestTrainer();
-        var isActive = false;
 
-        TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
-
-        given(em.createQuery(anyString(), eq(Trainer.class))).willReturn(mockTypedQuery);
-        given(mockTypedQuery.setParameter(anyString(), anyBoolean())).willReturn(mockTypedQuery);
-        given(mockTypedQuery.setParameter(anyString(), anyLong())).willReturn(mockTypedQuery);
-        given(mockTypedQuery.executeUpdate()).willReturn(1);
-
-        // when
-        trainerDao.changeStatus(trainer.getId(), isActive);
-
-        // then
-        verify(em, times(1)).createQuery(anyString(), eq(Trainer.class));
-        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyBoolean());
-        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyLong());
-        verify(mockTypedQuery, times(1)).executeUpdate();
-        verifyNoMoreInteractions(em, mockTypedQuery);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should remove trainer when trainer with given ID exists")
-    void testDelete_positive() {
-        // given
-        var trainer = getTestTrainer();
-
-        given(em.find(eq(Trainer.class), anyLong())).willReturn(trainer);
-        doNothing().when(em).remove(any(Trainer.class));
-        doNothing().when(em).flush();
-
-        // when
-        trainerDao.delete(trainer);
-
-        // then
-        verify(em, times(1)).find(eq(Trainer.class), anyLong());
-        verify(em, times(1)).remove(any(Trainer.class));
-        verify(em, times(1)).flush();
-        verifyNoMoreInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainer is null")
-    void testDelete_negative_nullTrainer() {
-        // when & then
-        assertThatThrownBy(() -> trainerDao.delete(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method delete - should throw IllegalArgumentException when trainer without ID is passed")
-    void testDelete_negative_trainerWithoutId() {
-        // given
-        var trainer = getTestTrainer();
-        trainer.setId(null);
-
-        // when & then
-        assertThatThrownBy(() -> trainerDao.delete(trainer))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Entity must not be null and must have an ID");
-
-        verifyNoInteractions(em);
-    }
+    // ==================== DELETE BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method deleteByUsername - should delete trainer when trainer with given username exists")
@@ -406,7 +293,7 @@ class TrainerDaoImplTest {
 
         TypedQuery<Trainer> mockTypedQuery = mock(TypedQuery.class);
 
-        given(em.createQuery(anyString(), eq(Trainer.class))).willReturn(mockTypedQuery);
+        given(em.createQuery(anyString())).willReturn(mockTypedQuery);
         given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mockTypedQuery);
         given(mockTypedQuery.executeUpdate()).willReturn(1);
 
@@ -414,87 +301,13 @@ class TrainerDaoImplTest {
         trainerDao.deleteByUsername(username);
 
         // then
-        verify(em, times(1)).createQuery(anyString(), eq(Trainer.class));
+        verify(em, times(1)).createQuery(anyString());
         verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
         verify(mockTypedQuery, times(1)).executeUpdate();
         verifyNoMoreInteractions(em, mockTypedQuery);
     }
 
-    @Test
-    @DisplayName("Test of the method existsByUsername - should return true when trainer with given username exists")
-    void testIsExistsByUsername_positive() {
-        // given
-        var username = "FirstName.LastName";
-
-        TypedQuery<Boolean> mockTypedQuery = mock(TypedQuery.class);
-
-        given(em.createQuery(anyString(), eq(Boolean.class))).willReturn(mockTypedQuery);
-        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mock(TypedQuery.class));
-        given(mockTypedQuery.getSingleResult()).willReturn(true);
-
-        // when
-        var actualResult = trainerDao.existsByUsername(username);
-
-        // then
-        assertThat(actualResult).isTrue();
-
-        verify(em, times(1)).createQuery(anyString(), eq(Boolean.class));
-        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
-        verify(mockTypedQuery, times(1)).getSingleResult();
-        verifyNoMoreInteractions(em, mockTypedQuery);
-    }
-
-    @Test
-    @DisplayName("Test of the method existsByUsername - should return false when trainer with given username does not exist")
-    void testIsExistsByUsername_negative_notExistedTrainer() {
-        // given
-        var username = "NonExistentUsername";
-
-        TypedQuery<Boolean> mockTypedQuery = mock(TypedQuery.class);
-
-        given(em.createQuery(anyString(), eq(Boolean.class))).willReturn(mockTypedQuery);
-        given(mockTypedQuery.setParameter(anyString(), anyString())).willReturn(mock(TypedQuery.class));
-        given(mockTypedQuery.getSingleResult()).willReturn(false);
-
-        // when
-        var actualResult = trainerDao.existsByUsername(username);
-
-        // then
-        assertThat(actualResult).isFalse();
-
-        verify(em, times(1)).createQuery(anyString(), eq(Boolean.class));
-        verify(mockTypedQuery, times(1)).setParameter(anyString(), anyString());
-        verify(mockTypedQuery, times(1)).getSingleResult();
-        verifyNoMoreInteractions(em, mockTypedQuery);
-    }
-
-    @Test
-    @DisplayName("Test of the method existsByUsername - should throw IllegalArgumentException when username is null")
-    void testIsExistsByUsername_negative_nullUsername() {
-        // when & then
-        assertThatThrownBy(() -> trainerDao.existsByUsername(null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Username must not be null");
-
-        verifyNoInteractions(em);
-    }
-
-    @Test
-    @DisplayName("Test of the method existsByUsername - should return false when username is blank")
-    void testIsExistsByUsername_negative_blankUsername() {
-        // given
-        var username = "   ";
-
-        // when
-        var actualResult = trainerDao.existsByUsername(username);
-
-        // then
-        assertThat(actualResult).isFalse();
-
-        verifyNoInteractions(em);
-    }
-
-    private Trainer getTestTrainer() {
+    private static Trainer getTestTrainer() {
         var trainer = new Trainer();
         trainer.setId(1L);
         trainer.setFirstName("FirstName");

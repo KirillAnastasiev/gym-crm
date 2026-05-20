@@ -5,13 +5,18 @@ import org.junit.jupiter.api.RepeatedTest;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-
+@DisplayName("PasswordGenerator test suite")
 class PasswordGeneratorTest {
-    @RepeatedTest(value = 20,
-                  name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
-                  failureThreshold = 1)
+
+    // ==================== GENERATE PASSWORD TESTS ====================
+
+    @RepeatedTest(
+            value = 20,
+            name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
+            failureThreshold = 1
+    )
     @DisplayName("Test of the method generatePassword - should generate password with length 10")
-    void testGeneratedPasswordLength() {
+    void testGeneratedPassword_length() {
         // when
         var actualResult = PasswordGenerator.generatePassword();
 
@@ -20,11 +25,13 @@ class PasswordGeneratorTest {
         assertThat(actualResult).hasSize(10);
     }
 
-    @RepeatedTest(value = 20,
-                  name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
-                  failureThreshold = 1)
+    @RepeatedTest(
+            value = 20,
+            name = "{displayName}, repetition {currentRepetition} of {totalRepetitions}",
+            failureThreshold = 1
+    )
     @DisplayName("Test of the method generatePassword - should generate password with only visible ASCII characters")
-    void testGeneratedPasswordValidCharacters() {
+    void testGeneratedPassword_validCharacters() {
         // when
         var actualResult = PasswordGenerator.generatePassword();
 
@@ -33,4 +40,5 @@ class PasswordGeneratorTest {
         actualResult.codePoints()
                 .forEach(codePoint -> assertThat((char) codePoint).isBetween('!', '~'));
     }
+
 }

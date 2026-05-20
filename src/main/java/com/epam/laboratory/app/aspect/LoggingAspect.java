@@ -1,88 +1,115 @@
 package com.epam.laboratory.app.aspect;
 
-import lombok.extern.slf4j.Slf4j;
+import com.epam.laboratory.app.aspect.annotation.Logging;
+import com.epam.laboratory.app.exception.ApplicationException;
+import com.epam.laboratory.app.util.SensitiveDataMasker;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
 @Aspect
 @Component
-@Slf4j
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class LoggingAspect {
 
     @Pointcut("@annotation(logging)")
-    public void executeLoggingAdvice(Logging logging) {}
+    public void loggingPointcut(Logging logging) {}
 
     @Pointcut("execution(* *.*(..)) && !execution(* *.*())")
-    public void executeMethodWithArgs() {}
+    public void executeMethodWithArgsPointcut() {}
 
     @Pointcut("execution(* *.*())")
-    public void executeMethodWithoutArgs() {}
+    public void executeMethodWithoutArgsPointcut() {}
 
     @Pointcut("execution(void *.*(..))")
-    public void executeVoidMethod() {}
+    public void executeVoidMethodPointcut() {}
 
     @Pointcut("execution(* *.*(..)) && !execution(void *.*(..))")
-    public void executeNotVoidMethod() {}
+    public void executeNotVoidMethodPointcut() {}
 
-    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithArgs()",
-            argNames = "joinPoint, logging")
+    @Before(
+            value = "loggingPointcut(logging) && executeMethodWithArgsPointcut()",
+            argNames = "joinPoint, logging"
+    )
     public void logMethodEntryWithArguments(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        Object[] args = joinPoint.getArgs();
-        String logMessage = String.format("Entering method: %s.%s with arguments: %s", className, methodName, Arrays.toString(args));
-        logByLevel(logging.value(), logMessage);
+        var logger = getLogger(joinPoint);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var args = joinPoint.getArgs();
+        var logMessage = "Entering method: %s.%s with arguments: %s".formatted(className, methodName, Arrays.toString(args));
+        logByLevel(logger,logging.value(), logMessage);
     }
 
-    @Before(value = "executeLoggingAdvice(logging) && executeMethodWithoutArgs()",
-            argNames = "joinPoint, logging")
+    @Before(
+            value = "loggingPointcut(logging) && executeMethodWithoutArgsPointcut()",
+            argNames = "joinPoint, logging"
+    )
     public void logMethodEntryWithoutArguments(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Entering method: %s.%s", className, methodName);
-        logByLevel(logging.value(), logMessage);
+        var logger = getLogger(joinPoint);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Entering method: %s.%s".formatted(className, methodName);
+        logByLevel(logger, logging.value(), logMessage);
     }
 
-    @AfterReturning(pointcut = "executeLoggingAdvice(logging) && executeNotVoidMethod()",
-                    argNames = "joinPoint, logging, result",
-                    returning = "result")
+    @AfterReturning(
+            pointcut = "loggingPointcut(logging) && executeNotVoidMethodPointcut()",
+            argNames = "joinPoint, logging, result",
+            returning = "result"
+    )
     public void logMethodExitWithResult(JoinPoint joinPoint, Logging logging, Object result) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Exiting method: %s.%s with result: %s", className, methodName, result);
-        logByLevel(logging.value(), logMessage);
+        var logger = getLogger(joinPoint);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Exiting method: %s.%s with result: %s".formatted(className, methodName, result);
+        logByLevel(logger, logging.value(), logMessage);
     }
 
-    @AfterReturning(value = "executeLoggingAdvice(logging) && executeVoidMethod()",
-                    argNames = "joinPoint, logging")
+    @AfterReturning(
+            value = "loggingPointcut(logging) && executeVoidMethodPointcut()",
+            argNames = "joinPoint, logging"
+    )
     public void logVoidMethodExit(JoinPoint joinPoint, Logging logging) {
-        String className = getClassName(joinPoint);
-        String methodName = getMethodName(joinPoint);
-        String logMessage = String.format("Exiting method: %s.%s", className, methodName);
-        logByLevel(logging.value(), logMessage);
+        var logger = getLogger(joinPoint);
+        var className = getClassName(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var logMessage = "Exiting method: %s.%s".formatted(className, methodName);
+        logByLevel(logger, logging.value(), logMessage);
     }
 
-    @AfterThrowing(value = "executeLoggingAdvice(logging)",
-                   argNames = "joinPoint, logging, exception",
-                   throwing = "exception")
+    @AfterThrowing(
+            value = "loggingPointcut(logging)",
+            argNames = "joinPoint, logging, exception",
+            throwing = "exception"
+    )
     public void logMethodException(JoinPoint joinPoint, Logging logging, Throwable exception) {
-        String methodName = getMethodName(joinPoint);
-        String className = getClassName(joinPoint);
-        String logMessage = String.format("Exception in method: %s.%s with message: %s", className, methodName, exception.getMessage());
-        log.error(logMessage, exception);
+        var logger = getLogger(joinPoint);
+        var methodName = getMethodName(joinPoint);
+        var className = getClassName(joinPoint);
+        var logMessage = "Exception in method: %s.%s with message: %s".formatted(className, methodName, exception.getMessage());
+        logError(logger, logMessage, exception);
     }
 
-    private void logByLevel(Level level, String message) {
-        switch (level) {
-            case DEBUG -> log.debug(message);
-            case INFO -> log.info(message);
-            case WARN -> log.warn(message);
-            case ERROR -> log.error(message);
-            default -> log.trace(message);
+    private Logger getLogger(JoinPoint joinPoint) {
+        return LoggerFactory.getLogger(joinPoint.getTarget().getClass());
+    }
+
+    private void logByLevel(Logger logger, Level level, String message) {
+        logger.makeLoggingEventBuilder(level).log(message);
+    }
+
+    private void logError(Logger logger, String message, Throwable exception) {
+        if (exception instanceof ApplicationException) {
+            logger.warn(message, exception);
+        } else {
+            logger.error(message, exception);
         }
     }
 
@@ -90,7 +117,7 @@ public class LoggingAspect {
         return joinPoint.getTarget().getClass().getSimpleName();
     }
 
-    private static String getMethodName(JoinPoint joinPoint) {
+    protected static String getMethodName(JoinPoint joinPoint) {
         return joinPoint.getSignature().getName();
     }
 }

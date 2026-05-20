@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.repository;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainer;
 import jakarta.persistence.NoResultException;
 import org.springframework.stereotype.Repository;
@@ -12,10 +12,10 @@ import static org.slf4j.event.Level.INFO;
 
 @Repository
 @Transactional(rollbackFor = Exception.class)
-public class TrainerDaoImpl extends AbstractUserDao<Trainer> implements TrainerDao {
+public class TrainerDaoImpl extends AbstractEntityDao<Trainer> implements TrainerDao {
     private static final String SELECT_BY_USERNAME_QUERY = "SELECT t FROM Trainer t WHERE t.username = :username";
-    private static final String CHANGE_PASSWORD_QUERY = "UPDATE Trainer t SET t.password = :newPassword WHERE t.id = :id";
-    private static final String CHANGE_STATUS_QUERY = "UPDATE Trainer t SET t.active = :isActive WHERE t.id = :id";
+    private static final String UPDATE_BY_USERNAME_QUERY = "UPDATE Trainer t SET t.firstName = :firstName, t.lastName = :lastName, t.specialization = :specialization, t.active = :isActive WHERE t.username = :username";
+    private static final String CHANGE_STATUS_BY_USERNAME_QUERY = "UPDATE Trainer t SET t.active = :isActive WHERE t.username = :username";
     private static final String DELETE_BY_USERNAME_QUERY = "DELETE FROM Trainer t WHERE t.username = :username";
 
     @Logging(INFO)
@@ -33,26 +33,30 @@ public class TrainerDaoImpl extends AbstractUserDao<Trainer> implements TrainerD
 
     @Logging(INFO)
     @Override
-    public void changePassword(Long id, String newPassword) {
-        var query = em.createQuery(CHANGE_PASSWORD_QUERY);
-        query.setParameter("id", id);
-        query.setParameter("newPassword", newPassword);
+    public Trainer updateByUsername(String username, Trainer entity) {
+        var query = em.createQuery(UPDATE_BY_USERNAME_QUERY);
+        query.setParameter("firstName", entity.getFirstName());
+        query.setParameter("lastName", entity.getLastName());
+        query.setParameter("specialization", entity.getSpecialization());
+        query.setParameter("isActive", entity.getActive());
+        query.setParameter("username", username);
         query.executeUpdate();
+        return findByUsername(username).get();
     }
 
     @Logging(INFO)
     @Override
-    public void changeStatus(Long id, boolean isActive) {
-        var query = em.createQuery(CHANGE_STATUS_QUERY, Trainer.class);
+    public void changeStatusByUsername(String username, boolean isActive) {
+        var query = em.createQuery(CHANGE_STATUS_BY_USERNAME_QUERY);
         query.setParameter("isActive", isActive);
-        query.setParameter("id", id);
+        query.setParameter("username", username);
         query.executeUpdate();
     }
 
     @Logging(INFO)
     @Override
     public void deleteByUsername(String username) {
-        var query = em.createQuery(DELETE_BY_USERNAME_QUERY, Trainer.class);
+        var query = em.createQuery(DELETE_BY_USERNAME_QUERY);
         query.setParameter("username", username);
         query.executeUpdate();
     }

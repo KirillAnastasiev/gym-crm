@@ -1,13 +1,16 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.domain.Trainee;
+import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -17,23 +20,33 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Optional;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
-@Nested
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TraineeServiceImpl test suite")
 class TraineeServiceImplTest {
     @Mock
     private TraineeDao traineeDao;
 
+    @Mock
+    private AuthenticationService authenticationService;
+
+    @Mock
+    private TrainerService trainerService;
+
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
+
+    // ==================== REGISTER NEW TESTS ====================
+
     @Test
-    @DisplayName("Test of the method create - should create trainee with unique username and return")
-    void testCreate_uniqueUsername() {
+    @DisplayName("Test of the method registerNew - should create trainee with unique username and return updated trainee")
+    void testRegisterNew_positive_uniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -47,7 +60,7 @@ class TraineeServiceImplTest {
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
-            var actualResult = traineeService.create(trainee);
+            var actualResult = traineeService.registerNew(trainee);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -62,8 +75,8 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method create - should create trainee with non-unique username and return")
-    void testCreate_nonUniqueUsername() {
+    @DisplayName("Test of the method registerNew - should create trainee with non-unique username and return")
+    void testRegisterNew_positive_nonUniqueUsername() {
         // given
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
@@ -77,7 +90,7 @@ class TraineeServiceImplTest {
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
-            var actualResult = traineeService.create(trainee);
+            var actualResult = traineeService.registerNew(trainee);
 
             // then
             assertThat(actualResult).isNotNull();
@@ -91,9 +104,12 @@ class TraineeServiceImplTest {
         }
     }
 
+
+    // ==================== UPDATE TESTS ====================
+
     @Test
-    @DisplayName("Test of the method update - should update trainee with unique username and return")
-    void testUpdate() {
+    @DisplayName("Test of the method update - should update trainee with unique username and return updated trainee")
+    void testUpdate_positive() {
         // given
         var trainee = createTestTrainee();
         trainee.setFirstName("UpdatedFirstName");
@@ -112,20 +128,64 @@ class TraineeServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method delete - should delete trainee")
-    void testDelete() {
+    @DisplayName("Test of the method update - should throw exception if input is null")
+    void testUpdate_negative_nullTrainee() {
+        // when & then
+        assertThatThrownBy(() -> traineeService.update(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Entity must not be null");
+
+        verifyNoInteractions(traineeDao);
+    }
+
+
+    // ==================== UPDATE BY USERNAME TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method updateByUsername - should update trainee by username and return updated trainee")
+    void testUpdateByUsername_positive() {
         // given
         var trainee = createTestTrainee();
+        var username = "FirstName.LastName";
+        trainee.setFirstName("UpdatedFirstName");
+        trainee.setUsername(username);
+        trainee.addTrainers(Collections.emptyList());
 
-        doNothing().when(traineeDao).delete(any(Trainee.class));
+        given(traineeDao.updateByUsername(eq(username), any(Trainee.class))).willReturn(trainee);
 
         // when
-        traineeService.delete(trainee);
+        var actualResult = traineeService.updateByUsername(username, trainee);
 
         // then
-        verify(traineeDao, times(1)).delete(any(Trainee.class));
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEqualTo(trainee);
+        assertThat(actualResult.getUsername()).isEqualTo(username);
+        assertThat(actualResult.getTrainers()).isNotNull();
+        assertThat(actualResult.getTrainers()).isInstanceOf(Collection.class);
+        assertThat(actualResult.getTrainers()).isEmpty();
+
+        verify(traineeDao, times(1)).updateByUsername(anyString(), any(Trainee.class));
         verifyNoMoreInteractions(traineeDao);
     }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "NULL, Trainee username must not be null",
+        "'', Trainee username must not be blank",
+        "'   ', Trainee username must not be blank"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method updateByUsername - should throw exception if input is invalid")
+    void testUpdateByUsername_negative_invalidInput(String username, String expectedMessage) {
+        // when & then
+        assertThatThrownBy(() -> traineeService.updateByUsername(username, createTestTrainee()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
+
+        verifyNoInteractions(traineeDao);
+    }
+
+
+    // ==================== SELECT BY ID TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectById - should return trainee by id")
@@ -158,11 +218,14 @@ class TraineeServiceImplTest {
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isNotPresent();
+        assertThat(actualResult).isEmpty();
 
         verify(traineeDao, times(1)).findById(anyLong(), any());
         verifyNoMoreInteractions(traineeDao);
     }
+
+
+    // ==================== SELECT BY CONDITION TESTS ====================
 
     @Test
     @DisplayName("Test of the method selectByCondition - should return collection of trainees that satisfy condition")
@@ -206,6 +269,9 @@ class TraineeServiceImplTest {
         verifyNoMoreInteractions(traineeDao);
     }
 
+
+    // ==================== SELECT BY USERNAME TESTS ====================
+
     @Test
     @DisplayName("Test of the method selectByUsername - should return trainee by username")
     void testSelectByUsername_positive() {
@@ -220,146 +286,251 @@ class TraineeServiceImplTest {
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isPresent();
-        assertThat(actualResult).contains(trainee);
+        assertThat(actualResult).isEqualTo(trainee);
 
         verify(traineeDao, times(1)).findByUsername(anyString());
         verifyNoMoreInteractions(traineeDao);
     }
 
     @Test
-    @DisplayName("Test of the method selectByUsername - should return empty optional if there is no trainee with given username")
-    void testSelectByUsername_negative() {
+    @DisplayName("Test of the method selectByUsername - should throw exception if there is no trainee with given username")
+    void testSelectByUsername_negative_notExistingUsername() {
         // given
+        var username = "NonExistingUsername";
+
         given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
 
-        // when
-        var actualResult = traineeService.selectByUsername("NonExistingUsername");
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isNotPresent();
+        // when & then
+        assertThatThrownBy(() -> traineeService.selectByUsername(username))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainee with username " + username + " not found");
 
         verify(traineeDao, times(1)).findByUsername(anyString());
         verifyNoMoreInteractions(traineeDao);
     }
 
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return true if password is correct for given username")
-    void testCheckPasswordForUsername_positive() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setUsername("FirstName.LastName");
-        trainee.setPassword("password");
+    @ParameterizedTest
+    @CsvSource(value ={
+        "NULL, Trainee username must not be null",
+        "'', Trainee username must not be blank",
+        "'   ', Trainee username must not be blank"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method selectByUsername - should throw exception if input is invalid")
+    void testSelectByUsername_negative_invalidInput(String username, String expectedMessage) {
+        // when & then
+        assertThatThrownBy(() -> traineeService.selectByUsername(username))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
 
-        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
-
-        // when
-        var actualResult = traineeService.checkPasswordForUsername("FirstName.LastName", "password");
-
-        // then
-        assertThat(actualResult).isTrue();
-
-        verify(traineeDao, times(1)).findByUsername(anyString());
-        verifyNoMoreInteractions(traineeDao);
+        verifyNoInteractions(traineeDao);
     }
 
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return false if password is incorrect for given username")
-    void testCheckPasswordForUsername_negative() {
-        // given
-        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
 
-        // when
-        var actualResult = traineeService.checkPasswordForUsername("FirstName.LastName", "wrongPassword");
-
-        // then
-        assertThat(actualResult).isFalse();
-
-        verify(traineeDao, times(1)).findByUsername(anyString());
-        verifyNoMoreInteractions(traineeDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method changePassword - should change password for given trainee")
-    void testChangePassword_withValidPassword() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setUsername("FirstName.LastName");
-        trainee.setPassword("oldPassword");
-
-        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
-
-        // when
-        traineeService.changePassword(trainee, "newPassword");
-
-        // then
-        assertThat(trainee.getPassword()).isEqualTo("newPassword");
-
-        verify(traineeDao, times(1)).update(any(Trainee.class));
-        verifyNoMoreInteractions(traineeDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method changePassword - should change password to generated one if given password is null")
-    void testChangePassword_withNullPassword() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setUsername("FirstName.LastName");
-        trainee.setPassword("oldPassword");
-
-        var generatedPassword = "generatedPassword";
-
-        try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class)) {
-            staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
-
-            given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
-
-            // when
-            traineeService.changePassword(trainee, null);
-
-            // then
-            assertThat(trainee.getPassword()).isEqualTo(generatedPassword);
-
-            verify(traineeDao, times(1)).update(any(Trainee.class));
-            verifyNoMoreInteractions(traineeDao);
-        }
-    }
-
-    @Test
-    @DisplayName("Test of the method changeStatus - should change status for given trainee")
-    void testChangeStatus() {
-        // given
-        var trainee = createTestTrainee();
-        trainee.setActive(true);
-
-        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
-
-        // when
-        traineeService.changeStatus(trainee, false);
-
-        // then
-        assertThat(trainee.isActive()).isFalse();
-
-        verify(traineeDao, times(1)).update(any(Trainee.class));
-        verifyNoMoreInteractions(traineeDao);
-    }
+    // ==================== DELETE BY USERNAME TESTS ====================
 
     @Test
     @DisplayName("Test of the method deleteByUsername - should delete trainee by username")
-    void testDeleteByUsername() {
+    void testDeleteByUsername_positive() {
         // given
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(true);
         doNothing().when(traineeDao).deleteByUsername(anyString());
 
         // when
         traineeService.deleteByUsername("FirstName.LastName");
 
         // then
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
         verify(traineeDao, times(1)).deleteByUsername(anyString());
-        verifyNoMoreInteractions(traineeDao);
+        verifyNoMoreInteractions(authenticationService, traineeDao);
     }
 
-    private Trainee createTestTrainee() {
+    @Test
+    @DisplayName("Test of the method deleteByUsername - should throw exception if there is no trainee with given username")
+    void testDeleteByUsername_negative_notExistingUsername() {
+        // given
+        var username = "NonExistingUsername";
+
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> traineeService.deleteByUsername(username))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainee with username " + username + " not found");
+
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
+        verifyNoMoreInteractions(authenticationService);
+        verifyNoInteractions(traineeDao);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "NULL, Trainee username must not be null",
+        "'', Trainee username must not be blank",
+        "'   ', Trainee username must not be blank"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method deleteByUsername - should throw exception if input is invalid")
+    void testDeleteByUsername_negative_invalidInput(String username, String expectedMessage) {
+        // when & then
+        assertThatThrownBy(() -> traineeService.deleteByUsername(username))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
+
+        verifyNoInteractions(traineeDao);
+    }
+
+
+    // ==================== CHANGE STATUS TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method changeStatusByUsername - should change trainee status")
+    void testChangeStatus_positive() {
+        // given
+        var username = "FirstName.LastName";
+        var isActive = false;
+
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(true);
+        doNothing().when(traineeDao).changeStatusByUsername(anyString(), anyBoolean());
+
+        // when
+        traineeService.changeStatus(username, isActive);
+
+        // then
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
+        verify(traineeDao, times(1)).changeStatusByUsername(anyString(), anyBoolean());
+        verifyNoMoreInteractions(authenticationService, traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method changeStatus - should throw exception if there is no trainee with given username")
+    void testChangeStatus_negative_notExistingUsername() {
+        // given
+        var username = "NonExistingUsername";
+        var isActive = false;
+
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() -> traineeService.changeStatus(username, isActive))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainee with username " + username + " not found");
+
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
+        verifyNoMoreInteractions(authenticationService);
+        verifyNoInteractions(traineeDao);
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = {
+        "NULL, Username must not be null",
+        "'', Username must not be blank",
+        "'   ', Username must not be blank"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method changeStatus - should throw exception if input is invalid")
+    void testChangeStatus_negative_invalidInput(String username, String expectedMessage) {
+        // given
+        given(authenticationService.checkExistsByUsername(username)).willThrow(new IllegalArgumentException(expectedMessage));
+
+        // when & then
+        assertThatThrownBy(() -> traineeService.changeStatus(username, true))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(expectedMessage);
+
+        verify(authenticationService, times(1)).checkExistsByUsername(username);
+        verifyNoMoreInteractions(authenticationService);
+        verifyNoInteractions(traineeDao);
+    }
+
+
+    // ==================== UPDATE TRAINERS TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method updateTrainers - should update trainee's trainers and return updated collection of trainers")
+    void testUpdateTrainers_positive() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+
+        var trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setFirstName("TrainerFirstName");
+        trainer.setLastName("TrainerLastName");
+        trainer.setUsername("TrainerFirstName.TrainerLastName");
+        trainer.setActive(true);
+
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
+        given(trainerService.selectByUsername(anyString())).willReturn(trainer);
+        given(traineeDao.update(any(Trainee.class))).willReturn(trainee);
+
+        // when
+        var actualResult = traineeService.updateTrainers("FirstName.LastName", Collections.singletonList(trainer));
+
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isInstanceOf(Collection.class);
+        assertThat(actualResult).isNotEmpty();
+        actualResult.forEach(t -> {
+            assertThat(t).isNotNull();
+            assertThat(t).isInstanceOf(Trainer.class);
+            assertThat(t).isEqualTo(trainer);
+        });
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verify(trainerService, times(1)).selectByUsername(anyString());
+        verify(traineeDao, times(1)).update(any(Trainee.class));
+        verifyNoMoreInteractions(traineeDao, trainerService);
+    }
+
+    @Test
+    @DisplayName("Test of the method updateTrainers - should throw exception if there is no trainee with given username")
+    void testUpdateTrainers_negative_notExistingTrainee() {
+        // given
+        var trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setFirstName("TrainerFirstName");
+        trainer.setLastName("TrainerLastName");
+        trainer.setUsername("TrainerFirstName.TrainerLastName");
+        trainer.setActive(true);
+
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.empty());
+
+        // when & then
+        assertThatThrownBy(() -> traineeService.updateTrainers("NonExistingUsername", Collections.singletonList(trainer)))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainee with username NonExistingUsername not found");
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao);
+        verifyNoInteractions(trainerService);
+    }
+
+    @Test
+    @DisplayName("Test of the method updateTrainers - should throw exception if there is no trainer with given username in the list of trainers")
+    void testUpdateTrainers_negative_notExistingTrainer() {
+        // given
+        var trainee = createTestTrainee();
+        trainee.setUsername("FirstName.LastName");
+
+        var trainer = new Trainer();
+        trainer.setId(1L);
+        trainer.setFirstName("TrainerFirstName");
+        trainer.setLastName("TrainerLastName");
+        trainer.setUsername("TrainerFirstName.TrainerLastName");
+        trainer.setActive(true);
+
+        given(traineeDao.findByUsername(anyString())).willReturn(Optional.of(trainee));
+        given(trainerService.selectByUsername(anyString())).willThrow(new NoSuchEntityException("Trainer with username TrainerFirstName.TrainerLastName not found"));
+
+        // when & then
+        assertThatThrownBy(() -> traineeService.updateTrainers("FirstName.LastName", Collections.singletonList(trainer)))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainer with username TrainerFirstName.TrainerLastName not found");
+
+        verify(traineeDao, times(1)).findByUsername(anyString());
+        verify(trainerService, times(1)).selectByUsername(anyString());
+        verifyNoMoreInteractions(traineeDao, trainerService);
+    }
+
+    private static Trainee createTestTrainee() {
         var trainee = new Trainee();
         trainee.setId(1L);
         trainee.setFirstName("FirstName");
@@ -369,4 +540,5 @@ class TraineeServiceImplTest {
 
         return trainee;
     }
+
 }

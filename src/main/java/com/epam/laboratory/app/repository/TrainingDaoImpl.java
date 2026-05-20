@@ -4,5 +4,5 @@ import com.epam.laboratory.app.domain.Training;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class TrainingDaoImpl extends AbstractDao<Training> implements TrainingDao {
+public class TrainingDaoImpl extends AbstractEntityDao<Training> implements TrainingDao {
 }

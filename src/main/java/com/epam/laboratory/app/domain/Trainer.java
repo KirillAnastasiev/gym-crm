@@ -1,39 +1,35 @@
 package com.epam.laboratory.app.domain;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.*;
-import jakarta.persistence.Entity;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "trainers", schema = "public")
+@jakarta.persistence.Entity
+@Table(name = "trainers")
 @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id", callSuper = true)
-@ToString(callSuper = true, exclude = {"password", "trainings", "trainees"})
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({"specialization"})
+@ToString(callSuper = true)
 public class Trainer extends User {
 
     @ManyToOne(optional = false, fetch = FetchType.EAGER)
     @JoinColumn(name = "training_type_id", nullable = false)
-    @JsonProperty(value = "specialization", required = true)
     private TrainingType specialization;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainer")
     @Setter(AccessLevel.PRIVATE)
+    @ToString.Exclude
     private Collection<Training> trainings = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, mappedBy = "trainers")
+    @Setter(AccessLevel.PRIVATE)
+    @ToString.Exclude
     private Collection<Trainee> trainees = new HashSet<>();
 
     public void addTraining(Training training) {
@@ -54,7 +50,7 @@ public class Trainer extends User {
     }
 
     public Collection<Training> getTrainings() {
-        return Set.copyOf(trainings);
+        return new ArrayList<>(trainings);
     }
 
     public void addTrainee(Trainee trainee) {
@@ -83,7 +79,7 @@ public class Trainer extends User {
     }
 
     public Collection<Trainee> getTrainees() {
-        return Set.copyOf(trainees);
+        return new ArrayList<>(trainees);
     }
 
 }

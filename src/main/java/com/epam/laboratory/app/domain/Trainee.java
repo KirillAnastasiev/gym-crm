@@ -1,45 +1,39 @@
 package com.epam.laboratory.app.domain;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import jakarta.persistence.*;
-import jakarta.persistence.Entity;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
-@Entity
-@Table(name = "trainees", schema = "public")
+@jakarta.persistence.Entity
+@Table(name = "trainees")
 @PrimaryKeyJoinColumn(name = "id", referencedColumnName = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
 @EqualsAndHashCode(of = "id", callSuper = true)
-@ToString(callSuper = true, exclude = {"password", "trainings", "trainers"})
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
-@JsonPropertyOrder({"dateOfBirth", "address"})
+@ToString(callSuper = true)
 public class Trainee extends User {
 
     @Column(name = "date_of_birth")
-    @JsonProperty(value = "dateOfBirth")
     private LocalDate dateOfBirth;
 
     @Column(name = "address", length = 200)
-    @JsonProperty(value = "address")
     private String address;
 
     @OneToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REMOVE, CascadeType.REFRESH}, orphanRemoval = true, mappedBy = "trainee")
     @Setter(AccessLevel.PRIVATE)
+    @ToString.Exclude
     private Collection<Training> trainings = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
     @JoinTable(name = "trainees_to_trainers", joinColumns = @JoinColumn(name = "trainee_id"), inverseJoinColumns = @JoinColumn(name = "trainer_id"))
     @Setter(AccessLevel.PRIVATE)
+    @ToString.Exclude
     private Collection<Trainer> trainers = new HashSet<>();
 
     public void addTraining(Training training) {
@@ -60,7 +54,7 @@ public class Trainee extends User {
     }
 
     public Collection<Training> getTrainings() {
-        return Set.copyOf(trainings);
+        return new ArrayList<>(trainings);
     }
 
     public void addTrainer(Trainer trainer) {
@@ -89,6 +83,6 @@ public class Trainee extends User {
     }
 
      public Collection<Trainer> getTrainers() {
-        return Set.copyOf(trainers);
+        return new ArrayList<>(trainers);
     }
 }

@@ -1,28 +1,31 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.aspect.Logging;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Entity;
-import com.epam.laboratory.app.repository.Dao;
+import com.epam.laboratory.app.repository.EntityDao;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.BiFunction;
 
-@org.springframework.stereotype.Service
-@RequiredArgsConstructor
-public abstract class AbstractService<T extends Entity> implements Service<T> {
+@Service
+@Transactional(rollbackFor = Exception.class)
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
+public abstract class AbstractEntityService<T extends Entity> implements EntityService<T> {
 
-    protected final Dao<T> dao;
+    protected final EntityDao<T> dao;
 
     @Logging(Level.INFO)
     @Override
-    public T create(T entity) {
+    public T registerNew(T entity) {
         prepareEntity(entity);
         return dao.save(entity);
     }
@@ -30,13 +33,10 @@ public abstract class AbstractService<T extends Entity> implements Service<T> {
     @Logging(Level.INFO)
     @Override
     public T update(T entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("Entity must not be null");
+        }
         return dao.update(entity);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public void delete(T entity) {
-        dao.delete(entity);
     }
 
     @Logging(Level.INFO)
