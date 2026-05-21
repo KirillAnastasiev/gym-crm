@@ -20,5 +20,5 @@ public record TraineeDto(
         @JsonProperty("dateOfBirth") LocalDate dateOfBirth,
         @JsonProperty("address") String address,
         @JsonProperty("trainers") Collection<TrainerDto> trainers,
-        @JsonProperty("active") boolean active
+        @JsonProperty("active") Boolean active
 ) {}

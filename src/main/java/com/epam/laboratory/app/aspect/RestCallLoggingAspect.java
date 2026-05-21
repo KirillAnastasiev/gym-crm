@@ -3,7 +3,6 @@ package com.epam.laboratory.app.aspect;
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.exception.ApplicationException;
 import com.epam.laboratory.app.util.SensitiveDataMasker;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Optional;
 
@@ -25,7 +25,7 @@ import java.util.Optional;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class RestCallLoggingAspect {
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
     protected final SensitiveDataMasker sensitiveDataMasker;
 
     @Pointcut("@annotation(restCallLogging)")
@@ -71,8 +71,9 @@ public class RestCallLoggingAspect {
         var requestInfo = new StringBuilder("REST Call - Endpoint: %s, HTTP Method: %s".formatted(endpoint, httpMethod));
         if (args != null && args.length > 0) {
             try {
-                var argsToLog = sensitiveDataMasker.maskSensitiveData(args);
-                var requestBody = objectMapper.writeValueAsString(argsToLog);
+                var argsToLog = args.length == 1 ? args[0] : args;
+                var maskedArgsToLog = sensitiveDataMasker.maskSensitiveData(argsToLog);
+                var requestBody = objectMapper.writeValueAsString(maskedArgsToLog);
                 requestInfo.append(", Request Body: %s".formatted(requestBody));
             } catch (Exception e) {
                 requestInfo.append(", Request Body: [Unable to serialize] - %s".formatted(e.getMessage()));
@@ -106,11 +107,11 @@ public class RestCallLoggingAspect {
         logger.makeLoggingEventBuilder(level).log(message);
     }
 
-    private void logError(Logger logger, String message, Throwable exception) {
-        if (exception instanceof ApplicationException) {
-            logger.warn(message, exception);
+    private void logError(Logger logger, String message, Throwable t) {
+        if (t instanceof ApplicationException) {
+            logger.warn(message, t);
         } else {
-            logger.error(message, exception);
+            logger.error(message, t);
         }
     }
 

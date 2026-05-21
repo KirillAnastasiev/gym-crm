@@ -18,7 +18,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/api/trainees")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-class TraineeController {
+public class TraineeController {
 
     private final TraineeService traineeService;
     private final TraineeMapper traineeMapper;

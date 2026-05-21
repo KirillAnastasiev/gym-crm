@@ -3,22 +3,17 @@ package com.epam.laboratory.app.rest;
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.AuthenticationService;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Map;
 
@@ -31,35 +26,24 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest
 @ContextConfiguration(classes = {
-        JsonMapper.class,
+        AuthenticationController.class,
         RestExceptionHandler.class
 })
 @DisplayName("AuthenticationController test suite")
 class AuthenticationControllerTest {
+    private static final String ACCESS_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNTAwMCwiZXhwIjoxNzc4NDM4NjAwfQ.newAccessTokenSignature";
+    private static final String REFRESH_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
 
     @Autowired
     private JsonMapper objectMapper;
 
     @Autowired
-    private RestExceptionHandler restExceptionHandler;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private AuthenticationService authenticationService;
-
-    @InjectMocks
-    private AuthenticationController authenticationController;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        mockMvc = MockMvcBuilders.standaloneSetup(authenticationController)
-                .setControllerAdvice(restExceptionHandler)
-                .build();
-    }
 
 
     // ==================== LOGIN ENDPOINT TESTS ====================
@@ -69,8 +53,8 @@ class AuthenticationControllerTest {
     void testLogin_positive() throws Exception {
         // given
         var tokensMap = Map.of(
-                "accessToken", "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD",
-                "refreshToken", "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX"
+                "accessToken", ACCESS_TOKEN,
+                "refreshToken", REFRESH_TOKEN
         );
 
         doNothing().when(authenticationService).validateUser(anyString(), anyString());
@@ -80,9 +64,7 @@ class AuthenticationControllerTest {
         var actualResult = mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"username":"John.Doe","password":"password123"}
-                         """))
+                        .content("{\"username\":\"John.Doe\",\"password\":\"password123\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -109,18 +91,13 @@ class AuthenticationControllerTest {
                 .when(authenticationService).validateUser(anyString(), anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(get("/api/auth/login")
+        mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"username":"Unknown.User","password":"password123"}
-                         """))
-                .andExpect(status().isUnauthorized());
-
-        var contentAsString = actualResult.andReturn().getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("User with username Unknown.User does not exist");
+                        .content("{\"username\":\"Unknown.User\",\"password\":\"password123\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("User with username Unknown.User does not exist"));
 
         verify(authenticationService, times(1)).validateUser(anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -134,18 +111,13 @@ class AuthenticationControllerTest {
                 .when(authenticationService).validateUser(anyString(), anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(get("/api/auth/login")
+        mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"username":"John.Doe","password":"wrongPassword"}
-                         """))
-                .andExpect(status().isUnauthorized());
-
-        var contentAsString = actualResult.andReturn().getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Incorrect password for username John.Doe");
+                        .content("{\"username\":\"John.Doe\",\"password\":\"wrongPassword\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("Incorrect password for username John.Doe"));
 
         verify(authenticationService, times(1)).validateUser(anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -158,10 +130,7 @@ class AuthenticationControllerTest {
     @DisplayName("Test of the method refreshAccessToken - should return new access token when refresh token is valid")
     void testRefreshAccessToken_positive() throws Exception {
         // given
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
-        var newTokenMap = Map.of(
-                "accessToken", "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNTAwMCwiZXhwIjoxNzc4NDM4NjAwfQ.newAccessTokenSignature"
-        );
+        var newTokenMap = Map.of("accessToken", ACCESS_TOKEN);
 
         given(authenticationService.refreshAccessToken(anyString())).willReturn(newTokenMap);
 
@@ -169,7 +138,7 @@ class AuthenticationControllerTest {
         var actualResult = mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("\"" + refreshToken + "\""))
+                        .content("\"" + REFRESH_TOKEN + "\""))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -195,16 +164,13 @@ class AuthenticationControllerTest {
                 .when(authenticationService).refreshAccessToken(anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(get("/api/auth/refresh-token")
+       mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content("\"" + invalidRefreshToken + "\""))
-                .andExpect(status().isUnauthorized());
-
-        var contentAsString = actualResult.andReturn().getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Invalid refresh token");
+                .andExpect(status().isUnauthorized())
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+               .andExpect(content().string("Invalid refresh token"));
 
         verify(authenticationService, times(1)).refreshAccessToken(anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -214,22 +180,17 @@ class AuthenticationControllerTest {
     @DisplayName("Test of the method refreshAccessToken - should return 401 when username is not found in refresh token")
     void testRefreshAccessToken_negative_noUsernameInRefreshToken() throws Exception {
         // given
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
-
         doThrow(new AuthenticationException("Username not found in refresh token"))
                 .when(authenticationService).refreshAccessToken(anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(get("/api/auth/refresh-token")
+       mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("\"" + refreshToken + "\""))
-                .andExpect(status().isUnauthorized());
-
-        var contentAsString = actualResult.andReturn().getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Username not found in refresh token");
+                        .content("\"" + REFRESH_TOKEN + "\""))
+                .andExpect(status().isUnauthorized())
+               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+               .andExpect(content().string("Username not found in refresh token"));
 
         verify(authenticationService, times(1)).refreshAccessToken(anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -245,20 +206,13 @@ class AuthenticationControllerTest {
         doNothing().when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"oldPassword":"oldPass123","newPassword":"newPass456"}
-                         """))
+                        .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Password changed successfully");
+                .andExpect(content().string("Password changed successfully"));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -272,19 +226,13 @@ class AuthenticationControllerTest {
                 .when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"oldPassword":"wrongOldPass","newPassword":"newPass456"}
-                         """))
+                        .content("{\"oldPassword\":\"wrongOldPass\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isUnauthorized())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Incorrect password for username John.Doe");
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("Incorrect password for username John.Doe"));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -298,19 +246,13 @@ class AuthenticationControllerTest {
                 .when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/auth/{username}/change-password", "NonExistent.User")
+        mockMvc.perform(put("/api/auth/{username}/change-password", "NonExistent.User")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"oldPassword":"oldPass123","newPassword":"newPass456"}
-                         """))
+                        .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isUnauthorized())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("User with username NonExistent.User does not exist");
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("User with username NonExistent.User does not exist"));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -330,19 +272,13 @@ class AuthenticationControllerTest {
         // when & then
         doThrow(new IllegalArgumentException(expectedErrorMessage)).when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
-        var actualResult = mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"oldPassword":"%s","newPassword":"%s"}
-                         """.formatted(oldPassword, newPassword)))
+                        .content("{\"oldPassword\":\"%s\",\"newPassword\":\"%s\"}".formatted(oldPassword, newPassword)))
                 .andExpect(status().isBadRequest())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo(expectedErrorMessage);
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string(expectedErrorMessage));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);

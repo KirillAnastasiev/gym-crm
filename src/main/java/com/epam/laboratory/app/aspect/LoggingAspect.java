@@ -2,7 +2,6 @@ package com.epam.laboratory.app.aspect;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.exception.ApplicationException;
-import com.epam.laboratory.app.util.SensitiveDataMasker;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;

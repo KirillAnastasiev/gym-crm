@@ -4,7 +4,6 @@ import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.dto.annotation.Sensitive;
 import com.epam.laboratory.app.exception.ApplicationException;
 import com.epam.laboratory.app.util.SensitiveDataMasker;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.aspectj.lang.JoinPoint;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +19,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.*;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-        ObjectMapper.class,
+        JsonMapper.class,
         SensitiveDataMasker.class,
         RestCallLoggingAspectTest.TestRestController.class
 })
@@ -40,7 +40,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 class RestCallLoggingAspectTest {
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @Autowired
     private SensitiveDataMasker sensitiveDataMasker;
@@ -118,8 +118,7 @@ class RestCallLoggingAspectTest {
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("""
-                              REST Call - Endpoint: /test/post, HTTP Method: POST, Request Body: [{"username":"testUser","password":"************"}]""");
+        assertThat(output).contains("REST Call - Endpoint: /test/post, HTTP Method: POST, Request Body: {\"username\":\"testUser\",\"password\":\"************\"}");
 
         verify(loggingAspect, times(1)).logRestCallRequest(joinPointCaptor.capture(), annotationCaptor.capture());
 
@@ -146,8 +145,7 @@ class RestCallLoggingAspectTest {
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("""
-                              REST Call Response - Status Code: 200, Response Body: "GET method - Success\"""");
+        assertThat(output).contains("REST Call Response - Status Code: 200, Response Body: \"GET method - Success\"");
 
         verify(loggingAspect, times(1)).logRestCallResponse(joinPointCaptor.capture(), annotationCaptor.capture(), any());
 
@@ -176,8 +174,7 @@ class RestCallLoggingAspectTest {
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("""
-                              REST Call Response - Status Code: 200, Response Body: "POST method - Success""");
+        assertThat(output).contains("REST Call Response - Status Code: 200, Response Body: \"POST method - Success\"");
 
         verify(loggingAspect, times(1)).logRestCallResponse(joinPointCaptor.capture(), annotationCaptor.capture(), any());
 

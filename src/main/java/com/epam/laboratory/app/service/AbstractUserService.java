@@ -21,8 +21,7 @@ public abstract class AbstractUserService<T extends User> extends AbstractEntity
         this.authenticationService = authenticationService;
     }
 
-    @Override
-    protected void prepareEntity(T user) {
+    protected void prepareUser(T user) {
         user.setPassword(PasswordGenerator.generatePassword());
         user.setUsername(UsernameHelper.generateUsername(user, authenticationService::checkExistsByUsername));
         user.setActive(true);

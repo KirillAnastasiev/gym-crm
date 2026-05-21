@@ -14,7 +14,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
 
 import static java.time.Duration.ofHours;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -70,17 +69,28 @@ class TrainingServiceImplTest {
         verifyNoMoreInteractions(traineeService, trainerService, trainingTypeService, trainingDao);
     }
 
+    @Test
+    @DisplayName("Test of the method registerNew - should throw IllegalArgumentException if training is null")
+    void testRegisterNew_negative_nullTraining() {
+        // when && then
+        assertThatThrownBy(() -> trainingServiceImpl.registerNew(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Training must not be null");
+
+        verifyNoInteractions(traineeService, trainerService, trainingTypeService, trainingDao);
+    }
+
 
     // ==================== UPDATE TESTS ====================
 
     @Test
     @DisplayName("Test of the method update - should update training")
-    void testUpdate() {
+    void testUpdate_positive() {
         // given
         var training = createTestTraining();
         training.setTrainingName("Updated Training");
 
-        given(trainingDao.update(any(Training.class))).willReturn(training);
+        given(trainingDao.save(any(Training.class))).willReturn(training);
 
         // when
         var actualResult = trainingServiceImpl.update(training);
@@ -90,48 +100,19 @@ class TrainingServiceImplTest {
         assertThat(actualResult).isEqualTo(training);
         assertThat(actualResult.getTrainingName()).isEqualTo("Updated Training");
 
-        verify(trainingDao, times(1)).update(any(Training.class));
-        verifyNoMoreInteractions(trainingDao);
-    }
-
-
-    // ==================== SELECT BY ID TESTS ====================
-
-    @Test
-    @DisplayName("Test of the method selectById - should return training by id")
-    void testSelectById_positive() {
-        // given
-        var training = createTestTraining();
-
-        given(trainingDao.findById(anyLong(), any())).willReturn(Optional.of(training));
-
-        // when
-        var actualResult = trainingServiceImpl.selectById(1L, Training.class);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isPresent();
-        assertThat(actualResult).contains(training);
-
-        verify(trainingDao, times(1)).findById(anyLong(), any());
+        verify(trainingDao, times(1)).save(any(Training.class));
         verifyNoMoreInteractions(trainingDao);
     }
 
     @Test
-    @DisplayName("Test of the method selectById - should return empty optional if there is no training with given id")
-    void testSelectById_negative() {
-        // given
-        given(trainingDao.findById(anyLong(), any())).willReturn(Optional.empty());
+    @DisplayName("Test of the method update - should throw IllegalArgumentException if training is null")
+    void testUpdate_negative_nullTraining() {
+        // when && then
+        assertThatThrownBy(() -> trainingServiceImpl.update(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Training must not be null");
 
-        // when
-        var actualResult = trainingServiceImpl.selectById(1L, Training.class);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
-
-        verify(trainingDao, times(1)).findById(anyLong(), any());
-        verifyNoMoreInteractions(trainingDao);
+        verifyNoInteractions(trainingDao);
     }
 
 
@@ -143,7 +124,7 @@ class TrainingServiceImplTest {
         // given
         var training = createTestTraining();
 
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.singletonList(training));
+        given(trainingDao.findByCondition(any())).willReturn(Collections.singletonList(training));
 
         // when
         var actualResult = trainingServiceImpl.selectByCondition((cb, root) ->
@@ -158,7 +139,7 @@ class TrainingServiceImplTest {
             assertThat(t.getTrainingName()).isEqualTo("Test Training");
         });
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -166,7 +147,7 @@ class TrainingServiceImplTest {
     @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainings that satisfy condition")
     void testSelectByCondition_negative() {
         // given
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.emptyList());
+        given(trainingDao.findByCondition(any())).willReturn(Collections.emptyList());
 
         // when
         var actualResult =  trainingServiceImpl.selectByCondition((cb, root) ->
@@ -177,7 +158,7 @@ class TrainingServiceImplTest {
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -192,7 +173,7 @@ class TrainingServiceImplTest {
         var trainingFilter = new TrainingFilter();
         trainingFilter.setTrainingTypeName("Test Training Type");
 
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.singletonList(training));
+        given(trainingDao.findByCondition(any())).willReturn(Collections.singletonList(training));
 
         // when
         var actualResult = trainingServiceImpl.selectForTrainee("FirstName.LastName", trainingFilter);
@@ -206,7 +187,7 @@ class TrainingServiceImplTest {
             assertThat(t.getTrainee()).isNotNull();
         });
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -217,7 +198,7 @@ class TrainingServiceImplTest {
         var trainingFilter = new TrainingFilter();
         trainingFilter.setTrainingTypeName("Not Existing Training Type");
 
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.emptyList());
+        given(trainingDao.findByCondition(any())).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainingServiceImpl.selectForTrainee("FirstName.LastName", trainingFilter);
@@ -227,7 +208,7 @@ class TrainingServiceImplTest {
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -257,7 +238,7 @@ class TrainingServiceImplTest {
         var trainingFilter = new TrainingFilter();
         trainingFilter.setTrainingTypeName("Test Training Type");
 
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.singletonList(training));
+        given(trainingDao.findByCondition(any())).willReturn(Collections.singletonList(training));
 
         // when
         var actualResult = trainingServiceImpl.selectForTrainer("FirstName.LastName1", trainingFilter);
@@ -271,7 +252,7 @@ class TrainingServiceImplTest {
             assertThat(t.getTrainer()).isNotNull();
         });
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 
@@ -282,7 +263,7 @@ class TrainingServiceImplTest {
         var trainingFilter = new TrainingFilter();
         trainingFilter.setTrainingTypeName("Not Existing Training Type");
 
-        given(trainingDao.findByCondition(any(), any())).willReturn(Collections.emptyList());
+        given(trainingDao.findByCondition(any())).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainingServiceImpl.selectForTrainer("FirstName.LastName1", trainingFilter);
@@ -292,7 +273,7 @@ class TrainingServiceImplTest {
         assertThat(actualResult).isInstanceOf(Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(trainingDao, times(1)).findByCondition(any(), any());
+        verify(trainingDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 

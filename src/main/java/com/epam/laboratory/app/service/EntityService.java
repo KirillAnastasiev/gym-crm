@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 
 public interface EntityService<T extends Entity> {
-    Optional<T> selectById(Long id, Class<T> entityClass);
     Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass);
     T registerNew(T entity);
     T update(T entity);
