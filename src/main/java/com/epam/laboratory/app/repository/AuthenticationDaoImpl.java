@@ -4,11 +4,10 @@ import com.epam.laboratory.app.aspect.annotation.Logging;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.event.Level;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.slf4j.event.Level.*;
+import static org.slf4j.event.Level.INFO;
 
 @Repository
 @Transactional(rollbackFor = Exception.class)
