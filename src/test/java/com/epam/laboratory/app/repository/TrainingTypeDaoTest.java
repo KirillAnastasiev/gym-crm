@@ -56,6 +56,19 @@ class TrainingTypeDaoTest {
         assertThat(actualResult.map(TrainingType::getTrainingTypeName)).contains(trainingTypeName);
     }
 
+
+    // ==================== COUNT TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method count - should return total number of training types")
+    void testCount() {
+        // when
+        var actualResult = trainingTypeDao.count();
+
+        // then
+        assertThat(actualResult).isEqualTo(8L);
+    }
+
     private static List<TrainingType> createTestTrainingTypes() {
         var trainingType1 = new TrainingType();
         trainingType1.setId(1L);

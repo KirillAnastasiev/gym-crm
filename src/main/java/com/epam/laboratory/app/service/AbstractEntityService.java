@@ -26,8 +26,22 @@ public abstract class AbstractEntityService<T extends Entity> implements EntityS
     @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
-    public Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass) {
+    public Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition) {
         return dao.findByCondition(condition);
+    }
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public long count() {
+        return dao.count();
+    }
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public long countByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition) {
+        return dao.countByCondition(condition);
     }
 
 }

@@ -53,7 +53,7 @@ class TraineeServiceImplTest {
         var generatedUsername = "FirstName.LastName";
 
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
-                var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
+             var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
             staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(generatedUsername);
 
@@ -83,7 +83,7 @@ class TraineeServiceImplTest {
         var generatedUsernameWithSuffix = "FirstName.LastName2";
 
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
-                var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
+             var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
             staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(generatedUsernameWithSuffix);
 
@@ -183,9 +183,9 @@ class TraineeServiceImplTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-        "NULL, Trainee username must not be null",
-        "'', Trainee username must not be blank",
-        "'   ', Trainee username must not be blank",
+            "NULL, Trainee username must not be null",
+            "'', Trainee username must not be blank",
+            "'   ', Trainee username must not be blank",
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method updateByUsername - should throw exception if input is invalid")
     void testUpdateByUsername_negative_invalidInput(String username, String expectedMessage) {
@@ -199,7 +199,7 @@ class TraineeServiceImplTest {
 
     @Test
     @DisplayName("Test of the method updateByUsername - should throw exception if trainee is null")
-    void  testUpdateByUsername_negative_nullTrainee() {
+    void testUpdateByUsername_negative_nullTrainee() {
         // when & then
         assertThatThrownBy(() -> traineeService.updateByUsername("FirstName.LastName", null))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -241,7 +241,7 @@ class TraineeServiceImplTest {
 
         // when
         var actualResult = traineeService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "FirstName.LastName"), Trainee.class);
+                cb.equal(root.get("username"), "FirstName.LastName"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -261,7 +261,7 @@ class TraineeServiceImplTest {
 
         // when
         var actualResult = traineeService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "NonExistingUsername"), Trainee.class);
+                cb.equal(root.get("username"), "NonExistingUsername"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -269,6 +269,41 @@ class TraineeServiceImplTest {
         assertThat(actualResult).isEmpty();
 
         verify(traineeDao, times(1)).findByCondition(any());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainees that satisfy condition")
+    void testCountByCondition_positive() {
+        // given
+        given(traineeDao.countByCondition(any())).willReturn(5L);
+
+        // when
+        var actualResult = traineeService.countByCondition(UserService.byStatus(true));
+
+        // then
+        assertThat(actualResult).isEqualTo(5L);
+
+        verify(traineeDao, times(1)).countByCondition(any());
+        verifyNoMoreInteractions(traineeDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return zero if there are no trainees that satisfy condition")
+    void testCountByCondition_negative() {
+        // given
+        given(traineeDao.countByCondition(any())).willReturn(0L);
+
+        // when
+        var actualResult = traineeService.countByCondition(TraineeService.byUsernames("NonExistingUsername"));
+
+        // then
+        assertThat(actualResult).isEqualTo(0L);
+
+        verify(traineeDao, times(1)).countByCondition(any());
         verifyNoMoreInteractions(traineeDao);
     }
 
@@ -313,10 +348,10 @@ class TraineeServiceImplTest {
     }
 
     @ParameterizedTest
-    @CsvSource(value ={
-        "NULL, Trainee username must not be null",
-        "'', Trainee username must not be blank",
-        "'   ', Trainee username must not be blank"
+    @CsvSource(value = {
+            "NULL, Trainee username must not be null",
+            "'', Trainee username must not be blank",
+            "'   ', Trainee username must not be blank"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method selectByUsername - should throw exception if input is invalid")
     void testSelectByUsername_negative_invalidInput(String username, String expectedMessage) {
@@ -367,9 +402,9 @@ class TraineeServiceImplTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-        "NULL, Trainee username must not be null",
-        "'', Trainee username must not be blank",
-        "'   ', Trainee username must not be blank"
+            "NULL, Trainee username must not be null",
+            "'', Trainee username must not be blank",
+            "'   ', Trainee username must not be blank"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method deleteByUsername - should throw exception if input is invalid")
     void testDeleteByUsername_negative_invalidInput(String username, String expectedMessage) {
@@ -424,9 +459,9 @@ class TraineeServiceImplTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-        "NULL, Username must not be null",
-        "'', Username must not be blank",
-        "'   ', Username must not be blank"
+            "NULL, Username must not be null",
+            "'', Username must not be blank",
+            "'   ', Username must not be blank"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method changeStatus - should throw exception if input is invalid")
     void testChangeStatus_negative_invalidInput(String username, String expectedMessage) {

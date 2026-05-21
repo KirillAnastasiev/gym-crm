@@ -49,6 +49,12 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!--    Spring Boot Actuator AutoConfigure    -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator-autoconfigure</artifactId>
+        </dependency>
+
         <!--    Micrometer Prometheus    -->
         <dependency>
             <groupId>io.micrometer</groupId>

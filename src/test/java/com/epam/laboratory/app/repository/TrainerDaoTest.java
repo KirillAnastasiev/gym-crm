@@ -119,6 +119,36 @@ class TrainerDaoTest {
         });
     }
 
+
+    // ==================== COUNT TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method count - should return count of all trainers")
+    void testCount() {
+        // when
+        var actualResult = trainerDao.count();
+
+        // then
+        assertThat(actualResult).isEqualTo(4L);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainers with given specialization")
+    void testCountByCondition() {
+        // given
+        String trainingTypeName = "Fitness";
+
+        // when
+        var actualResult = trainerDao.countByCondition(TrainerService.bySpecializations(trainingTypeName));
+
+        // then
+        assertThat(actualResult).isEqualTo(1L);
+    }
+
+
     // ==================== UPDATE BY USERNAME TESTS ====================
 
     @Test

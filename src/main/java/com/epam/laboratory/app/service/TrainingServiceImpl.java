@@ -1,10 +1,8 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
-import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingFilter;
-import com.epam.laboratory.app.repository.TraineeDao;
 import com.epam.laboratory.app.repository.TrainingDao;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;

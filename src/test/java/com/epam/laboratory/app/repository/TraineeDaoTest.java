@@ -5,6 +5,7 @@ import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.service.TraineeService;
+import com.epam.laboratory.app.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -123,6 +124,34 @@ class TraineeDaoTest {
                 .isNotEmpty();
     }
 
+
+    // ==================== COUNT TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method count - should return count of all trainees")
+    void testCount() {
+        // when
+        var actualResult = traineeDao.count();
+
+        // then
+        assertThat(actualResult).isEqualTo(4);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainees with given active status")
+    void testCountByCondition() {
+        // given
+        boolean isActive = true;
+
+        // when
+        var actualResult = traineeDao.countByCondition(UserService.byStatus(isActive));
+
+        // then
+        assertThat(actualResult).isGreaterThan(0);
+    }
 
     // ==================== UPDATE BY USERNAME TESTS ====================
 

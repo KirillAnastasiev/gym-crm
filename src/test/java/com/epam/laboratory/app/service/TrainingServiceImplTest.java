@@ -128,7 +128,7 @@ class TrainingServiceImplTest {
 
         // when
         var actualResult = trainingServiceImpl.selectByCondition((cb, root) ->
-                cb.equal(root.get("trainingName"), "Test Training"), Training.class);
+                cb.equal(root.get("trainingName"), "Test Training"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -151,7 +151,7 @@ class TrainingServiceImplTest {
 
         // when
         var actualResult =  trainingServiceImpl.selectByCondition((cb, root) ->
-                cb.equal(root.get("trainingName"), "Test Training"), Training.class);
+                cb.equal(root.get("trainingName"), "Test Training"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -159,6 +159,41 @@ class TrainingServiceImplTest {
         assertThat(actualResult).isEmpty();
 
         verify(trainingDao, times(1)).findByCondition(any());
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainings that satisfy condition")
+    void testCountByCondition_positive() {
+        // given
+        given(trainingDao.countByCondition(any())).willReturn(5L);
+
+        // when
+        var actualResult = trainingServiceImpl.countByCondition(TrainingService.toDate(LocalDateTime.now()));
+
+        // then
+        assertThat(actualResult).isEqualTo(5L);
+
+        verify(trainingDao, times(1)).countByCondition(any());
+        verifyNoMoreInteractions(trainingDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return 0 if there are no trainings that satisfy condition")
+    void testCountByCondition_negative() {
+        // given
+        given(trainingDao.countByCondition(any())).willReturn(0L);
+
+        // when
+        var actualResult = trainingServiceImpl.countByCondition(TrainingService.byTraineeUsernames("Unknown.Username"));
+
+        // then
+        assertThat(actualResult).isEqualTo(0L);
+
+        verify(trainingDao, times(1)).countByCondition(any());
         verifyNoMoreInteractions(trainingDao);
     }
 

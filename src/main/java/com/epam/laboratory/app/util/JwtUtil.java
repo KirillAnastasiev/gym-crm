@@ -22,13 +22,16 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 @Setter(AccessLevel.PACKAGE)
 public class JwtUtil {
 
-    @Value("${jwt.secret:secretKey}")
+    @Value("${app.security.jwt.enabled:true}")
+    private boolean enabled;
+
+    @Value("${app.security.jwt.secret:secretKey}")
     private String secretKey;
 
-    @Value("${jwt.access.expiration-seconds:3600}")
+    @Value("${app.security.jwt.access.expiration-seconds:3600}")
     private int accessTokenExpirationSeconds;
 
-    @Value("${jwt.refresh.expiration-seconds:86400}")
+    @Value("${app.security.jwt.refresh.expiration-seconds:86400}")
     private int refreshTokenExpirationSeconds;
 
     public String generateAccessToken(String username) {
@@ -81,6 +84,10 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }
+    }
+
+    public boolean isEnabled() {
+        return enabled;
     }
 
     private SecretKey getSigningKey() {

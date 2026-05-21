@@ -88,6 +88,20 @@ class TrainingDaoTest {
                 LocalDate.of(2024, 7, 2).atStartOfDay())).isTrue());
     }
 
+
+    // ==================== COUNT TEST ====================
+
+    @Test
+    @DisplayName("Test of the method count - should return total number of trainings")
+    void testCount() {
+        // when
+        var actualResult = trainingDao.count();
+
+        // then
+        assertThat(actualResult).isEqualTo(8L);
+    }
+
+
     private static Trainee createTestTrainee() {
         var trainee = new Trainee();
         trainee.setId(1L);

@@ -6,6 +6,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.slf4j.event.Level;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,20 @@ public interface EntityDao<T extends Entity> {
 
     @Logging(Level.INFO)
     @Transactional(readOnly = true)
-    List<T> findAll(org.springframework.data.jpa.domain.Specification<T> spec);
+    default long countByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition) {
+        return count((root, query, cb) -> condition.apply(cb, root));
+    }
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    List<T> findAll(Specification<T> spec);
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    long count();
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    long count(Specification<T> spec);
 
 }

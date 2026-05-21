@@ -240,7 +240,7 @@ class TrainerServiceImplTest {
 
         // when
         var actualResult = trainerService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "FirstName.LastName"), Trainer.class);
+                cb.equal(root.get("username"), "FirstName.LastName"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -260,7 +260,7 @@ class TrainerServiceImplTest {
 
         // when
         var actualResult = trainerService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "FirstName.LastName"), Trainer.class);
+                cb.equal(root.get("username"), "FirstName.LastName"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -268,6 +268,41 @@ class TrainerServiceImplTest {
         assertThat(actualResult).isEmpty();
 
         verify(trainerDao, times(1)).findByCondition(any());
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainers that satisfy condition")
+    void testCountByCondition_positive() {
+        // given
+        given(trainerDao.countByCondition(any())).willReturn(5L);
+
+        // when
+        var actualResult = trainerService.countByCondition(UserService.byStatus(true));
+
+        // then
+        assertThat(actualResult).isEqualTo(5L);
+
+        verify(trainerDao, times(1)).countByCondition(any());
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return 0 if there are no trainers that match the condition")
+    void testCountByCondition_negative() {
+        // given
+        given(trainerDao.countByCondition(any())).willReturn(0L);
+
+        // when
+        var actualResult = trainerService.countByCondition(TrainerService.byUsernames("Unknown.Username"));
+
+        // then
+        assertThat(actualResult).isEqualTo(0L);
+
+        verify(trainerDao, times(1)).countByCondition(any());
         verifyNoMoreInteractions(trainerDao);
     }
 
