@@ -5,17 +5,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
-import org.springframework.test.context.jdbc.Sql;
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase.*;
 
 @DataJpaTest
-@Sql(scripts = {
-        "classpath:schema.test.sql",
-        "classpath:data.test.sql"
-}, executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS)
+@AutoConfigureTestDatabase(replace = Replace.NONE, connection = EmbeddedDatabaseConnection.H2)
 @DisplayName("TrainingTypeDao test suite")
 class TrainingTypeDaoTest {
 
