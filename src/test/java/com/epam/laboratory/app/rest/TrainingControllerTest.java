@@ -79,7 +79,6 @@ class TrainingControllerTest {
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainee/{username}", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -120,7 +119,6 @@ class TrainingControllerTest {
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainer/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -159,9 +157,8 @@ class TrainingControllerTest {
         // when & then
         mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("Training was registered"));
 
@@ -185,11 +182,10 @@ class TrainingControllerTest {
         // when & then
         mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username John.Doe not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username John.Doe not found\"}"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);
@@ -211,11 +207,10 @@ class TrainingControllerTest {
         // when & then
         mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username Jane.Smith not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username Jane.Smith not found\"}"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);

@@ -32,17 +32,6 @@ public class ApplicationConfig implements WebMvcConfigurer {
                 .build();
     }
 
-    @Bean
-    public JacksonJsonHttpMessageConverter jacksonJsonHttpMessageConverter(JsonMapper objectMapper) {
-        return new JacksonJsonHttpMessageConverter(objectMapper);
-    }
-
-    @Override
-    public void configureMessageConverters(HttpMessageConverters.ServerBuilder builder) {
-        builder.configureMessageConvertersList(converters ->
-                        converters.addFirst(jacksonJsonHttpMessageConverter(jsonMapper()))).build();
-    }
-
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         WebMvcConfigurer.super.addInterceptors(registry);

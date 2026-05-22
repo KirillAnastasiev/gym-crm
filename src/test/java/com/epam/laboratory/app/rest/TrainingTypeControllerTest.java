@@ -62,8 +62,7 @@ class TrainingTypeControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/training-types")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();

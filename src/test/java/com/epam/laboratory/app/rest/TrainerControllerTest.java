@@ -79,8 +79,7 @@ class TrainerControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainers/{username}", "Jane.Smith")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -103,11 +102,10 @@ class TrainerControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/trainers/{username}", "NonExistentTrainer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username NonExistentTrainer not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).selectByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
@@ -129,9 +127,8 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -165,7 +162,6 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -192,8 +188,7 @@ class TrainerControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "Jane.Smith")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("Trainer with username Jane.Smith was deleted"));
@@ -211,11 +206,10 @@ class TrainerControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "NonExistentTrainer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username NonExistentTrainer not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
@@ -233,7 +227,6 @@ class TrainerControllerTest {
         // when & then
         mockMvc.perform(patch("/api/trainers/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -253,11 +246,10 @@ class TrainerControllerTest {
         // when & then
         mockMvc.perform(patch("/api/trainers/{username}", "NonExistentTrainer")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"active\": false}"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username NonExistentTrainer not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).changeStatus(anyString(), anyBoolean());
         verifyNoMoreInteractions(trainerService);
@@ -279,7 +271,6 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -311,11 +302,10 @@ class TrainerControllerTest {
         // when & then
         mockMvc.perform(put("/api/trainers/{username}/trainees", "NonExistentTrainer")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username NonExistentTrainer not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).updateTrainees(anyString(), anyCollection());
         verifyNoMoreInteractions(trainerService);
@@ -334,11 +324,10 @@ class TrainerControllerTest {
         // when & then
         mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username NonExistentTrainee not found"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentTrainee not found\"}"));
 
         verify(trainerService, times(1)).updateTrainees(anyString(), anyCollection());
         verifyNoMoreInteractions(trainerService);

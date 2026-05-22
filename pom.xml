@@ -48,14 +48,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!--    Spring Boot Actuator AutoConfigure    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-actuator-autoconfigure</artifactId>
         </dependency>
 
-        <!--    Micrometer Prometheus    -->
+        <!--    Micrometer Registry Prometheus    -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
@@ -70,7 +68,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!--    OpenAPI    -->
+        <!--    OpenAPI/Swagger    -->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -135,28 +133,22 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!--    Spring Boot MVC Test    -->
+        <!--    Spring Boot Test    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!--    Spring Boot Data JPA Test    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!--    Spring Boot Validation Test    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation-test</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <!--    Spring Boot Actuator Test    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator-test</artifactId>

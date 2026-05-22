@@ -109,7 +109,7 @@ public class RestCallLoggingAspect {
 
     private void logError(Logger logger, String message, Throwable t) {
         if (t instanceof ApplicationException) {
-            logger.warn(message, t);
+            logger.warn(message);
         } else {
             logger.error(message, t);
         }

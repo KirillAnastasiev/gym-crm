@@ -4,11 +4,19 @@ import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.dto.TrainingTypeDto;
 import com.epam.laboratory.app.dto.mapper.TrainingTypeMapper;
 import com.epam.laboratory.app.service.TrainingTypeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
@@ -16,13 +24,33 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/api/training-types")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
+@Tag(name = "Training Type Management", description = "Endpoints for managing training types")
 public class TrainingTypeController {
 
     private final TrainingTypeService trainingTypeService;
     private final TrainingTypeMapper trainingTypeMapper;
 
-    @GetMapping(produces = "application/json")
+
+    // ==================== GET MAPPINGS ====================
+
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.OK)
     @RestCallLogging(Level.INFO)
+    @Operation(
+            description = "Retrieve a list of all training types",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "List of training types retrieved successfully",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    array = @ArraySchema(
+                                            schema = @Schema(implementation = TrainingTypeDto.class)
+                                    )
+                            )
+                    )
+            }
+    )
     Collection<TrainingTypeDto> getAllTrainingTypes() {
         var trainingTypes = trainingTypeService.selectAll();
         return trainingTypes.stream()

@@ -1,6 +1,7 @@
 package com.epam.laboratory.app.rest;
 
 import com.epam.laboratory.app.exception.AuthenticationException;
+import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.AuthenticationService;
 import org.junit.jupiter.api.DisplayName;
@@ -63,7 +64,6 @@ class AuthenticationControllerTest {
         // when & then
         var actualResult = mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"John.Doe\",\"password\":\"password123\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -84,20 +84,19 @@ class AuthenticationControllerTest {
     }
 
     @Test
-    @DisplayName("Test of the method login - should return 401 when user is not found")
+    @DisplayName("Test of the method login - should return 404 when user is not found")
     void testLogin_negative_userNotFound() throws Exception {
         // given
-        doThrow(new AuthenticationException("User with username Unknown.User does not exist"))
+        doThrow(new NoSuchEntityException("User with username Unknown.User does not exist"))
                 .when(authenticationService).validateUser(anyString(), anyString());
 
         // when & then
         mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"Unknown.User\",\"password\":\"password123\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("User with username Unknown.User does not exist"));
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"User with username Unknown.User does not exist\"}"));
 
         verify(authenticationService, times(1)).validateUser(anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -113,11 +112,10 @@ class AuthenticationControllerTest {
         // when & then
         mockMvc.perform(get("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"John.Doe\",\"password\":\"wrongPassword\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Incorrect password for username John.Doe"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Incorrect password for username John.Doe\"}"));
 
         verify(authenticationService, times(1)).validateUser(anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -137,7 +135,6 @@ class AuthenticationControllerTest {
         // when & then
         var actualResult = mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("\"" + REFRESH_TOKEN + "\""))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -166,11 +163,10 @@ class AuthenticationControllerTest {
         // when & then
        mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("\"" + invalidRefreshToken + "\""))
                 .andExpect(status().isUnauthorized())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-               .andExpect(content().string("Invalid refresh token"));
+               .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+               .andExpect(content().json("{\"detail\":\"Invalid refresh token\"}"));
 
         verify(authenticationService, times(1)).refreshAccessToken(anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -186,11 +182,10 @@ class AuthenticationControllerTest {
         // when & then
        mockMvc.perform(get("/api/auth/refresh-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("\"" + REFRESH_TOKEN + "\""))
                 .andExpect(status().isUnauthorized())
-               .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-               .andExpect(content().string("Username not found in refresh token"));
+               .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+               .andExpect(content().json("{\"detail\":\"Username not found in refresh token\"}"));
 
         verify(authenticationService, times(1)).refreshAccessToken(anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -208,7 +203,6 @@ class AuthenticationControllerTest {
         // when & then
         mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -228,31 +222,29 @@ class AuthenticationControllerTest {
         // when & then
         mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"wrongOldPass\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Incorrect password for username John.Doe"));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Incorrect password for username John.Doe\"}"));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
     }
 
     @Test
-    @DisplayName("Change Password - Negative: Should return 401 when user does not exist")
+    @DisplayName("Change Password - Negative: Should return 404 when user does not exist")
     void testChangePassword_negative_userNotFound() throws Exception {
         // given
-        doThrow(new AuthenticationException("User with username NonExistent.User does not exist"))
+        doThrow(new NoSuchEntityException("User with username NonExistent.User does not exist"))
                 .when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
         mockMvc.perform(put("/api/auth/{username}/change-password", "NonExistent.User")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("User with username NonExistent.User does not exist"));
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"User with username NonExistent.User does not exist\"}"));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
@@ -274,11 +266,10 @@ class AuthenticationControllerTest {
 
         mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"%s\",\"newPassword\":\"%s\"}".formatted(oldPassword, newPassword)))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(expectedErrorMessage));
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"%s\"}".formatted(expectedErrorMessage)));
 
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
