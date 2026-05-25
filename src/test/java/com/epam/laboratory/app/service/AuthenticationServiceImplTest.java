@@ -1,6 +1,7 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.exception.AuthenticationException;
+import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.AuthenticationDao;
 import com.epam.laboratory.app.util.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
@@ -179,7 +180,7 @@ class AuthenticationServiceImplTest {
 
         // when & then
         assertThatThrownBy(() -> authenticationService.validateUser(username, password))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(NoSuchEntityException.class)
                 .hasMessage("User with username %s does not exist".formatted(username));
 
         verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
@@ -305,7 +306,7 @@ class AuthenticationServiceImplTest {
 
         // when & then
         assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Invalid refresh token");
 
         verify(jwtUtil, times(1)).validateToken(anyString());
@@ -323,7 +324,7 @@ class AuthenticationServiceImplTest {
 
         // when & then
         assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
-                .isInstanceOf(AuthenticationException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Username not found in refresh token");
 
         verify(jwtUtil, times(1)).validateToken(anyString());

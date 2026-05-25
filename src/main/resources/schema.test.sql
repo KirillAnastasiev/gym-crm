@@ -1,3 +1,6 @@
+CREATE SCHEMA IF NOT EXISTS public;
+SET SCHEMA public;
+
 DROP TABLE IF EXISTS trainees_to_trainers;
 DROP TABLE IF EXISTS trainings;
 DROP TABLE IF EXISTS trainers;
@@ -5,14 +8,22 @@ DROP TABLE IF EXISTS trainees;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS training_types;
 
+DROP SEQUENCE IF EXISTS users_id_seq;
+DROP SEQUENCE IF EXISTS training_types_id_seq;
+DROP SEQUENCE IF EXISTS trainings_id_seq;
+
+CREATE SEQUENCE users_id_seq INCREMENT BY 1 START WITH 1;
+CREATE SEQUENCE training_types_id_seq INCREMENT BY 1 START WITH 1;
+CREATE SEQUENCE trainings_id_seq INCREMENT BY 1 START WITH 1;
+
 CREATE TABLE IF NOT EXISTS training_types (
-    id                      BIGINT                              NOT NULL                            GENERATED ALWAYS AS IDENTITY,
+    id                      BIGINT                              NOT NULL,
     training_type_name      VARCHAR(50)                         NOT NULL                            UNIQUE,
     CONSTRAINT              training_types_pk                   PRIMARY KEY (id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
-    id                      BIGINT                              NOT NULL                            GENERATED ALWAYS AS IDENTITY,
+    id                      BIGINT                              NOT NULL,
     first_name              VARCHAR(50)                         NOT NULL,
     last_name               VARCHAR(50)                         NOT NULL,
     username                VARCHAR(110)                        NOT NULL                            UNIQUE,
@@ -22,7 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE TABLE IF NOT EXISTS trainees (
-    id                      BIGINT                              NOT NULL                            GENERATED ALWAYS AS IDENTITY,
+    id                      BIGINT                              NOT NULL,
     date_of_birth           DATE,
     address                 VARCHAR(200),
     CONSTRAINT              trainees_pk                         PRIMARY KEY (id),
@@ -30,7 +41,7 @@ CREATE TABLE IF NOT EXISTS trainees (
 );
 
 CREATE TABLE IF NOT EXISTS trainers (
-    id                      BIGINT                              NOT NULL                            GENERATED ALWAYS AS IDENTITY,
+    id                      BIGINT                              NOT NULL,
     training_type_id        BIGINT                              NOT NULL,
     CONSTRAINT              trainers_pk                         PRIMARY KEY (id),
     CONSTRAINT              trainers_users_fk                   FOREIGN KEY (id)                    REFERENCES users(id)                ON DELETE CASCADE,
@@ -38,7 +49,7 @@ CREATE TABLE IF NOT EXISTS trainers (
 );
 
 CREATE TABLE IF NOT EXISTS trainings (
-    id                      BIGINT                              NOT NULL                            GENERATED ALWAYS AS IDENTITY,
+    id                      BIGINT                              NOT NULL,
     trainee_id              BIGINT                              NOT NULL,
     trainer_id              BIGINT                              NOT NULL,
     training_name           VARCHAR(100)                        NOT NULL,
@@ -52,10 +63,9 @@ CREATE TABLE IF NOT EXISTS trainings (
 );
 
 CREATE TABLE IF NOT EXISTS trainees_to_trainers (
-    id                     BIGINT                              NOT NULL                             GENERATED ALWAYS AS IDENTITY,
     trainee_id             BIGINT                              NOT NULL,
     trainer_id             BIGINT                              NOT NULL,
-    CONSTRAINT             trainees_to_trainers_pk             PRIMARY KEY (id),
+    CONSTRAINT             trainees_to_trainers_pk             PRIMARY KEY (trainee_id, trainer_id),
     CONSTRAINT             trainees_to_trainers_trainees_fk    FOREIGN KEY (trainee_id)            REFERENCES trainees(id)              ON DELETE CASCADE,
     CONSTRAINT             trainees_to_trainers_trainers_fk    FOREIGN KEY (trainer_id)            REFERENCES trainers(id)              ON DELETE CASCADE
 );

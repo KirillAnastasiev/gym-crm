@@ -46,7 +46,7 @@ class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method registerNew - should create trainer with generated password")
-    void testRegisterNew_uniqueUsername() {
+    void testRegisterNew_positive_uniqueUsername() {
         // given
         var trainer = createTestTrainer();
         var password = "generatedPassword";
@@ -76,7 +76,7 @@ class TrainerServiceImplTest {
 
     @Test
     @DisplayName("Test of the method registerNew - should create trainer with generated password and username with suffix if username is not unique")
-    void testRegisterNew_nonUniqueUsername() {
+    void testRegisterNew_positive_nonUniqueUsername() {
         // given
         var trainer = createTestTrainer();
         var password = "generatedPassword";
@@ -104,6 +104,17 @@ class TrainerServiceImplTest {
         }
     }
 
+    @Test
+    @DisplayName("Test of the method registerNew - should throw exception if input is null")
+    void testRegisterNew_negative_nullTrainer() {
+        // when & then
+        assertThatThrownBy(() -> trainerService.registerNew(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Trainer must not be null");
+
+        verifyNoInteractions(trainerDao);
+    }
+
 
     // ==================== UPDATE TESTS ====================
 
@@ -114,7 +125,7 @@ class TrainerServiceImplTest {
         var trainer = createTestTrainer();
         trainer.setFirstName("UpdatedFirstName");
 
-        given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
+        given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
         var actualResult = trainerService.update(trainer);
@@ -123,7 +134,7 @@ class TrainerServiceImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isEqualTo(trainer);
 
-        verify(trainerDao, times(1)).update(any(Trainer.class));
+        verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(trainerDao);
     }
 
@@ -133,7 +144,7 @@ class TrainerServiceImplTest {
         // when & then
         assertThatThrownBy(() -> trainerService.update(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Entity must not be null");
+                .hasMessageContaining("Trainer must not be null");
 
         verifyNoInteractions(trainerDao);
     }
@@ -151,6 +162,7 @@ class TrainerServiceImplTest {
         trainer.setUsername(username);
         trainer.addTrainees(Collections.emptyList());
 
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(true);
         given(trainerDao.updateByUsername(eq(username), any(Trainer.class))).willReturn(trainer);
 
         // when
@@ -164,8 +176,9 @@ class TrainerServiceImplTest {
         assertThat(actualResult.getTrainees()).isInstanceOf(Collection.class);
         assertThat(actualResult.getTrainees()).isEmpty();
 
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
         verify(trainerDao, times(1)).updateByUsername(anyString(), any(Trainer.class));
-        verifyNoMoreInteractions(trainerDao);
+        verifyNoMoreInteractions(authenticationService, trainerDao);
     }
 
     @ParameterizedTest
@@ -184,44 +197,34 @@ class TrainerServiceImplTest {
         verifyNoInteractions(trainerDao);
     }
 
-
-    // ==================== SELECT BY ID TESTS ====================
-
     @Test
-    @DisplayName("Test of the method selectById - should return trainer if it exists")
-    void testSelectById_positive() {
-        // given
-        var trainer = createTestTrainer();
+    @DisplayName("Test of the method updateByUsername - should throw exception if input trainer is null")
+    void testUpdateByUsername_negative_nullTrainer() {
+        // when & then
+        assertThatThrownBy(() -> trainerService.updateByUsername("FirstName.LastName", null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Trainer must not be null");
 
-        given(trainerDao.findById(anyLong(), any())).willReturn(Optional.of(trainer));
-
-        // when
-        var actualResult = trainerService.selectById(1L, Trainer.class);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isPresent();
-        assertThat(actualResult).contains(trainer);
-
-        verify(trainerDao, times(1)).findById(anyLong(), any());
-        verifyNoMoreInteractions(trainerDao);
+        verifyNoInteractions(trainerDao);
     }
 
     @Test
-    @DisplayName("Test of the method selectById - should return empty optional if trainer does not exist")
-    void testSelectById_negative() {
+    @DisplayName("Test of the method updateByUsername - should throw exception if trainer with given username does not exist")
+    void testUpdateByUsername_negative_nonExistentTrainer() {
         // given
-        given(trainerDao.findById(anyLong(), any())).willReturn(Optional.empty());
+        var username = "NonExistentUsername";
+        var trainer = createTestTrainer();
 
-        // when
-        var actualResult = trainerService.selectById(1L, Trainer.class);
+        given(authenticationService.checkExistsByUsername(anyString())).willReturn(false);
 
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult).isEmpty();
+        // when & then
+        assertThatThrownBy(() -> trainerService.updateByUsername(username, trainer))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessageContaining("Trainer with username NonExistentUsername not found");
 
-        verify(trainerDao, times(1)).findById(anyLong(), any());
-        verifyNoMoreInteractions(trainerDao);
+        verify(authenticationService, times(1)).checkExistsByUsername(anyString());
+        verifyNoMoreInteractions(authenticationService);
+        verifyNoInteractions(trainerDao);
     }
 
 
@@ -233,11 +236,11 @@ class TrainerServiceImplTest {
         // given
         var trainer = createTestTrainer();
 
-        given(trainerDao.findByCondition(any(), any())).willReturn(java.util.List.of(trainer));
+        given(trainerDao.findByCondition(any())).willReturn(java.util.List.of(trainer));
 
         // when
         var actualResult = trainerService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "FirstName.LastName"), Trainer.class);
+                cb.equal(root.get("username"), "FirstName.LastName"));
 
         // then
         assertThat(actualResult).isNotNull();
@@ -245,7 +248,7 @@ class TrainerServiceImplTest {
         assertThat(actualResult).hasSize(1);
         assertThat(actualResult).contains(trainer);
 
-        verify(trainerDao, times(1)).findByCondition(any(), any());
+        verify(trainerDao, times(1)).findByCondition(any());
         verifyNoMoreInteractions(trainerDao);
     }
 
@@ -253,18 +256,53 @@ class TrainerServiceImplTest {
     @DisplayName("Test of the method selectByCondition - should return empty collection if there are no trainers that match the condition")
     void testSelectByCondition_negative() {
         // given
-        given(trainerDao.findByCondition(any(), any())).willReturn(java.util.List.of());
+        given(trainerDao.findByCondition(any())).willReturn(Collections.emptyList());
 
         // when
         var actualResult = trainerService.selectByCondition((cb, root) ->
-                cb.equal(root.get("username"), "FirstName.LastName"), Trainer.class);
+                cb.equal(root.get("username"), "FirstName.LastName"));
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(java.util.Collection.class);
         assertThat(actualResult).isEmpty();
 
-        verify(trainerDao, times(1)).findByCondition(any(), any());
+        verify(trainerDao, times(1)).findByCondition(any());
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+
+    // ==================== COUNT BY CONDITION TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return count of trainers that satisfy condition")
+    void testCountByCondition_positive() {
+        // given
+        given(trainerDao.countByCondition(any())).willReturn(5L);
+
+        // when
+        var actualResult = trainerService.countByCondition(UserService.byStatus(true));
+
+        // then
+        assertThat(actualResult).isEqualTo(5L);
+
+        verify(trainerDao, times(1)).countByCondition(any());
+        verifyNoMoreInteractions(trainerDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method countByCondition - should return 0 if there are no trainers that match the condition")
+    void testCountByCondition_negative() {
+        // given
+        given(trainerDao.countByCondition(any())).willReturn(0L);
+
+        // when
+        var actualResult = trainerService.countByCondition(TrainerService.byUsernames("Unknown.Username"));
+
+        // then
+        assertThat(actualResult).isEqualTo(0L);
+
+        verify(trainerDao, times(1)).countByCondition(any());
         verifyNoMoreInteractions(trainerDao);
     }
 
@@ -454,7 +492,7 @@ class TrainerServiceImplTest {
 
         given(trainerDao.findByUsername(anyString())).willReturn(Optional.of(trainer));
         given(traineeService.selectByUsername(anyString())).willReturn(trainee);
-        given(trainerDao.update(any(Trainer.class))).willReturn(trainer);
+        given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
         // when
         var actualResult = trainerService.updateTrainees("FirstName.LastName", Collections.singletonList(trainee));
@@ -471,7 +509,7 @@ class TrainerServiceImplTest {
 
         verify(trainerDao, times(1)).findByUsername(anyString());
         verify(traineeService, times(1)).selectByUsername(anyString());
-        verify(trainerDao, times(1)).update(any(Trainer.class));
+        verify(trainerDao, times(1)).save(any(Trainer.class));
         verifyNoMoreInteractions(trainerDao, traineeService);
     }
 

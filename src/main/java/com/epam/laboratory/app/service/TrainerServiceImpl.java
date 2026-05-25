@@ -5,6 +5,7 @@ import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TrainerDao;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,25 @@ public class TrainerServiceImpl extends AbstractUserService<Trainer> implements 
         this.traineeService = traineeService;
     }
 
+    @Logging(Level.INFO)
+    @Override
+    public Trainer registerNew(Trainer trainer) {
+        if (trainer == null) {
+            throw new IllegalArgumentException("Trainer must not be null");
+        }
+        prepareUser(trainer);
+        return ((TrainerDao) dao).save(trainer);
+    }
+
+    @Logging(Level.INFO)
+    @Override
+    public Trainer update(Trainer trainer) {
+        if (trainer == null) {
+            throw new IllegalArgumentException("Trainer must not be null");
+        }
+        return ((TrainerDao) dao).save(trainer);
+    }
+
     @Logging(INFO)
     @Override
     public Trainer updateByUsername(String username, Trainer entity) {
@@ -39,6 +59,10 @@ public class TrainerServiceImpl extends AbstractUserService<Trainer> implements 
         }
         if (entity == null) {
             throw new IllegalArgumentException("Trainer must not be null");
+        }
+        var isExists = authenticationService.checkExistsByUsername(username);
+        if (!isExists) {
+            throw new NoSuchEntityException("Trainer with username %s not found".formatted(username));
         }
         var updatedTrainer = ((TrainerDao) dao).updateByUsername(username, entity);
         updatedTrainer.getTrainees();
@@ -57,7 +81,7 @@ public class TrainerServiceImpl extends AbstractUserService<Trainer> implements 
         }
         var optionalTrainer = ((TrainerDao) dao).findByUsername(username);
         var trainer = optionalTrainer.orElseThrow(() ->
-                new NoSuchEntityException("Trainer with username " + username + " not found"));
+                new NoSuchEntityException("Trainer with username %s not found".formatted(username)));
         trainer.getTrainees();
         return trainer;
     }
@@ -73,7 +97,7 @@ public class TrainerServiceImpl extends AbstractUserService<Trainer> implements 
         }
         var isExists = authenticationService.checkExistsByUsername(username);
         if (!isExists) {
-            throw new NoSuchEntityException("Trainer with username " + username + " not found");
+            throw new NoSuchEntityException("Trainer with username %s not found".formatted(username));
         }
         ((TrainerDao) dao).deleteByUsername(username);
     }
@@ -83,7 +107,7 @@ public class TrainerServiceImpl extends AbstractUserService<Trainer> implements 
     public void changeStatus(String username, boolean isActive) {
         var isExists = authenticationService.checkExistsByUsername(username);
         if (!isExists) {
-            throw new NoSuchEntityException("Trainer with username " + username + " not found");
+            throw new NoSuchEntityException("Trainer with username %s not found".formatted(username));
         }
         ((TrainerDao) dao).changeStatusByUsername(username, isActive);
     }

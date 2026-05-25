@@ -1,14 +1,13 @@
 package com.epam.laboratory.app.util;
 
 import com.epam.laboratory.app.dto.annotation.Sensitive;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,8 +18,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-        JavaTimeModule.class,
-        ObjectMapper.class,
+        JsonMapper.class,
         SensitiveDataMasker.class
 })
 @DisplayName("SensitiveDataMasker test suite")

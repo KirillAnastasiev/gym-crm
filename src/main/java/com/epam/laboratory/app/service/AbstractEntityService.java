@@ -24,34 +24,24 @@ public abstract class AbstractEntityService<T extends Entity> implements EntityS
     protected final EntityDao<T> dao;
 
     @Logging(Level.INFO)
+    @Transactional(readOnly = true)
     @Override
-    public T registerNew(T entity) {
-        prepareEntity(entity);
-        return dao.save(entity);
-    }
-
-    @Logging(Level.INFO)
-    @Override
-    public T update(T entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("Entity must not be null");
-        }
-        return dao.update(entity);
+    public Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition) {
+        return dao.findByCondition(condition);
     }
 
     @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
-    public Optional<T> selectById(Long id, Class<T> entityClass) {
-        return dao.findById(id, entityClass);
+    public long count() {
+        return dao.count();
     }
 
     @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
-    public Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass) {
-        return dao.findByCondition(condition, entityClass);
+    public long countByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition) {
+        return dao.countByCondition(condition);
     }
 
-    protected abstract void prepareEntity(T entity);
 }

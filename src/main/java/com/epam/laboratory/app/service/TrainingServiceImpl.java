@@ -7,6 +7,7 @@ import com.epam.laboratory.app.repository.TrainingDao;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,24 +38,28 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
         this.trainerService = trainerService;
     }
 
-    @Override
-    protected void prepareEntity(Training entity) {
-        // dumb method
-    }
-
     @Logging(INFO)
     @Override
-    public Training registerNew(Training entity) {
-        var traineeUsername = entity.getTrainee().getUsername();
-        var trainerUsername = entity.getTrainer().getUsername();
-
+    public Training registerNew(Training training) {
+        if (training == null) {
+            throw new IllegalArgumentException("Training must not be null");
+        }
+        var traineeUsername = training.getTrainee().getUsername();
+        var trainerUsername = training.getTrainer().getUsername();
         var trainee = traineeService.selectByUsername(traineeUsername);
         var trainer = trainerService.selectByUsername(trainerUsername);
+        training.setTrainee(trainee);
+        training.setTrainer(trainer);
+        return ((TrainingDao) dao).save(training);
+    }
 
-        entity.setTrainee(trainee);
-        entity.setTrainer(trainer);
-
-        return dao.save(entity);
+    @Logging(Level.INFO)
+    @Override
+    public Training update(Training training) {
+        if (training == null) {
+            throw new IllegalArgumentException("Training must not be null");
+        }
+        return ((TrainingDao) dao).save(training);
     }
 
     @Logging(INFO)
@@ -70,9 +75,9 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
 
         if (filter != null) {
             BiFunction<CriteriaBuilder, Root<Training>, Predicate>[] conditions = filterConditions(filter);
-            return dao.findByCondition(and(conditionJoiner(conditions), byTraineeUsernames(traineeUsername)), Training.class);
+            return dao.findByCondition(and(conditionJoiner(conditions), byTraineeUsernames(traineeUsername)));
         } else {
-            return dao.findByCondition(byTraineeUsernames(traineeUsername), Training.class);
+            return dao.findByCondition(byTraineeUsernames(traineeUsername));
         }
     }
 
@@ -89,9 +94,9 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
 
         if (filter != null) {
             BiFunction<CriteriaBuilder, Root<Training>, Predicate>[] filterConditions = filterConditions(filter);
-            return dao.findByCondition(and(conditionJoiner(filterConditions), byTrainerUsernames(trainerUsername)), Training.class);
+            return dao.findByCondition(and(conditionJoiner(filterConditions), byTrainerUsernames(trainerUsername)));
         } else {
-            return dao.findByCondition(byTrainerUsernames(trainerUsername), Training.class);
+            return dao.findByCondition(byTrainerUsernames(trainerUsername));
         }
     }
 

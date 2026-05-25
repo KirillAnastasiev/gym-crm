@@ -6,12 +6,12 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.function.BiFunction;
 
 public interface EntityService<T extends Entity> {
-    Optional<T> selectById(Long id, Class<T> entityClass);
-    Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition, Class<T> entityClass);
+    Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition);
+    long count();
+    long countByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition);
     T registerNew(T entity);
     T update(T entity);
 

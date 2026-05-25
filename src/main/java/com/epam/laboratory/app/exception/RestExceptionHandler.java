@@ -1,37 +1,50 @@
 package com.epam.laboratory.app.exception;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @RestControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(exception = DtoValidationException.class, produces = "application/json")
+    @ExceptionHandler(exception = DtoValidationException.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
     @RestCallLogging
-    protected ResponseEntity<Object> handleDtoValidationException(DtoValidationException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    protected ResponseEntity<Object> handleDtoValidationException(DtoValidationException e, WebRequest request) {
+        var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        var httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+        return createResponseEntity(problemDetails, httpHeaders, HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler(exception = AuthenticationException.class, produces = "application/json")
+    @ExceptionHandler(exception = AuthenticationException.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
     @RestCallLogging
-    protected ResponseEntity<Object> handleAuthenticationException(AuthenticationException e) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+    protected ResponseEntity<Object> handleAuthenticationException(AuthenticationException e, WebRequest request) {
+        var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
+        return createResponseEntity(problemDetails, null, HttpStatus.UNAUTHORIZED, request);
     }
 
-    @ExceptionHandler(exception = IllegalArgumentException.class, produces = "application/json")
+    @ExceptionHandler(exception = IllegalArgumentException.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
     @RestCallLogging
-    protected ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+    protected ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException e, WebRequest request) {
+        var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        return createResponseEntity(problemDetails, null, HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler(exception = NoSuchEntityException.class, produces = "application/json")
+    @ExceptionHandler(exception = NoSuchEntityException.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
     @RestCallLogging
-    protected ResponseEntity<Object> handleNoSuchEntityException(NoSuchEntityException e) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    protected ResponseEntity<Object> handleNoSuchEntityException(NoSuchEntityException e, WebRequest request) {
+        var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
+        return createResponseEntity(problemDetails, null, HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(exception = Exception.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+    @RestCallLogging
+    protected ResponseEntity<Object> handleUnexpectedException(Exception e, WebRequest request) {
+        var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        return createResponseEntity(problemDetails, null, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
 }

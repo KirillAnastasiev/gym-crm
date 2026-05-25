@@ -32,6 +32,34 @@ class TrainingTypeServiceImplTest {
     private TrainingTypeServiceImpl trainingTypeService;
 
 
+    // ==================== REGISTER NEW TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method registerNew - should throw UnsupportedOperationException")
+    void testRegisterNew() {
+        // when & then
+        assertThatThrownBy(() -> trainingTypeService.registerNew(new TrainingType()))
+                .isInstanceOf(UnsupportedOperationException.class)
+                .hasMessage("Unavailable operation for training type");
+
+        verifyNoInteractions(trainingTypeDao);
+    }
+
+
+    // ==================== UPDATE TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method update - should throw UnsupportedOperationException")
+    void testUpdate() {
+        // when & then
+        assertThatThrownBy(() -> trainingTypeService.update(new TrainingType()))
+                .isInstanceOf(UnsupportedOperationException.class)
+                .hasMessage("Unavailable operation for training type");
+
+        verifyNoInteractions(trainingTypeDao);
+    }
+
+
     // ==================== SELECT ALL TESTS ====================
 
     @Test

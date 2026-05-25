@@ -6,19 +6,15 @@ import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.TrainingService;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -36,10 +32,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest
 @ContextConfiguration(classes = {
-        JavaTimeModule.class,
-        JsonMapper.class,
+        TrainingController.class,
         TrainingMapperImpl.class,
         TrainingTypeMapperImpl.class,
         TrainingFilterMapperImpl.class,
@@ -49,38 +44,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class TrainingControllerTest {
 
     @Autowired
-    private JavaTimeModule javaTimeModule;
-
-    @Autowired
-    private JsonMapper objectMapper;
-
-    @Autowired
-    private TrainingMapper traineeMapper;
+    private JsonMapper jsonMapper;
 
     @Autowired
     private TrainingFilterMapper traineeFilterMapper;
 
     @Autowired
-    private RestExceptionHandler restExceptionHandler;
+    private TrainingMapper trainingMapper;
+
+    @Autowired
+    private MockMvc mockMvc;
 
     @MockitoBean
     private TrainingService trainingService;
-
-    @Autowired
-    private TrainingMapper trainingMapper;
-
-    private TrainingController trainingController;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper.registerModule(javaTimeModule);
-        trainingController = new TrainingController(trainingService, traineeMapper, traineeFilterMapper);
-        mockMvc = MockMvcBuilders.standaloneSetup(trainingController)
-                .setControllerAdvice(restExceptionHandler)
-                .build();
-    }
 
 
     // ==================== GET TRAINEE TRAININGS ENDPOINT TESTS ====================
@@ -95,23 +71,22 @@ class TrainingControllerTest {
         var training = getTestTraining(trainee, trainer, trainingType);
         var trainingFilter = getTestTrainingFilter();
 
-        var requestBody = objectMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
-        var expectedResponse = objectMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
+        var requestBody = jsonMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
+        var expectedResponse = jsonMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
 
         given(trainingService.selectForTrainee(anyString(), any(TrainingFilter.class))).willReturn(Collections.singletonList(training));
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainee/{username}", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
         var contentAsString = actualResult.getResponse().getContentAsString();
-        Collection<TrainingDto> response = objectMapper.readValue(contentAsString,
-                objectMapper.getTypeFactory().constructCollectionType(Collection.class, TrainingDto.class));
+        Collection<TrainingDto> response = jsonMapper.readValue(contentAsString,
+                jsonMapper.getTypeFactory().constructCollectionType(Collection.class, TrainingDto.class));
 
         assertThat(response).isNotNull();
         assertThat(response).isInstanceOf(Collection.class);
@@ -136,23 +111,22 @@ class TrainingControllerTest {
         var training = getTestTraining(trainee, trainer, trainingType);
         var trainingFilter = getTestTrainingFilter();
 
-        var requestBody = objectMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
-        var expectedResponse = objectMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
+        var requestBody = jsonMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
+        var expectedResponse = jsonMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
 
         given(trainingService.selectForTrainer(anyString(), any(TrainingFilter.class))).willReturn(Collections.singletonList(training));
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainer/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
         var contentAsString = actualResult.getResponse().getContentAsString();
-        Collection<TrainingDto> response = objectMapper.readValue(contentAsString,
-                objectMapper.getTypeFactory().constructCollectionType(Collection.class, TrainingDto.class));
+        Collection<TrainingDto> response = jsonMapper.readValue(contentAsString,
+                jsonMapper.getTypeFactory().constructCollectionType(Collection.class, TrainingDto.class));
 
         assertThat(response).isNotNull();
         assertThat(response).isInstanceOf(Collection.class);
@@ -176,21 +150,17 @@ class TrainingControllerTest {
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
 
-        var requestBody = objectMapper.writeValueAsString(trainingMapper.toDto(training));
+        var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
         given(trainingService.registerNew(any(Training.class))).willReturn(training);
 
         // when & then
-        var actualResult = mockMvc.perform(post("/api/trainings")
+        mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Training was registered");
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().string("Training was registered"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);
@@ -205,21 +175,17 @@ class TrainingControllerTest {
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
 
-        var requestBody = objectMapper.writeValueAsString(trainingMapper.toDto(training));
+        var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
         given(trainingService.registerNew(any(Training.class))).willThrow(new NoSuchEntityException("Trainee with username John.Doe not found"));
 
         // when & then
-        var actualResult = mockMvc.perform(post("/api/trainings")
+        mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).contains("Trainee with username John.Doe not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username John.Doe not found\"}"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);
@@ -234,21 +200,17 @@ class TrainingControllerTest {
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
 
-        var requestBody = objectMapper.writeValueAsString(trainingMapper.toDto(training));
+        var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
         given(trainingService.registerNew(any(Training.class))).willThrow(new NoSuchEntityException("Trainer with username Jane.Smith not found"));
 
         // when & then
-        var actualResult = mockMvc.perform(post("/api/trainings")
+        mockMvc.perform(post("/api/trainings")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).contains("Trainer with username Jane.Smith not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username Jane.Smith not found\"}"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);

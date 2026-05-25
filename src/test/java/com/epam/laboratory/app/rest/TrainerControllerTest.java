@@ -11,22 +11,15 @@ import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.TrainerService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -40,10 +33,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest(TrainerController.class)
 @ContextConfiguration(classes = {
-        JavaTimeModule.class,
-        JsonMapper.class,
+        TrainerController.class,
         TrainerMapperImpl.class,
         TrainingTypeMapperImpl.class,
         TrainerCredentialsMapperImpl.class,
@@ -57,37 +49,20 @@ class TrainerControllerTest {
     private JsonMapper objectMapper;
 
     @Autowired
-    private JavaTimeModule javaTimeModule;
-
-    @Autowired
     private TrainerMapper trainerMapper;
 
     @Autowired
     private TrainerCredentialsMapper credentialsMapper;
 
     @Autowired
-    private TraineeWithoutTrainersMapper traineeMapper;
+    private TraineeWithoutTrainersMapper traineeWithoutTrainersMapper;
 
     @Autowired
-    private RestExceptionHandler restExceptionHandler;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private TrainerService trainerService;
 
-    private TrainerController trainerController;
-
-    private MockMvc mockMvc;
-    @Autowired
-    private TraineeWithoutTrainersMapper traineeWithoutTrainersMapper;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper.registerModule(javaTimeModule);
-        trainerController = new TrainerController(trainerService, trainerMapper, credentialsMapper, traineeMapper);
-        mockMvc = MockMvcBuilders.standaloneSetup(trainerController)
-                .setControllerAdvice(restExceptionHandler)
-                .build();
-    }
 
     // ==================== GET PROFILE ENDPOINT TESTS ====================
 
@@ -104,8 +79,7 @@ class TrainerControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainers/{username}", "Jane.Smith")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -127,17 +101,11 @@ class TrainerControllerTest {
         given(trainerService.selectByUsername(anyString())).willThrow(new NoSuchEntityException("Trainer with username NonExistentTrainer not found"));
 
         // when & then
-        var actualResult = mockMvc.perform(get("/api/trainers/{username}", "NonExistentTrainer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/trainers/{username}", "NonExistentTrainer")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainer with username NonExistentTrainer not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).selectByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
@@ -159,9 +127,8 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainers")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -195,7 +162,6 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -222,9 +188,9 @@ class TrainerControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "Jane.Smith")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("Trainer with username Jane.Smith was deleted"));
 
         verify(trainerService, times(1)).deleteByUsername(anyString());
@@ -239,17 +205,11 @@ class TrainerControllerTest {
                 .when(trainerService).deleteByUsername(anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(delete("/api/trainers/{username}", "NonExistentTrainer")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/api/trainers/{username}", "NonExistentTrainer")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainer with username NonExistentTrainer not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
@@ -267,11 +227,9 @@ class TrainerControllerTest {
         // when & then
         mockMvc.perform(patch("/api/trainers/{username}", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"active": false}
-                         """))
+                        .content("{\"active\": false}"))
                 .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().string("Trainer with username Jane.Smith was blocked"));
 
         verify(trainerService, times(1)).changeStatus(anyString(), anyBoolean());
@@ -286,20 +244,12 @@ class TrainerControllerTest {
                 .when(trainerService).changeStatus(anyString(), anyBoolean());
 
         // when & then
-        var actualResult = mockMvc.perform(patch("/api/trainers/{username}", "NonExistentTrainer")
+        mockMvc.perform(patch("/api/trainers/{username}", "NonExistentTrainer")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"active": false}
-                         """))
+                        .content("{\"active\": false}"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainer with username NonExistentTrainer not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).changeStatus(anyString(), anyBoolean());
         verifyNoMoreInteractions(trainerService);
@@ -321,7 +271,6 @@ class TrainerControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -351,18 +300,12 @@ class TrainerControllerTest {
                 .when(trainerService).updateTrainees(anyString(), anyCollection());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/trainers/{username}/trainees", "NonExistentTrainer")
+        mockMvc.perform(put("/api/trainers/{username}/trainees", "NonExistentTrainer")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainer with username NonExistentTrainer not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(trainerService, times(1)).updateTrainees(anyString(), anyCollection());
         verifyNoMoreInteractions(trainerService);
@@ -379,18 +322,12 @@ class TrainerControllerTest {
                 .when(trainerService).updateTrainees(anyString(), anyCollection());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
+        mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username NonExistentTrainee not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentTrainee not found\"}"));
 
         verify(trainerService, times(1)).updateTrainees(anyString(), anyCollection());
         verifyNoMoreInteractions(trainerService);

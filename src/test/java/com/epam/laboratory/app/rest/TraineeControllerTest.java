@@ -11,20 +11,15 @@ import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.TraineeService;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -38,24 +33,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest
 @ContextConfiguration(classes = {
-        JavaTimeModule.class,
-        JsonMapper.class,
+        TraineeController.class,
         TraineeMapperImpl.class,
         TraineeCredentialsMapperImpl.class,
         TrainerWithoutTraineesMapperImpl.class,
         TrainingTypeMapperImpl.class,
-        RestExceptionHandler.class
+        RestExceptionHandler.class,
 })
 @DisplayName("TraineeController test suite")
 class TraineeControllerTest {
 
     @Autowired
     private JsonMapper objectMapper;
-
-    @Autowired
-    private JavaTimeModule javaTimeModule;
 
     @Autowired
     private TraineeMapper traineeMapper;
@@ -67,30 +58,17 @@ class TraineeControllerTest {
     private TrainerWithoutTraineesMapper trainerWithoutTraineesMapper;
 
     @Autowired
-    private RestExceptionHandler restExceptionHandler;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private TraineeService traineeService;
-
-    private TraineeController traineeController;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        objectMapper.registerModule(javaTimeModule);
-        traineeController = new TraineeController(traineeService, traineeMapper, credentialsMapper, trainerWithoutTraineesMapper);
-        mockMvc = MockMvcBuilders.standaloneSetup(traineeController)
-                .setControllerAdvice(restExceptionHandler)
-                .build();
-    }
 
 
     // ==================== GET PROFILE ENDPOINT TESTS ====================
 
     @Test
     @DisplayName("Test of the method getProfile - should return trainee profile when trainee exists")
-    void getProfile_positive() throws Exception {
+    void testGetProfile_positive() throws Exception {
         // given
         var trainee = getTestTrainee();
         var trainer = getTestTrainer();
@@ -101,8 +79,7 @@ class TraineeControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainees/{username}", "John.Doe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -124,17 +101,11 @@ class TraineeControllerTest {
         given(traineeService.selectByUsername(anyString())).willThrow(new NoSuchEntityException("Trainee with username NonExistentUsername not found"));
 
         // when & then
-        MvcResult actualResult = mockMvc.perform(get("/api/trainees/{username}", "NonExistentUsername")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get("/api/trainees/{username}", "NonExistentUsername")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username NonExistentUsername not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentUsername not found\"}"));
 
         verify(traineeService, times(1)).selectByUsername(anyString());
         verifyNoMoreInteractions(traineeService);
@@ -156,9 +127,8 @@ class TraineeControllerTest {
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainees")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
@@ -192,7 +162,6 @@ class TraineeControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainees/{username}", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -219,16 +188,11 @@ class TraineeControllerTest {
         doNothing().when(traineeService).deleteByUsername(anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(delete("/api/trainees/{username}", "John.Doe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/api/trainees/{username}", "John.Doe")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username John.Doe was deleted");
+                .andExpect(content().string("Trainee with username John.Doe was deleted"));
 
         verify(traineeService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(traineeService);
@@ -242,16 +206,11 @@ class TraineeControllerTest {
                 .when(traineeService).deleteByUsername(anyString());
 
         // when & then
-        var actualResult = mockMvc.perform(delete("/api/trainees/{username}", "NonExistentUsername")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/api/trainees/{username}", "NonExistentUsername")
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username NonExistentUsername not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentUsername not found\"}"));
 
         verify(traineeService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(traineeService);
@@ -267,19 +226,12 @@ class TraineeControllerTest {
         doNothing().when(traineeService).changeStatus(anyString(), anyBoolean());
 
         // when & then
-        var actualResult = mockMvc.perform(patch("/api/trainees/{username}", "John.Doe")
+        mockMvc.perform(patch("/api/trainees/{username}", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("""
-                            {"isActive": false}                     
-                         """))
+                        .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username John.Doe was blocked");
+                .andExpect(content().string("Trainee with username John.Doe was blocked"));
 
         verify(traineeService, times(1)).changeStatus(anyString(), eq(false));
         verifyNoMoreInteractions(traineeService);
@@ -293,17 +245,12 @@ class TraineeControllerTest {
                 .when(traineeService).changeStatus(anyString(), anyBoolean());
 
         // when & then
-        var actualResult = mockMvc.perform(patch("/api/trainees/{username}", "NonExistentUsername")
+        mockMvc.perform(patch("/api/trainees/{username}", "NonExistentUsername")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content("{\"isActive\": false}"))
+                        .content("{\"active\": false}"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username NonExistentUsername not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentUsername not found\"}"));
 
         verify(traineeService, times(1)).changeStatus(anyString(), anyBoolean());
         verifyNoMoreInteractions(traineeService);
@@ -325,7 +272,6 @@ class TraineeControllerTest {
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainees/{username}/trainers", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -355,17 +301,12 @@ class TraineeControllerTest {
                 .when(traineeService).updateTrainers(anyString(), anyCollection());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/trainees/{username}/trainers", "NonExistentUsername")
+        mockMvc.perform(put("/api/trainees/{username}/trainers", "NonExistentUsername")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainee with username NonExistentUsername not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainee with username NonExistentUsername not found\"}"));
 
         verify(traineeService, times(1)).updateTrainers(anyString(), anyCollection());
         verifyNoMoreInteractions(traineeService);
@@ -382,17 +323,12 @@ class TraineeControllerTest {
                 .when(traineeService).updateTrainers(anyString(), anyCollection());
 
         // when & then
-        var actualResult = mockMvc.perform(put("/api/trainees/{username}/trainers", "John.Doe")
+        mockMvc.perform(put("/api/trainees/{username}/trainers", "John.Doe")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andReturn();
-
-        var contentAsString = actualResult.getResponse().getContentAsString();
-        assertThat(contentAsString).isNotNull();
-        assertThat(contentAsString).isEqualTo("Trainer with username NonExistentTrainer not found");
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Trainer with username NonExistentTrainer not found\"}"));
 
         verify(traineeService, times(1)).updateTrainers(anyString(), anyCollection());
         verifyNoMoreInteractions(traineeService);

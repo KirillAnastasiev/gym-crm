@@ -4,11 +4,10 @@ import com.epam.laboratory.app.aspect.annotation.Logging;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.event.Level;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.slf4j.event.Level.*;
+import static org.slf4j.event.Level.INFO;
 
 @Repository
 @Transactional(rollbackFor = Exception.class)
@@ -22,6 +21,7 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
     private EntityManager em;
 
     @Logging(INFO)
+    @Transactional(readOnly = true)
     @Override
     public boolean checkExistsByUsername(String username) {
         var query = em.createQuery(EXISTS_BY_USERNAME_QUERY, Boolean.class);
@@ -30,6 +30,7 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
     }
 
     @Logging(INFO)
+    @Transactional(readOnly = true)
     @Override
     public boolean checkPasswordForUsername(String username, String password) {
         var query = em.createQuery(CHECK_PASSWORD_FOR_USERNAME_QUERY, String.class);
@@ -46,4 +47,5 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
         query.setParameter("newPassword", newPassword);
         query.executeUpdate();
     }
+
 }

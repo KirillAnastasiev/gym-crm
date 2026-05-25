@@ -2,6 +2,7 @@ package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.exception.AuthenticationException;
+import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.AuthenticationDao;
 import com.epam.laboratory.app.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -59,7 +60,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     public void validateUser(String username, String password) {
         var exists = checkExistsByUsername(username);
         if (!exists) {
-            throw new AuthenticationException("User with username %s does not exist".formatted(username));
+            throw new NoSuchEntityException("User with username %s does not exist".formatted(username));
         }
 
         var passwordIsCorrect = checkPasswordForUsername(username, password);
@@ -97,12 +98,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         var isValid = jwtUtil.validateToken(refreshToken);
         if (!isValid) {
-            throw new AuthenticationException("Invalid refresh token");
+            throw new IllegalArgumentException("Invalid refresh token");
         }
 
         var optionalUsername = jwtUtil.getUsernameFromToken(refreshToken);
         var username = optionalUsername.orElseThrow(() ->
-                new AuthenticationException("Username not found in refresh token"));
+                new IllegalArgumentException("Username not found in refresh token"));
 
         var newAccessToken = jwtUtil.generateAccessToken(username);
         Map<String, String> newToken = new HashMap<>();

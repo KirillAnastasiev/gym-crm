@@ -6,18 +6,15 @@ import com.epam.laboratory.app.dto.mapper.TrainingTypeMapper;
 import com.epam.laboratory.app.dto.mapper.TrainingTypeMapperImpl;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.service.TrainingTypeService;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -29,9 +26,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
+@WebMvcTest
 @ContextConfiguration(classes = {
-        JsonMapper.class,
+        TrainingTypeController.class,
         TrainingTypeMapperImpl.class,
         RestExceptionHandler.class
 })
@@ -45,22 +42,10 @@ class TrainingTypeControllerTest {
     private TrainingTypeMapper trainingTypeMapper;
 
     @Autowired
-    private RestExceptionHandler restExceptionHandler;
+    private MockMvc mockMvc;
 
     @MockitoBean
     private TrainingTypeService trainingTypeService;
-
-    private TrainingTypeController trainingTypeController;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setUp() {
-        trainingTypeController = new TrainingTypeController(trainingTypeService, trainingTypeMapper);
-        mockMvc = MockMvcBuilders.standaloneSetup(trainingTypeController)
-                .setControllerAdvice(restExceptionHandler)
-                .build();
-    }
 
 
     // ==================== GET ALL TRAINING TYPES ENDPOINT TESTS ====================
@@ -77,8 +62,7 @@ class TrainingTypeControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/training-types")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();

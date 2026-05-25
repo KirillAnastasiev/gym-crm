@@ -2,13 +2,13 @@ package com.epam.laboratory.app.util;
 
 
 import com.epam.laboratory.app.dto.annotation.Sensitive;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.lang.reflect.Field;
 import java.util.Collection;
@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toMap;
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class SensitiveDataMasker {
 
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
 
     public Object maskSensitiveData(Object obj) {
         if (obj == null) {
@@ -105,7 +105,7 @@ public class SensitiveDataMasker {
                 var jsonNode = maskSensitiveData(array[i]);
                 array[i] = objectMapper.readValue(jsonNode.toString(), array[i].getClass());
             }
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             var logMessage = "Failed to mask sensitive data in array of type %s: %s".formatted(getClassName(array), e.getMessage());
             log.warn(logMessage);
          }
