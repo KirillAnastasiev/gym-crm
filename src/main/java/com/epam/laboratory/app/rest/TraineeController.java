@@ -304,7 +304,13 @@ public class TraineeController {
                             responseCode = "200",
                             description = "Trainee's status changed successfully",
                             content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(value = """
+                                            {   
+                                              "message": "Trainee with username John.Doe was blocked"
+                                            }
+                                            """)
                             )
                     ),
                     @ApiResponse(
@@ -323,11 +329,11 @@ public class TraineeController {
                     )
             }
     )
-    String changeTraineeStatus(@PathVariable String username,
+    MessageResponseDto changeTraineeStatus(@PathVariable String username,
                                @RequestBody ChangeStatusRequestDto requestDto) {
         boolean isActive = requestDto.active();
         traineeService.changeStatus(username, isActive);
-        return "Trainee with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked");
+        return new MessageResponseDto("Trainee with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked"));
     }
 
 
@@ -353,7 +359,13 @@ public class TraineeController {
                             responseCode = "200",
                             description = "Trainee deleted successfully",
                             content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(value = """
+                                            {
+                                              "message": "Trainee with username John.Doe was deleted"
+                                            }
+                                            """)
                             )
                     ),
                     @ApiResponse(
@@ -372,9 +384,9 @@ public class TraineeController {
                     )
             }
     )
-    String deleteTrainee(@PathVariable String username) {
+    MessageResponseDto deleteTrainee(@PathVariable String username) {
         traineeService.deleteByUsername(username);
-        return "Trainee with username %s was deleted".formatted(username);
+        return new MessageResponseDto("Trainee with username %s was deleted".formatted(username));
     }
 
 }

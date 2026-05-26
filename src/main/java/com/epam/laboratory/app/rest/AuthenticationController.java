@@ -2,8 +2,8 @@ package com.epam.laboratory.app.rest;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
-import com.epam.laboratory.app.dto.ChangePasswordRequestDto;
-import com.epam.laboratory.app.dto.CredentialsDto;
+import com.epam.laboratory.app.dto.*;
+import com.epam.laboratory.app.dto.mapper.TokenResponseDtoMapper;
 import com.epam.laboratory.app.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,8 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -28,11 +26,12 @@ import java.util.Map;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final TokenResponseDtoMapper tokenResponseDtoMapper;
 
 
-    // ==================== GET MAPPINGS ====================
+    // ==================== POST MAPPINGS ====================
 
-    @GetMapping(
+    @PostMapping(
             path = "/login",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -56,14 +55,7 @@ public class AuthenticationController {
                             description = "Authentication successful, tokens returned",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Map.class),
-                                    examples = @ExampleObject(
-                                            value = """
-                                                    {
-                                                        "accessToken": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3OTQ1Mzk3NywiZXhwIjoxNzc5NDU3NTc3fQ.DQFklRjyFCfi4L42QQ4ZLeQDEiPuzi9NAlcR9ded9DX18VmFx-XkkFgHEj6lDJyF",
-                                                        "refreshToken": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3OTQ1Mzk3NywiZXhwIjoxNzgwNzQ5OTc3fQ.duZfF30tnsvqbCxYo_weR_UrqDnDopdwJS-XAcey4sMmyLk_wdgMsudXlNZpqMvm"
-                                                    }"""
-                                    )
+                                    schema = @Schema(implementation = TokensResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -82,14 +74,51 @@ public class AuthenticationController {
                     )
             }
     )
-    Map<String, String> login(@RequestBody CredentialsDto credentialsDto) {
+    TokensResponseDto login(@RequestBody CredentialsDto credentialsDto) {
         var username = credentialsDto.username();
         var password = credentialsDto.password();
-        authenticationService.validateUser(username, password);
-        return authenticationService.getUserTokens(username);
+        var userTokens = authenticationService.getUserTokens(username, password);
+        return tokenResponseDtoMapper.toDto(userTokens);
     }
 
-    @GetMapping(
+    @PostMapping(
+            path = "/{username}/logout",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ResponseStatus(HttpStatus.OK)
+    @ValidateArguments
+    @RestCallLogging(Level.INFO)
+    @Operation(
+            description = "Logout user by invalidating the provided refresh token",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "Logout successful, access and refresh tokens invalidated",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(value = """
+                                            {
+                                              "message": "Logout successful"
+                                            }
+                                            """)
+                            )
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "Invalid or expired refresh token",
+                            content = @Content(
+                                    mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE
+                            )
+                    )
+            }
+    )
+    MessageResponseDto logout(@PathVariable String username) {
+        authenticationService.logout(username);
+        return new MessageResponseDto("Logout successful, access and refresh tokens invalidated");
+    }
+
+    @PostMapping(
             path = "/refresh-token",
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
@@ -104,25 +133,16 @@ public class AuthenticationController {
                     required = true,
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(type = "string"),
-                            examples = @ExampleObject(
-                                    value = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3OTQ0MzQ5MiwiZXhwIjoxNzgwNzM5NDkyfQ.tnYBM6AUOqk7QRvEArY1GBUhlGs68tA3dOMzQzQUH1hhgZPA_GEy-w-obtuWK2Wv"
-                            )
+                            schema = @Schema(implementation = RefreshTokenRequestDto.class)
                     )
             ),
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Access token refreshed successfully",
+                            description = "Access token refreshed successfully, new tokens returned",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
-                                    schema = @Schema(implementation = Map.class),
-                                    examples = @ExampleObject(
-                                            value = """
-                                                    {
-                                                         "accessToken": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3OTQ1MzY5NywiZXhwIjoxNzc5NDU3Mjk3fQ.m6AcgzHbGHxbTSbiD4mZQXWVHb4Ex2UmGmD72cH5iIh-XTV26_T-BPfHvUv6dPqI"
-                                                     }"""
-                                    )
+                                    schema = @Schema(implementation = TokensResponseDto.class)
                             )
                     ),
                     @ApiResponse(
@@ -134,8 +154,9 @@ public class AuthenticationController {
                     )
             }
     )
-    Map<String, String> refreshAccessToken(@RequestBody String refreshToken) {
-        return authenticationService.refreshAccessToken(refreshToken);
+    TokensResponseDto refreshAccessToken(@RequestBody RefreshTokenRequestDto refreshTokenDto) {
+        var newTokens = authenticationService.refreshAccessToken(refreshTokenDto.refreshToken());
+        return tokenResponseDtoMapper.toDto(newTokens);
     }
 
 
@@ -170,7 +191,13 @@ public class AuthenticationController {
                             responseCode = "200",
                             description = "Password changed successfully",
                             content = @Content(
-                                    mediaType = MediaType.APPLICATION_JSON_VALUE
+                                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(value = """
+                                            {
+                                              "message": "Password changed successfully"
+                                            }
+                                            """)
                             )
                     ),
                     @ApiResponse(
@@ -196,12 +223,12 @@ public class AuthenticationController {
                     )
             }
     )
-    String changePassword(@PathVariable String username,
-                          @RequestBody ChangePasswordRequestDto requestDto) {
+    MessageResponseDto changePassword(@PathVariable String username,
+                                      @RequestBody ChangePasswordRequestDto requestDto) {
         var oldPassword = requestDto.oldPassword();
         var newPassword = requestDto.newPassword();
         authenticationService.changePassword(username, oldPassword, newPassword);
-        return "Password changed successfully";
+        return new MessageResponseDto("Password changed successfully");
     }
 
 }

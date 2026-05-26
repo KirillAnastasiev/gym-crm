@@ -191,7 +191,7 @@ class TrainerControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username Jane.Smith was deleted"));
+                .andExpect(content().json("{\"message\":\"Trainer with username Jane.Smith was deleted\"}"));
 
         verify(trainerService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
@@ -230,7 +230,7 @@ class TrainerControllerTest {
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username Jane.Smith was blocked"));
+                .andExpect(content().json("{\"message\":\"Trainer with username Jane.Smith was blocked\"}"));
 
         verify(trainerService, times(1)).changeStatus(anyString(), anyBoolean());
         verifyNoMoreInteractions(trainerService);

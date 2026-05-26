@@ -3,7 +3,7 @@ package com.epam.laboratory.app.service;
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.AuthenticationDao;
-import com.epam.laboratory.app.util.JwtUtil;
+import com.epam.laboratory.app.security.JwtToken;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
-import java.util.Optional;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -30,7 +29,7 @@ class AuthenticationServiceImplTest {
     private AuthenticationDao authenticationDao;
 
     @Mock
-    private JwtUtil jwtUtil;
+    private JwtService jwtService;
 
     @InjectMocks
     private AuthenticationServiceImpl authenticationService;
@@ -207,6 +206,23 @@ class AuthenticationServiceImplTest {
         verifyNoMoreInteractions(authenticationDao);
     }
 
+    @ParameterizedTest
+    @CsvSource(value = {
+            "NULL, password, 'Username must not be null'",
+            "username, NULL, 'Password must not be null'",
+            "'   ', password, 'Username must not be blank'",
+            "username, '   ', 'Password must not be blank'"
+    }, nullValues = {"NULL"})
+    @DisplayName("Test of the method validateUser - should throw IllegalArgumentException when username or password is invalid")
+    void testValidateUser_negative_invalidInput(String username, String password, String expectedMessage) {
+        // when & then
+        assertThatThrownBy(() -> authenticationService.validateUser(username, password))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(expectedMessage);
+
+        verifyNoInteractions(authenticationDao);
+    }
+
 
     // ==================== GET USER TOKENS TESTS ====================
 
@@ -214,15 +230,16 @@ class AuthenticationServiceImplTest {
     @DisplayName("Test of the method getUserTokens - should return access token and refresh token when username is valid")
     void testGetUserTokens_positive() {
         // given
-        var username = "FirstName.LastName";
         var accessToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD";
         var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
 
-        given(jwtUtil.generateAccessToken(anyString())).willReturn(accessToken);
-        given(jwtUtil.generateRefreshToken(anyString())).willReturn(refreshToken);
+        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
+        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
+        given(jwtService.generateAccessToken(anyString())).willReturn(accessToken);
+        given(jwtService.generateRefreshToken(anyString())).willReturn(refreshToken);
 
         // when
-        var actualResult = authenticationService.getUserTokens(username);
+        var actualResult = authenticationService.getUserTokens("FirstName.LastName", "password123");
 
         // then
         assertThat(actualResult).isNotNull();
@@ -231,24 +248,28 @@ class AuthenticationServiceImplTest {
         assertThat(actualResult).containsEntry("accessToken", accessToken);
         assertThat(actualResult).containsEntry("refreshToken", refreshToken);
 
-        verify(jwtUtil, times(1)).generateAccessToken(anyString());
-        verify(jwtUtil, times(1)).generateRefreshToken(anyString());
-        verifyNoMoreInteractions(authenticationDao, jwtUtil);
+        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
+        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
+        verify(jwtService, times(1)).generateAccessToken(anyString());
+        verify(jwtService, times(1)).generateRefreshToken(anyString());
+        verifyNoMoreInteractions(authenticationDao, jwtService, jwtService);
     }
 
     @ParameterizedTest
     @CsvSource(value = {
-            "NULL, 'Username must not be null'",
-            "'   ', 'Username must not be blank'"
+            "NULL, password123, 'Username must not be null'",
+            "'   ', password123, 'Username must not be blank'",
+            "FirstName.LastName, NULL, 'Password must not be null'",
+            "FirstName.LastName, '   ', 'Password must not be blank'"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method getUserTokens - should throw IllegalArgumentException when username is invalid")
-    void testGetUserTokens_negative_invalidInput(String username, String expectedMessage) {
+    void testGetUserTokens_negative_invalidInput(String username, String password, String expectedMessage) {
         // when & then
-        assertThatThrownBy(() -> authenticationService.getUserTokens(username))
+        assertThatThrownBy(() -> authenticationService.getUserTokens(username, password))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(expectedMessage);
 
-        verifyNoInteractions(authenticationDao, jwtUtil);
+        verifyNoInteractions(authenticationDao);
     }
 
 
@@ -261,9 +282,11 @@ class AuthenticationServiceImplTest {
         var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
         var newAccessToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD";
 
-        given(jwtUtil.validateToken(anyString())).willReturn(true);
-        given(jwtUtil.getUsernameFromToken(anyString())).willReturn(Optional.of("FirstName.LastName"));
-        given(jwtUtil.generateAccessToken(anyString())).willReturn(newAccessToken);
+        doNothing().when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        given(jwtService.getUsernameFromToken(anyString())).willReturn("FirstName.LastName");
+        doNothing().when(jwtService).revokeTokenIfExists(anyString(), any(JwtToken.JwtTokenType.class));
+        given(jwtService.generateAccessToken(anyString())).willReturn(newAccessToken);
+        given(jwtService.generateRefreshToken(anyString())).willReturn(refreshToken);
 
 
         // when
@@ -275,10 +298,12 @@ class AuthenticationServiceImplTest {
         assertThat(actualResult).isNotEmpty();
         assertThat(actualResult).containsEntry("accessToken", newAccessToken);
 
-        verify(jwtUtil, times(1)).validateToken(anyString());
-        verify(jwtUtil, times(1)).getUsernameFromToken(anyString());
-        verify(jwtUtil, times(1)).generateAccessToken(anyString());
-        verifyNoMoreInteractions(authenticationDao, jwtUtil);
+        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        verify(jwtService, times(2)).revokeTokenIfExists(anyString(), any(JwtToken.JwtTokenType.class));
+        verify(jwtService, times(1)).getUsernameFromToken(anyString());
+        verify(jwtService, times(1)).generateAccessToken(anyString());
+        verifyNoMoreInteractions(jwtService);
+        verifyNoInteractions(authenticationDao);
     }
 
     @ParameterizedTest
@@ -293,7 +318,7 @@ class AuthenticationServiceImplTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(expectedMessage);
 
-        verifyNoInteractions(authenticationDao, jwtUtil);
+        verifyNoInteractions(authenticationDao);
     }
 
     @Test
@@ -302,15 +327,15 @@ class AuthenticationServiceImplTest {
         // given
         var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
 
-        given(jwtUtil.validateToken(anyString())).willReturn(false);
+        doThrow(new AuthenticationException("Invalid JWT token")).when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
 
         // when & then
         assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid refresh token");
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessage("Invalid JWT token");
 
-        verify(jwtUtil, times(1)).validateToken(anyString());
-        verifyNoMoreInteractions(jwtUtil);
+        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        verifyNoMoreInteractions(jwtService);
     }
 
     @Test
@@ -319,17 +344,17 @@ class AuthenticationServiceImplTest {
         // given
         var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
 
-        given(jwtUtil.validateToken(anyString())).willReturn(true);
-        given(jwtUtil.getUsernameFromToken(anyString())).willReturn(java.util.Optional.empty());
+        doNothing().when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        given(jwtService.getUsernameFromToken(anyString())).willThrow(new IllegalArgumentException("Username not found in JWT token"));
 
         // when & then
         assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Username not found in refresh token");
+                .hasMessage("Username not found in JWT token");
 
-        verify(jwtUtil, times(1)).validateToken(anyString());
-        verify(jwtUtil, times(1)).getUsernameFromToken(anyString());
-        verifyNoMoreInteractions(jwtUtil);
+        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        verify(jwtService, times(1)).getUsernameFromToken(anyString());
+        verifyNoMoreInteractions(jwtService);
     }
 
 
@@ -360,10 +385,10 @@ class AuthenticationServiceImplTest {
     @ParameterizedTest
     @CsvSource(value = {
             "NULL, oldPassword, newPassword, 'Username must not be null'",
-            "username, NULL, newPassword, 'Old password must not be null'",
+            "username, NULL, newPassword, 'Password must not be null'",
             "username, oldPassword, NULL, 'New password must not be null'",
             "'   ', oldPassword, newPassword, 'Username must not be blank'",
-            "username, '   ', newPassword, 'Old password must not be blank'",
+            "username, '   ', newPassword, 'Password must not be blank'",
             "username, oldPassword, '   ', 'New password must not be blank'"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method changePassword - should throw IllegalArgumentException when username, old password or new password is invalid")

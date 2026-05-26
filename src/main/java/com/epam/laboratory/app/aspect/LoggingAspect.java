@@ -104,11 +104,11 @@ public class LoggingAspect {
         logger.makeLoggingEventBuilder(level).log(message);
     }
 
-    private void logError(Logger logger, String message, Throwable t) {
-        if (t instanceof ApplicationException) {
+    private void logError(Logger logger, String message, Throwable throwable) {
+        if (throwable instanceof ApplicationException) {
             logger.warn(message);
         } else {
-            logger.error(message, t);
+            logger.error(message, throwable);
         }
     }
 

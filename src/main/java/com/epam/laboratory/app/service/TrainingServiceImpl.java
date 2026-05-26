@@ -4,6 +4,7 @@ import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingFilter;
 import com.epam.laboratory.app.repository.TrainingDao;
+import com.epam.laboratory.app.util.InputDataValidator;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -41,9 +42,7 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
     @Logging(INFO)
     @Override
     public Training registerNew(Training training) {
-        if (training == null) {
-            throw new IllegalArgumentException("Training must not be null");
-        }
+        InputDataValidator.validateNotNull(training, "Training");
         var traineeUsername = training.getTrainee().getUsername();
         var trainerUsername = training.getTrainer().getUsername();
         var trainee = traineeService.selectByUsername(traineeUsername);
@@ -56,9 +55,7 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
     @Logging(Level.INFO)
     @Override
     public Training update(Training training) {
-        if (training == null) {
-            throw new IllegalArgumentException("Training must not be null");
-        }
+        InputDataValidator.validateNotNull(training, "Training");
         return ((TrainingDao) dao).save(training);
     }
 
@@ -66,13 +63,7 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
     @Transactional(readOnly = true)
     @Override
     public Collection<Training> selectForTrainee(String traineeUsername, TrainingFilter filter) {
-        if (traineeUsername == null) {
-            throw new IllegalArgumentException("Trainee username must not be null");
-        }
-        if (traineeUsername.isEmpty()) {
-            throw new IllegalArgumentException("Trainee username must not be blank");
-        }
-
+        InputDataValidator.validateNotBlank(traineeUsername, "Trainee username");
         if (filter != null) {
             BiFunction<CriteriaBuilder, Root<Training>, Predicate>[] conditions = filterConditions(filter);
             return dao.findByCondition(and(conditionJoiner(conditions), byTraineeUsernames(traineeUsername)));
@@ -85,13 +76,7 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
     @Transactional(readOnly = true)
     @Override
     public Collection<Training> selectForTrainer(String trainerUsername, TrainingFilter filter) {
-        if (trainerUsername == null) {
-            throw new IllegalArgumentException("Trainer username must not be null");
-        }
-        if (trainerUsername.isEmpty()) {
-            throw new IllegalArgumentException("Trainer username must not be blank");
-        }
-
+        InputDataValidator.validateNotBlank(trainerUsername, "Trainer username");
         if (filter != null) {
             BiFunction<CriteriaBuilder, Root<Training>, Predicate>[] filterConditions = filterConditions(filter);
             return dao.findByCondition(and(conditionJoiner(filterConditions), byTrainerUsernames(trainerUsername)));

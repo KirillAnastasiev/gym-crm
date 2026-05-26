@@ -1,0 +1,44 @@
+spring:
+
+################### Connection pool settings ##################
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:gym-testdb;DB_CLOSE_DELAY=-1;INIT=CREATE SCHEMA IF NOT EXISTS PUBLIC
+    username: sa
+    password:
+    hikari:
+      maximum-pool-size: 10
+
+#################### Persistence settings #####################
+  jpa:
+    database: h2
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        hbm2ddl:
+          auto: none
+        ejb:
+          persistenceUnitName: gym-persistence-unit
+  sql:
+    init:
+      mode: always
+      platform: h2
+      schema-locations: classpath:schema.test.sql
+      data-locations: classpath:data.test.sql
+
+####################### OpenAPI settings #######################
+springdoc:
+  show-actuator: true
+
+######################### JWT settings #########################
+app:
+  security:
+    jwt:
+      enabled: true
+      encryption-algorithm: HS256
+      secret: mySecretKeyForJWTTokenGenerationAndValidationPurpose123456
+      access-ttl-seconds: 3600       # 1 hour
+      refresh-ttl-seconds: 1296000   # 15 days
+      issuer: gym-api
+      audience: gym-app

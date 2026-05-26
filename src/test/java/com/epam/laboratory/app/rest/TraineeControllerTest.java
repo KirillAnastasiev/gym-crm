@@ -192,7 +192,7 @@ class TraineeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username John.Doe was deleted"));
+                .andExpect(content().json("{\"message\":\"Trainee with username John.Doe was deleted\"}"));
 
         verify(traineeService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(traineeService);
@@ -231,7 +231,7 @@ class TraineeControllerTest {
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username John.Doe was blocked"));
+                .andExpect(content().json("{\"message\":\"Trainee with username John.Doe was blocked\"}"));
 
         verify(traineeService, times(1)).changeStatus(anyString(), eq(false));
         verifyNoMoreInteractions(traineeService);

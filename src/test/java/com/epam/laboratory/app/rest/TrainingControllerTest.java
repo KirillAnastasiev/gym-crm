@@ -160,7 +160,7 @@ class TrainingControllerTest {
                         .content(requestBody))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Training was registered"));
+                .andExpect(content().json("{\"message\":\"Training was registered\"}"));
 
         verify(trainingService, times(1)).registerNew(any(Training.class));
         verifyNoMoreInteractions(trainingService);

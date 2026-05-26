@@ -30,6 +30,7 @@ public interface TraineeDao extends UserDao<Trainee>, JpaRepository<Trainee, Lon
         return findByUsername(username).get();
     }
 
+    @Logging(Level.INFO)
     @Query(UPDATE_BY_USERNAME_QUERY)
     @Modifying
     void doUpdateByUsername(@Param("username") String username,

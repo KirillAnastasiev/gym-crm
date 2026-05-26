@@ -1,6 +1,7 @@
 CREATE SCHEMA IF NOT EXISTS public;
 SET SCHEMA public;
 
+DROP TABLE IF EXISTS jwt_tokens;
 DROP TABLE IF EXISTS trainees_to_trainers;
 DROP TABLE IF EXISTS trainings;
 DROP TABLE IF EXISTS trainers;
@@ -68,4 +69,14 @@ CREATE TABLE IF NOT EXISTS trainees_to_trainers (
     CONSTRAINT             trainees_to_trainers_pk             PRIMARY KEY (trainee_id, trainer_id),
     CONSTRAINT             trainees_to_trainers_trainees_fk    FOREIGN KEY (trainee_id)            REFERENCES trainees(id)              ON DELETE CASCADE,
     CONSTRAINT             trainees_to_trainers_trainers_fk    FOREIGN KEY (trainer_id)            REFERENCES trainers(id)              ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS jwt_tokens (
+    id                      UUID                                NOT NULL                           DEFAULT RANDOM_UUID(),
+    token_type              VARCHAR(20)                         NOT NULL,
+    expiration_date         TIMESTAMP                           NOT NULL,
+    username                VARCHAR(110)                        NOT NULL,
+    is_revoked              BOOLEAN                             NOT NULL                           DEFAULT FALSE,
+    CONSTRAINT              jwt_tokens_pk                       PRIMARY KEY (id),
+    CONSTRAINT              jwt_tokens_users_fk                 FOREIGN KEY (username)             REFERENCES users(username)          ON DELETE CASCADE
 );

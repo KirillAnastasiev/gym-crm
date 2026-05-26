@@ -300,7 +300,7 @@ class TrainerServiceImplTest {
         var actualResult = trainerService.countByCondition(TrainerService.byUsernames("Unknown.Username"));
 
         // then
-        assertThat(actualResult).isEqualTo(0L);
+        assertThat(actualResult).isZero();
 
         verify(trainerDao, times(1)).countByCondition(any());
         verifyNoMoreInteractions(trainerDao);

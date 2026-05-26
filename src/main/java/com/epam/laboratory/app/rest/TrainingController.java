@@ -2,6 +2,7 @@ package com.epam.laboratory.app.rest;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
+import com.epam.laboratory.app.dto.MessageResponseDto;
 import com.epam.laboratory.app.dto.TrainingDto;
 import com.epam.laboratory.app.dto.TrainingFilterDto;
 import com.epam.laboratory.app.dto.mapper.TrainingFilterMapper;
@@ -109,8 +110,8 @@ public class TrainingController {
                     )
             }
     )
-    public Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
-                                                       @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
+    Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
+                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
         var trainings = trainingService.selectForTrainee(username, trainingFilter);
         return trainings.stream()
@@ -189,8 +190,8 @@ public class TrainingController {
                     )
             }
     )
-    public Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
-                                                       @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
+    Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
+                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
         var trainings = trainingService.selectForTrainer(username, trainingFilter);
         return trainings.stream()
@@ -237,7 +238,14 @@ public class TrainingController {
                             responseCode = "201",
                             description = "Training successfully registered",
                             content = @Content(
-                                    mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE
+                                    mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(
+                                            value = """
+                                                    {
+                                                        "message": "Training was registered"
+                                                    }"""
+                                    )
                             )
                     ),
                     @ApiResponse(
@@ -256,10 +264,10 @@ public class TrainingController {
                     )
             }
     )
-    public String registerTraining(@RequestBody TrainingDto trainingDto) {
+    MessageResponseDto registerTraining(@RequestBody TrainingDto trainingDto) {
         var training = trainingMapper.toEntity(trainingDto);
         trainingService.registerNew(training);
-        return "Training was registered";
+        return new MessageResponseDto("Training was registered");
     }
 
 }

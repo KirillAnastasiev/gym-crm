@@ -4,6 +4,7 @@ import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TrainingTypeDao;
+import com.epam.laboratory.app.util.InputDataValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,12 +42,7 @@ public class TrainingTypeServiceImpl extends AbstractEntityService<TrainingType>
     @Logging(INFO)
     @Override
     public TrainingType selectByTrainingTypeName(String trainingTypeName) {
-        if (trainingTypeName == null) {
-            throw new IllegalArgumentException("Training type name must not be null");
-        }
-        if (trainingTypeName.isBlank()) {
-            throw new IllegalArgumentException("Training type name must not be blank");
-        }
+        InputDataValidator.validateNotBlank(trainingTypeName, "Training type name");
         var optionalTrainingType = ((TrainingTypeDao) dao).findByTrainingTypeName(trainingTypeName);
         return optionalTrainingType.orElseThrow(() ->
                 new NoSuchEntityException("Training type with name " + trainingTypeName + " not found"));
