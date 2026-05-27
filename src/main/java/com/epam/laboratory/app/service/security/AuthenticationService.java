@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.security;
 
 import java.util.Map;
 

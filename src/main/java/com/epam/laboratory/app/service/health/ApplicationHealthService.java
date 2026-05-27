@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.health;
 
 import java.util.Map;
 

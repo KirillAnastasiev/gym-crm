@@ -1,19 +1,24 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.dto.RefreshTokenRequestDto;
 import com.epam.laboratory.app.dto.mapper.TokenResponseDtoMapper;
 import com.epam.laboratory.app.dto.mapper.TokenResponseDtoMapperImpl;
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
-import com.epam.laboratory.app.service.AuthenticationService;
+import com.epam.laboratory.app.security.JwtAuthenticationConverter;
+import com.epam.laboratory.app.service.security.AuthenticationService;
+import com.epam.laboratory.app.service.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,9 +35,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
-@ContextConfiguration(classes = {
-        AuthenticationController.class,
+@WebMvcTest(AuthenticationController.class)
+@Import({
+        TestSecurityConfig.class,
         TokenResponseDtoMapperImpl.class,
         RestExceptionHandler.class
 })
@@ -52,6 +57,15 @@ class AuthenticationControllerTest {
 
     @MockitoBean
     private AuthenticationService authenticationService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JwtAuthenticationConverter converter;
+
+    @MockitoBean
+    private AuthenticationManager authenticationManager;
 
 
     // ==================== LOGIN ENDPOINT TESTS ====================

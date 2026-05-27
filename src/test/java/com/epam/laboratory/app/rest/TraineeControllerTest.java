@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
@@ -10,13 +11,16 @@ import com.epam.laboratory.app.dto.UserDto;
 import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
+import com.epam.laboratory.app.security.JwtAuthenticationConverter;
 import com.epam.laboratory.app.service.TraineeService;
+import com.epam.laboratory.app.service.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -33,14 +37,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
-@ContextConfiguration(classes = {
-        TraineeController.class,
+@WebMvcTest(TraineeController.class)
+@Import({
+        TestSecurityConfig.class,
         TraineeMapperImpl.class,
         TraineeCredentialsMapperImpl.class,
         TrainerWithoutTraineesMapperImpl.class,
         TrainingTypeMapperImpl.class,
-        RestExceptionHandler.class,
+        RestExceptionHandler.class
 })
 @DisplayName("TraineeController test suite")
 class TraineeControllerTest {
@@ -62,6 +66,15 @@ class TraineeControllerTest {
 
     @MockitoBean
     private TraineeService traineeService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JwtAuthenticationConverter converter;
+
+    @MockitoBean
+    private AuthenticationManager authenticationManager;
 
 
     // ==================== GET PROFILE ENDPOINT TESTS ====================

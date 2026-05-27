@@ -1,16 +1,22 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.TrainingType;
 import com.epam.laboratory.app.dto.TrainingTypeDto;
 import com.epam.laboratory.app.dto.mapper.TrainingTypeMapper;
 import com.epam.laboratory.app.dto.mapper.TrainingTypeMapperImpl;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
+import com.epam.laboratory.app.security.JwtAuthenticationConverter;
 import com.epam.laboratory.app.service.TrainingTypeService;
+import com.epam.laboratory.app.service.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,11 +32,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
-@ContextConfiguration(classes = {
-        TrainingTypeController.class,
+@WebMvcTest(TrainingTypeController.class)
+@Import({
         TrainingTypeMapperImpl.class,
-        RestExceptionHandler.class
+        RestExceptionHandler.class,
+        TestSecurityConfig.class  // Добавить тестовую конфигурацию
 })
 @DisplayName("TrainingTypeController test suite")
 class TrainingTypeControllerTest {
@@ -46,6 +52,15 @@ class TrainingTypeControllerTest {
 
     @MockitoBean
     private TrainingTypeService trainingTypeService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JwtAuthenticationConverter converter;
+
+    @MockitoBean
+    private AuthenticationManager authenticationManager;
 
 
     // ==================== GET ALL TRAINING TYPES ENDPOINT TESTS ====================

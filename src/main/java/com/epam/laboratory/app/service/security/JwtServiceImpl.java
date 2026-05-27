@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.security;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.exception.AuthenticationException;
@@ -50,41 +50,67 @@ public class JwtServiceImpl implements JwtService {
 
     @Logging(Level.INFO)
     @Override
-    public String generateAccessToken(String username) {
-        return revokePreviousAndGenerateNewToken(username, JwtToken.JwtTokenType.ACCESS, config.accessTtlSeconds());
+    public JwtToken createAccessToken(String username) {
+        InputDataValidator.validateNotBlank(username, "Username");
+        var token = fetchJwtToken(username, JwtToken.JwtTokenType.ACCESS, config.accessTtlSeconds());
+        tokenDao.save(token);
+        token.getPayload().jti(token.getId());
+        return token;
     }
 
     @Logging(Level.INFO)
     @Override
-    public String generateRefreshToken(String username) {
-        return revokePreviousAndGenerateNewToken(username, JwtToken.JwtTokenType.REFRESH, config.refreshTtlSeconds());
+    public JwtToken createRefreshToken(String username) {
+        InputDataValidator.validateNotBlank(username, "Username");
+        var token = fetchJwtToken(username, JwtToken.JwtTokenType.REFRESH, config.refreshTtlSeconds());
+        tokenDao.save(token);
+        token.getPayload().jti(token.getId());
+        return token;
+    }
+
+    @Logging(Level.INFO)
+    @Override
+    public String serializeToken(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
+        return ENCODER.apply(token);
+    }
+
+    @Logging(Level.INFO)
+    @Override
+    public JwtToken deserializeToken(String token) {
+        InputDataValidator.validateNotBlank(token, "Token");
+        checkSecretString();
+        return DECODER.apply(token, config.secret());
     }
 
     @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
-    public void validateToken(String token, JwtToken.JwtTokenType tokenType) {
-        InputDataValidator.validateNotBlank(token, "Token");
+    public void validateToken(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
         checkSecretString();
-        var jwtToken = DECODER.apply(token, config.secret());
-        if (jwtToken.getPayload().getJtt() != tokenType) {
-            throw new IllegalArgumentException("Invalid JWT token type");
-        }
-        var isValid = isTokenValid(jwtToken);
+        var isValid = isTokenValid(token);
         if (!isValid) {
-            throw new AuthenticationException("Invalid JWT token");
+            throw new IllegalArgumentException("Invalid JWT token");
         }
-        var tokenId = jwtToken.getId() != null ? jwtToken.getId() : jwtToken.getPayload().getJti();
-        var isRevoked = tokenDao.isRevokedById(tokenId);
+        var isRevoked = isTokenRevoked(token);
         if (isRevoked) {
             throw new AuthenticationException("JWT token is revoked");
         }
     }
 
     @Logging(Level.INFO)
+    @Override
+    public void revokeToken(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
+        var id = token.getId() != null ? token.getId() : token.getPayload().getJti();
+        tokenDao.revoke(id);
+    }
+
+    @Logging(Level.INFO)
     @Transactional(readOnly = true)
     @Override
-    public void revokeTokenIfExists(String username, JwtToken.JwtTokenType type) {
+    public void revokeToken(String username, JwtToken.JwtTokenType type) {
         InputDataValidator.validateNotBlank(username, "Username");
         tokenDao.findLastNotRevokedByUsernameAndType(username, type)
                 .ifPresent(t -> tokenDao.revoke(t.getId()));
@@ -92,23 +118,33 @@ public class JwtServiceImpl implements JwtService {
 
     @Logging(Level.INFO)
     @Override
-    public String getUsernameFromToken(String token) {
-        InputDataValidator.validateNotBlank(token, "Token");
+    public String getUsernameFromToken(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
         checkSecretString();
-        var jwtToken = DECODER.apply(token, config.secret());
-        if (!isTokenValid(jwtToken)) {
+        var isValid = isTokenValid(token);
+        if (!isValid) {
             throw new IllegalArgumentException("Invalid JWT token");
         }
-        return jwtToken.getPayload().getSub();
+        return token.getPayload().getSub();
     }
 
-    private String revokePreviousAndGenerateNewToken(String username, JwtToken.JwtTokenType type, int ttlSeconds) {
-        InputDataValidator.validateNotBlank(username, "Username");
-        revokeTokenIfExists(username, type);
-        var newToken = fetchJwtToken(username, type, ttlSeconds);
-        tokenDao.save(newToken);
-        newToken.getPayload().jti(newToken.getId());
-        return ENCODER.apply(newToken);
+    @Logging(Level.INFO)
+    @Override
+    public boolean isTokenExpired(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
+        var expiration = token.getPayload().getExp();
+        return expiration != null && expiration.isBefore(Instant.now());
+    }
+
+    @Logging(Level.INFO)
+    @Override
+    public boolean isTokenRevoked(JwtToken token) {
+        InputDataValidator.validateNotNull(token, "Token");
+        var tokenId = token.getId() != null ? token.getId() : token.getPayload().getJti();
+        if (tokenId != null) {
+            return tokenDao.isRevokedById(tokenId);
+        }
+        return true;
     }
 
     private boolean isTokenValid(JwtToken jwtToken) {
@@ -135,11 +171,6 @@ public class JwtServiceImpl implements JwtService {
     private boolean isTokenIssuerValid(JwtToken jwtToken) {
         var tokenIssuer = jwtToken.getPayload().getIss();
         return tokenIssuer != null && !tokenIssuer.isBlank() && tokenIssuer.equals(config.issuer());
-    }
-
-    private boolean isTokenExpired(JwtToken jwtToken) {
-        var expiration = jwtToken.getPayload().getExp();
-        return expiration != null && expiration.isBefore(Instant.now());
     }
 
     private boolean isTokenTypeValid(JwtToken jwtToken) {

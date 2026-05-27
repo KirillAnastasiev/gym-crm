@@ -2,6 +2,7 @@ package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.domain.User;
 import com.epam.laboratory.app.repository.UserDao;
+import com.epam.laboratory.app.service.security.AuthenticationService;
 import com.epam.laboratory.app.util.PasswordGenerator;
 import com.epam.laboratory.app.util.UsernameHelper;
 import org.springframework.beans.factory.annotation.Autowired;

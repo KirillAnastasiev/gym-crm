@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.security;
 
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
@@ -13,7 +13,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Instant;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -24,6 +26,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthenticationServiceImpl test suite")
 class AuthenticationServiceImplTest {
+    private static final String ACCESS_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD";
+    private static final String REFRESH_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
 
     @Mock
     private AuthenticationDao authenticationDao;
@@ -230,13 +234,17 @@ class AuthenticationServiceImplTest {
     @DisplayName("Test of the method getUserTokens - should return access token and refresh token when username is valid")
     void testGetUserTokens_positive() {
         // given
-        var accessToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD";
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
+        var accessToken = createTestJwtToken();
+        var refreshToken = createTestJwtToken();
+        refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
 
+        doNothing().when(jwtService).revokeToken(anyString(), any(JwtToken.JwtTokenType.class));
         given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
         given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
-        given(jwtService.generateAccessToken(anyString())).willReturn(accessToken);
-        given(jwtService.generateRefreshToken(anyString())).willReturn(refreshToken);
+        given(jwtService.createAccessToken(anyString())).willReturn(accessToken);
+        given(jwtService.createRefreshToken(anyString())).willReturn(refreshToken);
+        given(jwtService.serializeToken(accessToken)).willReturn(ACCESS_TOKEN);
+        given(jwtService.serializeToken(refreshToken)).willReturn(REFRESH_TOKEN);
 
         // when
         var actualResult = authenticationService.getUserTokens("FirstName.LastName", "password123");
@@ -245,14 +253,16 @@ class AuthenticationServiceImplTest {
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Map.class);
         assertThat(actualResult).isNotEmpty();
-        assertThat(actualResult).containsEntry("accessToken", accessToken);
-        assertThat(actualResult).containsEntry("refreshToken", refreshToken);
+        assertThat(actualResult).containsEntry("accessToken", ACCESS_TOKEN);
+        assertThat(actualResult).containsEntry("refreshToken", REFRESH_TOKEN);
 
+        verify(jwtService, times(2)).revokeToken(anyString(), any(JwtToken.JwtTokenType.class));
         verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
         verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
-        verify(jwtService, times(1)).generateAccessToken(anyString());
-        verify(jwtService, times(1)).generateRefreshToken(anyString());
-        verifyNoMoreInteractions(authenticationDao, jwtService, jwtService);
+        verify(jwtService, times(1)).createAccessToken(anyString());
+        verify(jwtService, times(1)).createRefreshToken(anyString());
+        verify(jwtService, times(2)).serializeToken(any(JwtToken.class));
+        verifyNoMoreInteractions(jwtService);
     }
 
     @ParameterizedTest
@@ -279,31 +289,40 @@ class AuthenticationServiceImplTest {
     @DisplayName("Test of the method refreshAccessToken - should return new access token when refresh token is valid")
     void testRefreshAccessToken_positive() {
         // given
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
-        var newAccessToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc4NDM4MDMzfQ._nbc9r7qbrKpSEw5C3x9Awrj6XejJPj93flN7qlN7Vf3nnnIjpfhPzzDWF0N6SUD";
+        var username = "FirstName.LastName";
+        var accessToken = createTestJwtToken();
+        var refreshToken = createTestJwtToken();
+        refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
 
-        doNothing().when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
-        given(jwtService.getUsernameFromToken(anyString())).willReturn("FirstName.LastName");
-        doNothing().when(jwtService).revokeTokenIfExists(anyString(), any(JwtToken.JwtTokenType.class));
-        given(jwtService.generateAccessToken(anyString())).willReturn(newAccessToken);
-        given(jwtService.generateRefreshToken(anyString())).willReturn(refreshToken);
-
+        given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
+        doNothing().when(jwtService).validateToken(any(JwtToken.class));
+        doNothing().when(jwtService).revokeToken(any(JwtToken.class));
+        given(jwtService.getUsernameFromToken(any(JwtToken.class))).willReturn(username);
+        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
+        given(jwtService.createAccessToken(anyString())).willReturn(accessToken);
+        given(jwtService.createRefreshToken(anyString())).willReturn(refreshToken);
+        given(jwtService.serializeToken(accessToken)).willReturn(ACCESS_TOKEN);
+        given(jwtService.serializeToken(refreshToken)).willReturn(REFRESH_TOKEN);
 
         // when
-        var actualResult = authenticationService.refreshAccessToken(refreshToken);
+        var actualResult = authenticationService.refreshAccessToken(REFRESH_TOKEN);
 
         // then
         assertThat(actualResult).isNotNull();
         assertThat(actualResult).isInstanceOf(Map.class);
         assertThat(actualResult).isNotEmpty();
-        assertThat(actualResult).containsEntry("accessToken", newAccessToken);
+        assertThat(actualResult).containsEntry("accessToken", ACCESS_TOKEN);
+        assertThat(actualResult).containsEntry("refreshToken", REFRESH_TOKEN);
 
-        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(jwtService, times(2)).revokeTokenIfExists(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(jwtService, times(1)).getUsernameFromToken(anyString());
-        verify(jwtService, times(1)).generateAccessToken(anyString());
-        verifyNoMoreInteractions(jwtService);
-        verifyNoInteractions(authenticationDao);
+        verify(jwtService, times(1)).deserializeToken(anyString());
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
+        verify(jwtService, times(1)).revokeToken(any(JwtToken.class));
+        verify(jwtService, times(1)).getUsernameFromToken(any(JwtToken.class));
+        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
+        verify(jwtService, times(1)).createAccessToken(anyString());
+        verify(jwtService, times(1)).createRefreshToken(anyString());
+        verify(jwtService, times(2)).serializeToken(any(JwtToken.class));
+        verifyNoMoreInteractions(jwtService, authenticationDao);
     }
 
     @ParameterizedTest
@@ -325,16 +344,18 @@ class AuthenticationServiceImplTest {
     @DisplayName("Test of the method refreshAccessToken - should throw AuthenticationException when refresh token is invalid")
     void testRefreshAccessToken_negative_invalidRefreshToken() {
         // given
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
+        var refreshToken = createTestJwtToken();
 
-        doThrow(new AuthenticationException("Invalid JWT token")).when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
+        doThrow(new AuthenticationException("Invalid JWT token")).when(jwtService).validateToken(any(JwtToken.class));
 
         // when & then
-        assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
+        assertThatThrownBy(() -> authenticationService.refreshAccessToken(REFRESH_TOKEN))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("Invalid JWT token");
 
-        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
+        verify(jwtService, times(1)).deserializeToken(anyString());
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
         verifyNoMoreInteractions(jwtService);
     }
 
@@ -342,18 +363,23 @@ class AuthenticationServiceImplTest {
     @DisplayName("Test of the method refreshAccessToken - should throw AuthenticationException when username is not found in refresh token")
     void testRefreshAccessToken_negative_usernameNotFoundInRefreshToken() {
         // given
-        var refreshToken = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
+        var refreshToken = createTestJwtToken();
+        refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
 
-        doNothing().when(jwtService).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
-        given(jwtService.getUsernameFromToken(anyString())).willThrow(new IllegalArgumentException("Username not found in JWT token"));
+        given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
+        doNothing().when(jwtService).validateToken(any(JwtToken.class));
+        doNothing().when(jwtService).revokeToken(any(JwtToken.class));
+        given(jwtService.getUsernameFromToken(any(JwtToken.class))).willThrow(new IllegalArgumentException("Invalid JWT token"));
 
         // when & then
-        assertThatThrownBy(() -> authenticationService.refreshAccessToken(refreshToken))
+        assertThatThrownBy(() -> authenticationService.refreshAccessToken(REFRESH_TOKEN))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Username not found in JWT token");
+                .hasMessage("Invalid JWT token");
 
-        verify(jwtService, times(1)).validateToken(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(jwtService, times(1)).getUsernameFromToken(anyString());
+        verify(jwtService, times(1)).deserializeToken(anyString());
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
+        verify(jwtService, times(1)).revokeToken(any(JwtToken.class));
+        verify(jwtService, times(1)).getUsernameFromToken(any(JwtToken.class));
         verifyNoMoreInteractions(jwtService);
     }
 
@@ -399,6 +425,22 @@ class AuthenticationServiceImplTest {
                 .hasMessage(expectedMessage);
 
         verifyNoInteractions(authenticationDao);
+    }
+
+    private static JwtToken createTestJwtToken() {
+        return new JwtToken()
+                .header(new JwtToken.Header()
+                        .typ("JWT")
+                        .alg("HS256"))
+                .payload(new JwtToken.Payload()
+                        .jtt(JwtToken.JwtTokenType.ACCESS)
+                        .sub("FirstName.LastName")
+                        .iss("testIssuer")
+                        .aud("testAudience")
+                        .iat(Instant.now())
+                        .exp(Instant.now().plusSeconds(3600))
+                        .jti(UUID.randomUUID()))
+                .secretKey("mySecretKeyForJWTTokenGenerationAndValidationPurpose123456");
     }
 
 }

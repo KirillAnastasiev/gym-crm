@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.security;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.exception.AuthenticationException;
@@ -59,11 +59,13 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Map<String, String> getUserTokens(String username, String password) {
         validateUser(username, password);
-        var accessToken = jwtService.generateAccessToken(username);
-        var refreshToken = jwtService.generateRefreshToken(username);
+        jwtService.revokeToken(username, JwtTokenType.ACCESS);
+        jwtService.revokeToken(username, JwtTokenType.REFRESH);
+        var accessToken = jwtService.createAccessToken(username);
+        var refreshToken = jwtService.createRefreshToken(username);
         return Map.of(
-                "accessToken", accessToken,
-                "refreshToken", refreshToken
+                "accessToken", jwtService.serializeToken(accessToken),
+                "refreshToken", jwtService.serializeToken(refreshToken)
         );
     }
 
@@ -71,15 +73,19 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public Map<String, String> refreshAccessToken(String refreshToken) {
         InputDataValidator.validateNotBlank(refreshToken, "Refresh token");
-        jwtService.validateToken(refreshToken, JwtTokenType.REFRESH);
-        String username = jwtService.getUsernameFromToken(refreshToken);
-        jwtService.revokeTokenIfExists(username, JwtTokenType.ACCESS);
-        jwtService.revokeTokenIfExists(username, JwtTokenType.REFRESH);
-        var newAccessToken = jwtService.generateAccessToken(username);
-        var newRefreshToken = jwtService.generateRefreshToken(username);
+        var tokenObject = jwtService.deserializeToken(refreshToken);
+        jwtService.validateToken(tokenObject);
+        jwtService.revokeToken(tokenObject);
+        String username = jwtService.getUsernameFromToken(tokenObject);
+        boolean exists = checkExistsByUsername(username);
+        if (!exists) {
+            throw new IllegalArgumentException("User with username %s does not exist".formatted(username));
+        }
+        var newAccessToken = jwtService.createAccessToken(username);
+        var newRefreshToken = jwtService.createRefreshToken(username);
         return Map.of(
-                "accessToken", newAccessToken,
-                "refreshToken", newRefreshToken
+                "accessToken", jwtService.serializeToken(newAccessToken),
+                "refreshToken", jwtService.serializeToken(newRefreshToken)
         );
     }
 
@@ -87,8 +93,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Override
     public void logout(String username) {
         InputDataValidator.validateNotBlank(username, "Username");
-        jwtService.revokeTokenIfExists(username, JwtTokenType.ACCESS);
-        jwtService.revokeTokenIfExists(username, JwtTokenType.REFRESH);
+        jwtService.revokeToken(username, JwtTokenType.ACCESS);
+        jwtService.revokeToken(username, JwtTokenType.REFRESH);
     }
 
     @Logging(INFO)
@@ -97,8 +103,8 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         InputDataValidator.validateNotBlank(newPassword, "New password");
         validateUser(username, oldPassword);
         authenticationDao.changePasswordForUsername(username, newPassword);
-        jwtService.revokeTokenIfExists(username, JwtTokenType.ACCESS);
-        jwtService.revokeTokenIfExists(username, JwtTokenType.REFRESH);
+        jwtService.revokeToken(username, JwtTokenType.ACCESS);
+        jwtService.revokeToken(username, JwtTokenType.REFRESH);
     }
 
 }

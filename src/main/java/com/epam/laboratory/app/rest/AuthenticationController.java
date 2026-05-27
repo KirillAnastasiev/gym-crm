@@ -4,7 +4,7 @@ import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
 import com.epam.laboratory.app.dto.*;
 import com.epam.laboratory.app.dto.mapper.TokenResponseDtoMapper;
-import com.epam.laboratory.app.service.AuthenticationService;
+import com.epam.laboratory.app.service.security.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -139,7 +139,7 @@ public class AuthenticationController {
             responses = {
                     @ApiResponse(
                             responseCode = "200",
-                            description = "Access token refreshed successfully, new tokens returned",
+                            description = "Token refreshed successfully, new tokens returned",
                             content = @Content(
                                     mediaType = MediaType.APPLICATION_JSON_VALUE,
                                     schema = @Schema(implementation = TokensResponseDto.class)

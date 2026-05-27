@@ -5,6 +5,7 @@ import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TrainerDao;
+import com.epam.laboratory.app.service.security.AuthenticationService;
 import com.epam.laboratory.app.util.InputDataValidator;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;

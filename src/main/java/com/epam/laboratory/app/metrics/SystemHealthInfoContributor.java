@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.metrics;
 
-import com.epam.laboratory.app.service.ApplicationHealthService;
+import com.epam.laboratory.app.service.health.ApplicationHealthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.info.Info;
