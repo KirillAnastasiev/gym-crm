@@ -1,6 +1,9 @@
 CREATE SCHEMA IF NOT EXISTS public;
 SET SCHEMA public;
 
+DROP INDEX IF EXISTS users_username_idx;
+
+DROP TABLE IF EXISTS user_security;
 DROP TABLE IF EXISTS jwt_tokens;
 DROP TABLE IF EXISTS trainees_to_trainers;
 DROP TABLE IF EXISTS trainings;
@@ -80,3 +83,14 @@ CREATE TABLE IF NOT EXISTS jwt_tokens (
     CONSTRAINT              jwt_tokens_pk                       PRIMARY KEY (id),
     CONSTRAINT              jwt_tokens_users_fk                 FOREIGN KEY (username)             REFERENCES users(username)          ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS user_security (
+    user_id                 BIGINT                              NOT NULL,
+    account_locked          BOOLEAN                             NOT NULL                            DEFAULT FALSE,
+    failed_attempts         INTEGER                             NOT NULL                            DEFAULT 0,
+    lock_time               TIMESTAMP,
+    CONSTRAINT              user_security_pk                    PRIMARY KEY (user_id),
+    CONSTRAINT              user_security_users_fk              FOREIGN KEY (user_id)               REFERENCES users(id)               ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS users_username_idx ON users(username);

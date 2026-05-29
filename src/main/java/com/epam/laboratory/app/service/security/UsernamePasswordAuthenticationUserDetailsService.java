@@ -1,35 +1,46 @@
 package com.epam.laboratory.app.service.security;
 
-import com.epam.laboratory.app.repository.AuthenticationDao;
+import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.security.UserDetailsPrincipal;
 import com.epam.laboratory.app.util.InputDataValidator;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 
 @Service
+@Transactional(rollbackFor = Exception.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UsernamePasswordAuthenticationUserDetailsService implements UserDetailsService {
 
-    private final AuthenticationDao authenticationDao;
+    private final UserSecurityService userSecurityService;
 
+    @Logging(Level.INFO)
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         InputDataValidator.validateNotBlank(username, "Username");
-        return authenticationDao.findUserByUsername(username)
-                .map(user -> UserDetailsPrincipal.builder()
-                        .username(user.getUsername())
-                        .password(user.getPassword())
-                        .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
-                        .active(user.getActive())
-                        .build())
-                .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password"));
+        var optionalUser = userSecurityService.getUserWithUserSecurityByUsername(username);
+        if (optionalUser.isPresent()) {
+            var user = optionalUser.get();
+            userSecurityService.checkUserSecurity(user);
+
+            return UserDetailsPrincipal.builder()
+                    .username(user.getUsername())
+                    .password(user.getPassword())
+                    .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
+                    .accountActive(user.getActive())
+                    .accountLocked(user.getSecurity() != null && user.getSecurity().isAccountLocked())
+                    .lockTime(user.getSecurity() != null ? user.getSecurity().getLockTime() : null)
+                    .build();
+        } else {
+            throw new UsernameNotFoundException("Invalid username or password");
+        }
     }
 }

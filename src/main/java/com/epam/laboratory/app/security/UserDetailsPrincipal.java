@@ -1,10 +1,12 @@
 package com.epam.laboratory.app.security;
 
+import com.epam.laboratory.app.dto.annotation.Sensitive;
 import lombok.*;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -20,9 +22,16 @@ public class UserDetailsPrincipal implements UserDetails {
     private String username;
 
     @ToString.Exclude
+    @Sensitive
     private String password;
 
-    private boolean active;
+    private boolean accountActive;
+
+    private int failedAttempts;
+
+    private boolean accountLocked;
+
+    private Instant lockTime;
 
     private Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
 
@@ -43,12 +52,12 @@ public class UserDetailsPrincipal implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return active;
+        return accountActive;
     }
 
     @Override
     public boolean isAccountNonLocked() {
-        return active;
+        return !accountLocked;
     }
 
     @Override

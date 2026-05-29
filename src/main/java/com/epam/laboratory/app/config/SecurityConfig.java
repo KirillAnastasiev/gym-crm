@@ -7,6 +7,7 @@ import com.epam.laboratory.app.service.security.UsernamePasswordAuthenticationUs
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.ProviderManager;
@@ -88,8 +89,12 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationProvider preAuthenticatedAuthenticationProvider,
-                                                       AuthenticationProvider daoAuthenticationProvider) {
-        return new ProviderManager(List.of(preAuthenticatedAuthenticationProvider, daoAuthenticationProvider));
+                                                       AuthenticationProvider daoAuthenticationProvider,
+                                                       AuthenticationEventPublisher  authenticationEventPublisher) {
+        var providerManager = new ProviderManager(List.of(preAuthenticatedAuthenticationProvider, daoAuthenticationProvider));
+        providerManager.setAuthenticationEventPublisher(authenticationEventPublisher);
+        return providerManager;
+
     }
 
     @Bean

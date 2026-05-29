@@ -20,6 +20,7 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
     private static final String EXISTS_BY_USERNAME_QUERY = "SELECT CASE WHEN COUNT(u) > 0 THEN TRUE ELSE FALSE END FROM User u WHERE u.username = :username";
     private static final String CHANGE_PASSWORD_FOR_USERNAME_QUERY = "UPDATE User u SET u.password = :newPassword WHERE u.username = :username";
     private static final String FIND_BY_USERNAME_QUERY = "SELECT u FROM User u WHERE u.username = :username";
+    private static final String FIND_BY_USERNAME_WITH_USER_SECURITY_QUERY = "SELECT u FROM User u LEFT JOIN FETCH u.security WHERE u.username = :username";
 
     @PersistenceContext
     private EntityManager em;
@@ -53,6 +54,23 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
         } catch (PersistenceException e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public Optional<User> findUserByUsernameWithUSerSecurity(String username) {
+        try {
+            var query = em.createQuery(FIND_BY_USERNAME_WITH_USER_SECURITY_QUERY, User.class);
+            query.setParameter("username", username);
+            return Optional.ofNullable(query.getSingleResult());
+        } catch (PersistenceException e) {
+            return Optional.empty();
+        }
+    }
+
+    @Logging(INFO)
+    @Override
+    public void save(User user) {
+        em.persist(user);
     }
 
 }
