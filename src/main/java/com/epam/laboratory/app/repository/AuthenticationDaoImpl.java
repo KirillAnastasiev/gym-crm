@@ -18,7 +18,6 @@ import static org.slf4j.event.Level.INFO;
 @RequiredArgsConstructor
 public class AuthenticationDaoImpl implements AuthenticationDao {
     private static final String EXISTS_BY_USERNAME_QUERY = "SELECT CASE WHEN COUNT(u) > 0 THEN TRUE ELSE FALSE END FROM User u WHERE u.username = :username";
-    private static final String CHECK_PASSWORD_FOR_USERNAME_QUERY = "SELECT u.password FROM User u WHERE u.username = :username";
     private static final String CHANGE_PASSWORD_FOR_USERNAME_QUERY = "UPDATE User u SET u.password = :newPassword WHERE u.username = :username";
     private static final String FIND_BY_USERNAME_QUERY = "SELECT u FROM User u WHERE u.username = :username";
 
@@ -32,16 +31,6 @@ public class AuthenticationDaoImpl implements AuthenticationDao {
         var query = em.createQuery(EXISTS_BY_USERNAME_QUERY, Boolean.class);
         query.setParameter("username", username);
         return query.getSingleResult();
-    }
-
-    @Logging(INFO)
-    @Transactional(readOnly = true)
-    @Override
-    public boolean checkPasswordForUsername(String username, String password) {
-        var query = em.createQuery(CHECK_PASSWORD_FOR_USERNAME_QUERY, String.class);
-        query.setParameter("username", username);
-        String storedPassword = query.getSingleResult();
-        return password.equals(storedPassword);
     }
 
     @Logging(INFO)

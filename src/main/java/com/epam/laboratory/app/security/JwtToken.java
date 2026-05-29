@@ -1,13 +1,10 @@
 package com.epam.laboratory.app.security;
 
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "jwt_tokens")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
@@ -25,27 +22,10 @@ public class JwtToken {
     public static final String IAT_CLAIM = "iat";
     public static final String EXP_CLAIM = "exp";
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
-    private UUID id;
-
-    @Transient
     private Header header;
-
-    @Embedded
     private Payload payload;
-
-    @Transient
     private String secretKey;
-
-    @Column(name = "revoked", nullable = false)
     private Boolean revoked;
-
-    public JwtToken id(UUID id) {
-        this.id = id;
-        return this;
-    }
 
     public JwtToken header(Header header) {
         this.header = header;
@@ -67,7 +47,6 @@ public class JwtToken {
         return this;
     }
 
-    @Embeddable
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
@@ -75,9 +54,7 @@ public class JwtToken {
     @EqualsAndHashCode
     @ToString
     public static class Header {
-
         private String alg;
-
         private String typ;
 
         public Header typ(String typ) {
@@ -89,10 +66,8 @@ public class JwtToken {
             this.alg = alg;
             return this;
         }
-
-
     }
-    @Embeddable
+
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
@@ -100,27 +75,12 @@ public class JwtToken {
     @EqualsAndHashCode
     @ToString
     public static class Payload {
-
-        @Column(name = "id", nullable = false, unique = true, insertable = false, updatable = false)
         private UUID jti;
-
-        @Enumerated(EnumType.STRING)
-        @Column(name = "token_type", nullable = false)
         private JwtTokenType jtt;
-
-        @Transient
         private String iss;
-
-        @Column(name = "username", nullable = false)
         private String sub;
-
-        @Transient
         private String aud;
-
-        @Transient
         private Instant iat;
-
-        @Column(name = "expiry_date", nullable = false)
         private Instant exp;
 
         public Payload jti(UUID jti) {
@@ -157,13 +117,11 @@ public class JwtToken {
             this.exp = exp;
             return this;
         }
-
     }
 
     public enum JwtTokenType {
         ACCESS, REFRESH
     }
-
 }
 
 

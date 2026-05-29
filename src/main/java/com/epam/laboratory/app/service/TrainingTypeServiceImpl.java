@@ -22,12 +22,6 @@ public class TrainingTypeServiceImpl extends AbstractEntityService<TrainingType>
         super(dao);
     }
 
-
-    @Override
-    public TrainingType registerNew(TrainingType entity) {
-        throw  new UnsupportedOperationException("Unavailable operation for training type");
-    }
-
     @Override
     public TrainingType update(TrainingType entity) {
         throw new UnsupportedOperationException("Unavailable operation for training type");

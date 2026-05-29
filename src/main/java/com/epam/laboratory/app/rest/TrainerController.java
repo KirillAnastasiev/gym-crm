@@ -4,7 +4,7 @@ import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
 import com.epam.laboratory.app.dto.*;
 import com.epam.laboratory.app.dto.mapper.TraineeWithoutTrainersMapper;
-import com.epam.laboratory.app.dto.mapper.TrainerCredentialsMapper;
+import com.epam.laboratory.app.dto.mapper.CredentialsMapper;
 import com.epam.laboratory.app.dto.mapper.TrainerMapper;
 import com.epam.laboratory.app.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
@@ -31,7 +32,7 @@ public class TrainerController {
 
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
-    private final TrainerCredentialsMapper credentialsMapper;
+    private final CredentialsMapper credentialsMapper;
     private final TraineeWithoutTrainersMapper traineeMapper;
 
 
@@ -44,6 +45,7 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get trainer profile by username",
             parameters = @Parameter(
@@ -92,7 +94,19 @@ public class TrainerController {
                     required = true,
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = TrainerDto.class)
+                            schema = @Schema(implementation = TrainerDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                  "firstName": "FirstName",
+                                                  "lastName": "LastName",
+                                                  "specialization": {
+                                                      "id": 1,
+                                                      "trainingTypeName": "Fitness"
+                                                  }
+                                            }
+                                            """
+                            )
                     )
             ),
             responses = {
@@ -114,8 +128,8 @@ public class TrainerController {
             }
     )
     CredentialsDto registerTrainer(@RequestBody TrainerDto trainerDto) {
-        var trainer = trainerService.registerNew(trainerMapper.toEntity(trainerDto));
-        return credentialsMapper.toDto(trainer);
+        var userCredentials = trainerService.registerNew(trainerMapper.toEntity(trainerDto));
+        return credentialsMapper.toDto(userCredentials);
     }
 
 
@@ -129,6 +143,7 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update trainer profile by username",
             parameters = @Parameter(
@@ -142,7 +157,20 @@ public class TrainerController {
                     required = true,
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = TrainerDto.class)
+                            schema = @Schema(implementation = TrainerDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                 "firstName": "Laura",
+                                                 "lastName": "Palmer",
+                                                 "specialization": {
+                                                     "id": 2,
+                                                     "trainingTypeName": "Yoga"
+                                                 },
+                                                 "active": true
+                                            }
+                                            """
+                            )
                     )
             ),
             responses = {
@@ -184,6 +212,7 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update the list of trainees assigned to a trainer",
             parameters = @Parameter(
@@ -203,7 +232,8 @@ public class TrainerController {
                                             [
                                                 {"username": "Jane.Smith"},
                                                 {"username": "Emily.Johnson"}
-                                            ]"""
+                                            ]
+                                            """
                             )
                     )
             ),
@@ -236,7 +266,8 @@ public class TrainerController {
                                                             "address" : "789 Oak St",
                                                             "active" : true
                                                         } 
-                                                    ]"""
+                                                    ]
+                                                    """
                                     )
                             )
                     ),
@@ -279,6 +310,7 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Change trainer's active status by username",
             parameters = @Parameter(
@@ -306,7 +338,8 @@ public class TrainerController {
                                             {
                                               "message": "Trainer with username Sarah.Davis was blocked"
                                             }
-                                            """)
+                                            """
+                                    )
                             )
                     ),
                     @ApiResponse(
@@ -342,6 +375,7 @@ public class TrainerController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Delete trainer by username",
             parameters = @Parameter(
@@ -361,7 +395,8 @@ public class TrainerController {
                                             {
                                               "message": "Trainer with username Sarah.Davis was deleted"
                                             }
-                                            """)
+                                            """
+                                    )
                             )
                     ),
                     @ApiResponse(

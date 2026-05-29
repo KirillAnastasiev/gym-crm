@@ -1,5 +1,6 @@
 package com.epam.laboratory.app.repository;
 
+import com.epam.laboratory.app.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,37 +50,6 @@ class AuthenticationDaoTest {
     }
 
 
-    // ==================== CHECK PASSWORD FOR USERNAME TESTS ====================
-
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return true if password for given username is correct")
-    void testCheckPasswordForUsername_positive() {
-        // given
-        var existingUsername = "John.Doe";
-        var correctPassword = "password123";
-
-        // when
-        var actualResult = authenticationDao.checkPasswordForUsername(existingUsername, correctPassword);
-
-        // then
-        assertThat(actualResult).isTrue();
-    }
-
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return false if password for given username is incorrect")
-    void testCheckPasswordForUsername_negative() {
-        // given
-        var existingUsername = "John.Doe";
-        var incorrectPassword = "wrongPassword";
-
-        // when
-        var actualResult = authenticationDao.checkPasswordForUsername(existingUsername, incorrectPassword);
-
-        // then
-        assertThat(actualResult).isFalse();
-    }
-
-
     // ==================== CHANGE PASSWORD FOR USERNAME TESTS ====================
 
     @Test
@@ -91,7 +61,10 @@ class AuthenticationDaoTest {
 
         // when
         authenticationDao.changePasswordForUsername(existingUsername, newPassword);
-        var actualResult = authenticationDao.checkPasswordForUsername(existingUsername, newPassword);
+        var actualResult = authenticationDao.findUserByUsername(existingUsername)
+                .map(User::getPassword)
+                .filter(password -> password.equals(newPassword))
+                .isPresent();
 
         // then
         assertThat(actualResult).isTrue();

@@ -3,33 +3,31 @@ package com.epam.laboratory.app.security;
 import com.epam.laboratory.app.service.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationConverter;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.stereotype.Component;
 
-@Component
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+@RequiredArgsConstructor
 public class JwtAuthenticationConverter implements AuthenticationConverter {
 
     private final JwtService jwtService;
 
     @Override
-    public @Nullable Authentication convert(HttpServletRequest request) {
+    public Authentication convert(HttpServletRequest request) {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             try {
                 String token = authHeader.substring(7);
                 var tokenObj = jwtService.deserializeToken(token);
+                jwtService.validateToken(tokenObj, JwtToken.JwtTokenType.ACCESS);
                 return new PreAuthenticatedAuthenticationToken(tokenObj, token);
             } catch (Exception e) {
-                return null;
+                throw new BadCredentialsException(e.getMessage());
             }
         }
-        return null;
+        throw new AuthenticationCredentialsNotFoundException("Missing or invalid Authorization header");
     }
-
 }

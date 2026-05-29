@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.service.security;
 
+import com.epam.laboratory.app.domain.JwtTokenEntity;
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.repository.JwtTokenDao;
 import com.epam.laboratory.app.security.JwtToken;
+import com.epam.laboratory.app.security.mapper.JwtTokenMapper;
 import com.epam.laboratory.app.util.JwtFactoryUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,12 +48,15 @@ class JwtServiceImplTest {
     @Mock
     private JwtTokenDao tokenDao;
 
+    @Mock
+    private JwtTokenMapper tokenMapper;
+
     @InjectMocks
     private JwtServiceImpl jwtService;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtServiceImpl(tokenDao, config);
+        jwtService = new JwtServiceImpl(config, tokenDao, tokenMapper);
     }
 
 
@@ -62,8 +67,10 @@ class JwtServiceImplTest {
     void testCreateAccessToken_positive() {
         // given
         var token = createTestJwtToken();
+        var tokenEntity = createTestJwtTokenEntity();
 
-        given(tokenDao.save(any(JwtToken.class))).willReturn(token);
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
+        given(tokenDao.save(any(JwtTokenEntity.class))).willReturn(tokenEntity);
 
         // when
         var actualResult = jwtService.createAccessToken("FirstName.LastName");
@@ -73,7 +80,7 @@ class JwtServiceImplTest {
         assertThat(actualResult.getPayload().getSub()).isEqualTo("FirstName.LastName");
         assertThat(actualResult.getPayload().getJtt()).isEqualTo(JwtToken.JwtTokenType.ACCESS);
 
-        verify(tokenDao, times(1)).save(any(JwtToken.class));
+        verify(tokenDao, times(1)).save(any(JwtTokenEntity.class));
         verifyNoMoreInteractions(tokenDao);
     }
 
@@ -95,15 +102,19 @@ class JwtServiceImplTest {
     @DisplayName("Test of the method createAccessToken - should throw RuntimeException when tokenDao throws exception")
     void testCreateAccessToken_negative_tokenDaoException() {
         // given
-        given(tokenDao.save(any(JwtToken.class))).willThrow(new RuntimeException("Database error"));
+        var tokenEntity = createTestJwtTokenEntity();
+
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
+        given(tokenDao.save(any(JwtTokenEntity.class))).willThrow(new RuntimeException("Database error"));
 
         // when & then
         assertThatThrownBy(() -> jwtService.createAccessToken("FirstName.LastName"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
 
-        verify(tokenDao, times(1)).save(any(JwtToken.class));
-        verifyNoMoreInteractions(tokenDao);
+        verify(tokenMapper, times(1)).toEntity(any(JwtToken.class));
+        verify(tokenDao, times(1)).save(any(JwtTokenEntity.class));
+        verifyNoMoreInteractions(tokenDao, tokenMapper);
     }
 
     @ParameterizedTest
@@ -129,8 +140,11 @@ class JwtServiceImplTest {
         // given
         var token = createTestJwtToken();
         token.getPayload().setJtt(JwtToken.JwtTokenType.REFRESH);
+        var tokenEntity = createTestJwtTokenEntity();
+        tokenEntity.setTokenType("REFRESH");
 
-        given(tokenDao.save(any(JwtToken.class))).willReturn(token);
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
+        given(tokenDao.save(any(JwtTokenEntity.class))).willReturn(tokenEntity);
 
         // when
         var actualResult = jwtService.createRefreshToken("FirstName.LastName");
@@ -140,23 +154,28 @@ class JwtServiceImplTest {
         assertThat(actualResult.getPayload().getSub()).isEqualTo("FirstName.LastName");
         assertThat(actualResult.getPayload().getJtt()).isEqualTo(JwtToken.JwtTokenType.REFRESH);
 
-        verify(tokenDao, times(1)).save(any(JwtToken.class));
-        verifyNoMoreInteractions(tokenDao);
+        verify(tokenMapper, times(1)).toEntity(any(JwtToken.class));
+        verify(tokenDao, times(1)).save(any(JwtTokenEntity.class));
+        verifyNoMoreInteractions(tokenDao, tokenMapper);
     }
 
     @Test
     @DisplayName("Test of the method createRefreshToken - should throw RuntimeException when tokenDao throws exception")
     void testCreateRefreshToken_negative_tokenDaoException() {
         // given
-        given(tokenDao.save(any(JwtToken.class))).willThrow(new RuntimeException("Database error"));
+        var tokenEntity = createTestJwtTokenEntity();
+
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
+        given(tokenDao.save(any(JwtTokenEntity.class))).willThrow(new RuntimeException("Database error"));
 
         // when & then
         assertThatThrownBy(() -> jwtService.createRefreshToken("FirstName.LastName"))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
 
-        verify(tokenDao, times(1)).save(any(JwtToken.class));
-        verifyNoMoreInteractions(tokenDao);
+        verify(tokenMapper, times(1)).toEntity(any(JwtToken.class));
+        verify(tokenDao, times(1)).save(any(JwtTokenEntity.class));
+        verifyNoMoreInteractions(tokenDao, tokenMapper);
     }
 
     @ParameterizedTest
@@ -261,13 +280,17 @@ class JwtServiceImplTest {
     void testValidateToken_positive() {
         // given
         var token = createTestJwtToken();
+        var tokenEntity = createTestJwtTokenEntity();
+
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
         given(tokenDao.isRevokedById(any(UUID.class))).willReturn(false);
 
         // when & then
-        assertThatNoException().isThrownBy(() -> jwtService.validateToken(token));
+        assertThatNoException().isThrownBy(() -> jwtService.validateToken(token, JwtToken.JwtTokenType.ACCESS));
 
+        verify(tokenMapper, times(1)).toEntity(any(JwtToken.class));
         verify(tokenDao, times(1)).isRevokedById(any(UUID.class));
-        verifyNoMoreInteractions(tokenDao);
+        verifyNoMoreInteractions(tokenMapper, tokenDao);
     }
 
     @Test
@@ -278,7 +301,7 @@ class JwtServiceImplTest {
         token.getPayload().sub("");
 
         // when & then
-        assertThatThrownBy(() -> jwtService.validateToken(token))
+        assertThatThrownBy(() -> jwtService.validateToken(token, JwtToken.JwtTokenType.ACCESS))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Invalid JWT token");
 
@@ -290,16 +313,33 @@ class JwtServiceImplTest {
     void testValidateToken_negative_revokedToken() {
         // given
         var token = createTestJwtToken();
+        var tokenEntity = createTestJwtTokenEntity();
 
+        given(tokenMapper.toEntity(any(JwtToken.class))).willReturn(tokenEntity);
         given(tokenDao.isRevokedById(any(UUID.class))).willReturn(true);
 
         // when & then
-        assertThatThrownBy(() -> jwtService.validateToken(token))
+        assertThatThrownBy(() -> jwtService.validateToken(token, JwtToken.JwtTokenType.ACCESS))
                 .isInstanceOf(AuthenticationException.class)
                 .hasMessage("JWT token is revoked");
 
+        verify(tokenMapper, times(1)).toEntity(any(JwtToken.class));
         verify(tokenDao, times(1)).isRevokedById(any(UUID.class));
         verifyNoMoreInteractions(tokenDao);
+    }
+
+    @Test
+    @DisplayName("Test of the method validateToken - should throw IllegalArgumentException for token with invalid type")
+    void testValidateToken_negative_notValidTokenType() {
+        // given
+        var token = createTestJwtToken();
+
+        // when
+        assertThatThrownBy(() -> jwtService.validateToken(token, JwtToken.JwtTokenType.REFRESH))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Invalid JWT token");
+
+        verifyNoInteractions(tokenDao);
     }
 
 
@@ -310,32 +350,18 @@ class JwtServiceImplTest {
     void testRevokeToken_positive() {
         // given
         var token = createTestJwtToken();
+        var tokenEntity = createTestJwtTokenEntity();
 
-        given(tokenDao.findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class)))
-                .willReturn(Optional.of(token));
+        given(tokenDao.findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString()))
+                .willReturn(Optional.of(tokenEntity));
+        doNothing().when(tokenDao).revokeByUsername(anyString());
 
         // when
         jwtService.revokeToken("FirstName.LastName", JwtToken.JwtTokenType.ACCESS);
 
         // then
-        verify(tokenDao, times(1)).findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(tokenDao, times(1)).revoke(token.getId());
-        verifyNoMoreInteractions(tokenDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method revokeToken - should revoke token by token object")
-    void testRevokeToken_positive_tokenObject() {
-        // given
-        var token = createTestJwtToken();
-
-        doNothing().when(tokenDao).revoke(any(UUID.class));
-
-        // when
-        assertThatNoException().isThrownBy(() -> jwtService.revokeToken(token));
-
-        // then
-        verify(tokenDao, times(1)).revoke(token.getId());
+        verify(tokenDao, times(1)).findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString());
+        verify(tokenDao, times(1)).revokeByUsername(anyString());
         verifyNoMoreInteractions(tokenDao);
     }
 
@@ -344,16 +370,17 @@ class JwtServiceImplTest {
     void testRevokeToken_negative_notExistingToken() {
         // given
         var token = createTestJwtToken();
+        var tokenEntity = createTestJwtTokenEntity();
 
-        given(tokenDao.findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class)))
-                .willReturn(Optional.of(token));
+        given(tokenDao.findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString()))
+                .willReturn(Optional.of(tokenEntity));
 
         // when
         jwtService.revokeToken("FirstName.LastName", JwtToken.JwtTokenType.ACCESS);
 
         // then
-        verify(tokenDao, times(1)).findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(tokenDao, times(1)).revoke(token.getId());
+        verify(tokenDao, times(1)).findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString());
+        verify(tokenDao, times(1)).revokeByUsername(anyString());
         verifyNoMoreInteractions(tokenDao);
     }
 
@@ -363,7 +390,7 @@ class JwtServiceImplTest {
         // given
         var token = createTestJwtToken();
 
-        given(tokenDao.findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class)))
+        given(tokenDao.findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString()))
                 .willThrow(new RuntimeException("Database error"));
 
         // when & then
@@ -371,7 +398,7 @@ class JwtServiceImplTest {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Database error");
 
-        verify(tokenDao, times(1)).findLastNotRevokedByUsernameAndType(anyString(), any(JwtToken.JwtTokenType.class));
+        verify(tokenDao, times(1)).findTopByUsernameAndTokenTypeAndIsRevokedFalseOrderByIdDesc(anyString(), anyString());
         verifyNoMoreInteractions(tokenDao);
     }
 
@@ -387,15 +414,6 @@ class JwtServiceImplTest {
         assertThatThrownBy(() -> jwtService.revokeToken(username, JwtToken.JwtTokenType.ACCESS))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(errorMessage);
-    }
-
-    @Test
-    @DisplayName("Test of the method revokeToken - should throw IllegalArgumentException for null token object")
-    void testRevokeToken_negative_invalidInput_tokenObject() {
-        // when & then
-        assertThatThrownBy(() -> jwtService.revokeToken((JwtToken) null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Token must not be null");
     }
 
 
@@ -416,23 +434,18 @@ class JwtServiceImplTest {
     }
 
     @Test
-    @DisplayName("Test of the method getUsernameFromToken - should throw IllegalArgumentException for token with blank username")
-    void testGetUsernameFromToken_negative_blankUsername() {
-        // given
-        var jwtToken = createTestJwtToken();
-        jwtToken.getPayload().setSub("");
-
-
+    @DisplayName("Test of the method getUsernameFromToken - should throw IllegalArgumentException for null token")
+    void testGetUsernameFromToken_negative_nullToken() {
         // when & then
-        assertThatThrownBy(() -> jwtService.getUsernameFromToken(jwtToken))
+        assertThatThrownBy(() -> jwtService.getUsernameFromToken(null))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid JWT token");
+                .hasMessage("Token must not be null");
+
     }
 
     private static JwtToken createTestJwtToken() {
         var id = UUID.randomUUID();
         return new JwtToken()
-                .id(id)
                 .header(new JwtToken.Header()
                         .typ("JWT")
                         .alg("HS256"))
@@ -445,6 +458,16 @@ class JwtServiceImplTest {
                         .exp(Instant.now().plusSeconds(3600))
                         .jti(id))
                 .secretKey("mySecretKeyForJWTTokenGenerationAndValidationPurpose123456");
+    }
+
+    private static JwtTokenEntity createTestJwtTokenEntity() {
+        var token = new JwtTokenEntity();
+        token.setId(UUID.randomUUID());
+        token.setTokenType("ACCESS");
+        token.setUsername("FirstName.LastName");
+        token.setExpiryDate(Instant.now().plusSeconds(3600));
+        token.setIsRevoked(false);
+        return token;
     }
 
 }

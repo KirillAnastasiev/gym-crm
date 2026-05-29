@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
@@ -46,6 +47,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainee. Optionally, you can provide a filter to narrow down the results.",
             parameters = @Parameter(
@@ -64,7 +66,8 @@ public class TrainingController {
                                             {
                                                 "dateFrom": "2024-07-01T00:00:00",
                                                 "dateTo": "2024-07-31T23:59:59"
-                                            }"""
+                                            }
+                                            """
                             )
                     )
             ),
@@ -89,7 +92,8 @@ public class TrainingController {
                                                                  },
                                                                  "trainingDate": "2024-07-05T12:30:00",
                                                                  "trainingDuration": "PT1H30M"
-                                                            }"""
+                                                            }
+                                                            """
                                             )
                                     )
                             )
@@ -127,6 +131,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainer. Optionally, you can provide a filter to narrow down the results.",
             parameters = @Parameter(
@@ -144,7 +149,8 @@ public class TrainingController {
                                     value = """
                                             {
                                                 "trainingTypeName":"Fitness"
-                                            }"""
+                                            }
+                                            """
                             )
                     )
             ),
@@ -169,7 +175,8 @@ public class TrainingController {
                                                                 },
                                                                 "trainingDate": "2024-07-01T08:00:00",
                                                                 "trainingDuration": "PT1H"
-                                                            }"""
+                                                            }
+                                                            """
                                             )
                                     )
                             )
@@ -209,6 +216,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.CREATED)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Register a new training session. The request body should contain all necessary details about the training.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -220,16 +228,17 @@ public class TrainingController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                                "traineeUsername": "John.Doe",
-                                                "trainerUsername": "Sarah.Davis",
-                                                "trainingName": "Evening Yoga",
-                                                "trainingType": {
-                                                    "id": 2,
-                                                    "trainingTypeName": "Yoga"
-                                                },
-                                                "trainingDate": "2024-07-10T18:00:00",
-                                                "trainingDuration": "PT1H"
-                                            }"""
+                                                 "traineeUsername": "John.Doe",
+                                                 "trainerUsername": "Sarah.Davis",
+                                                 "trainingType": {
+                                                     "id": 2,
+                                                     "trainingTypeName": "Yoga"
+                                                 },
+                                                 "trainingName": "Soft yoga",
+                                                 "trainingDate": "2025-12-15T12:45:00",
+                                                 "trainingDuration": "PT30M"
+                                            }
+                                            """
                             )
                     )
             ),
@@ -244,7 +253,8 @@ public class TrainingController {
                                             value = """
                                                     {
                                                         "message": "Training was registered"
-                                                    }"""
+                                                    }
+                                                    """
                                     )
                             )
                     ),

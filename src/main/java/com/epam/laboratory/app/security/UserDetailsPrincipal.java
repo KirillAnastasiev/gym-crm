@@ -10,12 +10,12 @@ import java.util.Collection;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Getter
 @Setter
+@Builder
 @EqualsAndHashCode(of = "username")
 @ToString
-public class JwtTokenPrincipal implements UserDetails {
+public class UserDetailsPrincipal implements UserDetails {
 
     private String username;
 
@@ -23,8 +23,6 @@ public class JwtTokenPrincipal implements UserDetails {
     private String password;
 
     private boolean active;
-
-    private boolean expired;
 
     private Collection<? extends GrantedAuthority> authorities = new ArrayList<>();
 
@@ -44,13 +42,22 @@ public class JwtTokenPrincipal implements UserDetails {
     }
 
     @Override
+    public boolean isEnabled() {
+        return active;
+    }
+
+    @Override
     public boolean isAccountNonLocked() {
         return active;
     }
 
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
 
     @Override
     public boolean isCredentialsNonExpired() {
-        return !expired;
+        return true;
     }
 }

@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS trainees_to_trainers (
 CREATE TABLE IF NOT EXISTS jwt_tokens (
     id                      UUID                                NOT NULL                           DEFAULT RANDOM_UUID(),
     token_type              VARCHAR(20)                         NOT NULL,
-    expiration_date         TIMESTAMP                           NOT NULL,
+    expiry_date             TIMESTAMP                           NOT NULL,
     username                VARCHAR(110)                        NOT NULL,
     is_revoked              BOOLEAN                             NOT NULL                           DEFAULT FALSE,
     CONSTRAINT              jwt_tokens_pk                       PRIMARY KEY (id),

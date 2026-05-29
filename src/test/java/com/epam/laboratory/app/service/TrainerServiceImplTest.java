@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -39,6 +40,9 @@ class TrainerServiceImplTest {
     @Mock
     private TraineeService traineeService;
 
+    @Mock
+    private PasswordEncoder  passwordEncoder;
+
     @InjectMocks
     private TrainerServiceImpl trainerService;
 
@@ -52,12 +56,14 @@ class TrainerServiceImplTest {
         var trainer = createTestTrainer();
         var password = "generatedPassword";
         var username = "FirstName.LastName";
+        var encodedPassword = "encodedPassword";
 
         try (var mockedStaticPasswordGenerator = mockStatic(PasswordGenerator.class);
                 var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
             mockedStaticPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
             mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(username);
 
+            given(passwordEncoder.encode(password)).willReturn(encodedPassword);
             given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
             // when
@@ -65,11 +71,10 @@ class TrainerServiceImplTest {
 
             // then
             assertThat(actualResult).isNotNull();
-            assertThat(actualResult.getId()).isNotNull();
-            assertThat(actualResult).isEqualTo(trainer);
             assertThat(actualResult.getPassword()).isEqualTo(password);
             assertThat(actualResult.getUsername()).isEqualTo(username);
 
+            verify(passwordEncoder, times(1)).encode(password);
             verify(trainerDao, times(1)).save(any());
             verifyNoMoreInteractions(trainerDao);
         }
@@ -82,12 +87,14 @@ class TrainerServiceImplTest {
         var trainer = createTestTrainer();
         var password = "generatedPassword";
         var usernameWithSuffix = "FirstName.LastName.2";
+        var encodedPassword = "encodedPassword";
 
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
                 var mockedStaticUsernameHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(password);
             mockedStaticUsernameHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(usernameWithSuffix);
 
+            given(passwordEncoder.encode(password)).willReturn(encodedPassword);
             given(trainerDao.save(any(Trainer.class))).willReturn(trainer);
 
             // when
@@ -95,11 +102,10 @@ class TrainerServiceImplTest {
 
             // then
             assertThat(actualResult).isNotNull();
-            assertThat(actualResult.getId()).isNotNull();
-            assertThat(actualResult).isEqualTo(trainer);
             assertThat(actualResult.getPassword()).isEqualTo(password);
             assertThat(actualResult.getUsername()).isEqualTo(usernameWithSuffix);
 
+            verify(passwordEncoder, times(1)).encode(password);
             verify(trainerDao, times(1)).save(any(Trainer.class));
             verifyNoMoreInteractions(trainerDao);
         }

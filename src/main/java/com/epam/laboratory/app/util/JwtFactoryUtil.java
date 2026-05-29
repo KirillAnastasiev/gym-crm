@@ -25,7 +25,7 @@ public class JwtFactoryUtil {
                     .add(getHeaderClimes(jwtToken))
                 .and()
                 .claims()
-                    .add(getPayloadClimes(jwtToken))
+                    .add(getPayloadClaims(jwtToken))
                 .and()
                 .signWith(getAlgorithm(jwtToken), getSignKey(jwtToken.getSecretKey()))
                 .compact();
@@ -86,7 +86,7 @@ public class JwtFactoryUtil {
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
-    private static Map<String, Object> getPayloadClimes(JwtToken jwtToken) {
+    private static Map<String, Object> getPayloadClaims(JwtToken jwtToken) {
         return Map.of(
                 JTI_CLAIM, jwtToken.getPayload().getJti().toString(),
                 JTT_CLAIM, jwtToken.getPayload().getJtt().name(),

@@ -4,6 +4,7 @@ import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.dto.TraineeDto;
 import com.epam.laboratory.app.dto.TrainerDto;
@@ -41,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({
         TestSecurityConfig.class,
         TraineeMapperImpl.class,
-        TraineeCredentialsMapperImpl.class,
+        CredentialsMapperImpl.class,
         TrainerWithoutTraineesMapperImpl.class,
         TrainingTypeMapperImpl.class,
         RestExceptionHandler.class
@@ -56,7 +57,7 @@ class TraineeControllerTest {
     private TraineeMapper traineeMapper;
 
     @Autowired
-    private TraineeCredentialsMapper credentialsMapper;
+    private CredentialsMapper credentialsMapper;
 
     @Autowired
     private TrainerWithoutTraineesMapper trainerWithoutTraineesMapper;
@@ -133,9 +134,10 @@ class TraineeControllerTest {
         // given
         var trainee = getTestTrainee();
         var requestBody = objectMapper.writeValueAsString(traineeMapper.toDto(trainee));
-        var expectedResponse = credentialsMapper.toDto(trainee);
+        var credentials = getTestCredentials();
+        var expectedResponse = credentialsMapper.toDto(credentials);
 
-        given(traineeService.registerNew(any(Trainee.class))).willReturn(trainee);
+        given(traineeService.registerNew(any(Trainee.class))).willReturn(credentials);
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainees")
@@ -156,8 +158,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== UPDATE TRAINEE ENDPOINT TESTS ====================
 
+    // ==================== UPDATE TRAINEE ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method updateTrainee - should update trainee and return updated trainee when request body is valid and trainee with given username exists")
     void testUpdateTrainee_positive() throws Exception {
@@ -192,8 +194,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== DELETE TRAINEE ENDPOINT TESTS ====================
 
+    // ==================== DELETE TRAINEE ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method deleteTrainee - should delete trainee and return confirmation message when trainee with given username exists")
     void testDeleteTrainee_positive() throws Exception {
@@ -230,8 +232,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== CHANGE TRAINEE STATUS ENDPOINT TESTS ====================
 
+    // ==================== CHANGE TRAINEE STATUS ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method changeTraineeStatus - should change trainee status and return confirmation message when trainee with given username exists")
     void testChangeTraineeStatus_positive() throws Exception {
@@ -270,8 +272,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== UPDATE TRAINEE TRAINERS ENDPOINT TESTS ====================
 
+    // ==================== UPDATE TRAINEE TRAINERS ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method updateTraineeTrainers - should update trainee trainers and return updated trainers when request body is valid and trainee with given username exists")
     void testUpdateTraineeTrainers_positive() throws Exception {
@@ -373,4 +375,12 @@ class TraineeControllerTest {
         trainer.setActive(true);
         return trainer;
     }
+
+    private static UserCredentials getTestCredentials() {
+        var credentials = new UserCredentials();
+        credentials.setUsername("Jane.Smith");
+        credentials.setPassword("password456");
+        return credentials;
+    }
+
 }

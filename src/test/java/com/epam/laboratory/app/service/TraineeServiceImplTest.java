@@ -15,6 +15,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -39,6 +40,9 @@ class TraineeServiceImplTest {
     @Mock
     private TrainerService trainerService;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private TraineeServiceImpl traineeService;
 
@@ -52,12 +56,14 @@ class TraineeServiceImplTest {
         var trainee = createTestTrainee();
         var generatedPassword = "1234567890";
         var generatedUsername = "FirstName.LastName";
+        var encodedPassword = "encodedPassword";
 
         try (var staticMockPasswordGenerator = mockStatic(PasswordGenerator.class);
              var staticMockUserHelper = mockStatic(UsernameHelper.class)) {
             staticMockPasswordGenerator.when(PasswordGenerator::generatePassword).thenReturn(generatedPassword);
             staticMockUserHelper.when(() -> UsernameHelper.generateUsername(any(), any())).thenReturn(generatedUsername);
 
+            given(passwordEncoder.encode(generatedPassword)).willReturn(encodedPassword);
             given(traineeDao.save(any(Trainee.class))).willReturn(trainee);
 
             // when
@@ -65,11 +71,10 @@ class TraineeServiceImplTest {
 
             // then
             assertThat(actualResult).isNotNull();
-            assertThat(actualResult.getId()).isNotNull();
-            assertThat(actualResult).isEqualTo(trainee);
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsername);
 
+            verify(passwordEncoder, times(1)).encode(generatedPassword);
             verify(traineeDao, times(1)).save(any(Trainee.class));
             verifyNoMoreInteractions(traineeDao);
         }
@@ -95,8 +100,6 @@ class TraineeServiceImplTest {
 
             // then
             assertThat(actualResult).isNotNull();
-            assertThat(actualResult.getId()).isNotNull();
-            assertThat(actualResult).isEqualTo(trainee);
             assertThat(actualResult.getPassword()).isEqualTo(generatedPassword);
             assertThat(actualResult.getUsername()).isEqualTo(generatedUsernameWithSuffix);
 

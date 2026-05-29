@@ -4,6 +4,7 @@ import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.dto.TraineeDto;
 import com.epam.laboratory.app.dto.TrainerDto;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         TrainerController.class,
         TrainerMapperImpl.class,
         TrainingTypeMapperImpl.class,
-        TrainerCredentialsMapperImpl.class,
+        CredentialsMapperImpl.class,
         TraineeWithoutTrainersMapperImpl.class,
         RestExceptionHandler.class
 })
@@ -59,7 +60,7 @@ class TrainerControllerTest {
     private TrainerMapper trainerMapper;
 
     @Autowired
-    private TrainerCredentialsMapper credentialsMapper;
+    private CredentialsMapper credentialsMapper;
 
     @Autowired
     private TraineeWithoutTrainersMapper traineeWithoutTrainersMapper;
@@ -138,10 +139,11 @@ class TrainerControllerTest {
     void testRegisterTrainer_positive() throws Exception {
         // given
         var trainer = getTestTrainer();
+        var credentials = getTestCredentials();
         var requestBody = objectMapper.writeValueAsString(trainerMapper.toDto(trainer));
-        var expectedResponse = credentialsMapper.toDto(trainer);
+        var expectedResponse = credentialsMapper.toDto(credentials);
 
-        given(trainerService.registerNew(any(Trainer.class))).willReturn(trainer);
+        given(trainerService.registerNew(any(Trainer.class))).willReturn(credentials);
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainers")
@@ -386,6 +388,13 @@ class TrainerControllerTest {
         trainee.setAddress("123 Main St");
         trainee.setActive(true);
         return trainee;
+    }
+
+    private static UserCredentials getTestCredentials() {
+        var userCredentials = new UserCredentials();
+        userCredentials.setUsername("John.Doe");
+        userCredentials.setPassword("password123");
+        return userCredentials;
     }
 
 }

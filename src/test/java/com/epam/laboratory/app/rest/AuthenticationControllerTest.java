@@ -19,7 +19,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -30,6 +29,8 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -68,23 +69,22 @@ class AuthenticationControllerTest {
     private AuthenticationManager authenticationManager;
 
 
-    // ==================== LOGIN ENDPOINT TESTS ====================
+    // ==================== GET TOKENS ENDPOINT TESTS ====================
 
     @Test
-    @DisplayName("Test of the method login - should return access and refresh tokens when credentials are correct")
-    void testLogin_positive() throws Exception {
+    @DisplayName("Test of the method getTokens - should return access and refresh tokens when credentials are correct")
+    void testGetTokens_positive() throws Exception {
         // given
         var tokensMap = Map.of(
                 "accessToken", ACCESS_TOKEN,
                 "refreshToken", REFRESH_TOKEN
         );
 
-        given(authenticationService.getUserTokens(anyString(), anyString())).willReturn(tokensMap);
+        given(authenticationService.getUserTokens(anyString())).willReturn(tokensMap);
 
         // when & then
-        var actualResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"John.Doe\",\"password\":\"password123\"}"))
+        var actualResult = mockMvc.perform(get("/api/auth/tokens")
+                        .with(user("John.Doe").password("password123")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -98,45 +98,43 @@ class AuthenticationControllerTest {
         assertThat(response).containsKey("refreshToken");
         assertThat(response).containsAllEntriesOf(tokensMap);
 
-        verify(authenticationService, times(1)).getUserTokens(anyString(), anyString());
+        verify(authenticationService, times(1)).getUserTokens(anyString());
         verifyNoMoreInteractions(authenticationService);
     }
 
     @Test
-    @DisplayName("Test of the method login - should return 404 when user is not found")
-    void testLogin_negative_userNotFound() throws Exception {
+    @DisplayName("Test of the method getTokens - should return 404 when user is not found")
+    void testGetTokens_negative_userNotFound() throws Exception {
         // given
         doThrow(new NoSuchEntityException("User with username Unknown.User does not exist"))
-                .when(authenticationService).getUserTokens(anyString(), anyString());
+                .when(authenticationService).getUserTokens(anyString());
 
         // when & then
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"Unknown.User\",\"password\":\"password123\"}"))
+        mockMvc.perform(get("/api/auth/tokens")
+                        .with(user("John.Doe").password("password123")))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(content().json("{\"detail\":\"User with username Unknown.User does not exist\"}"));
 
-        verify(authenticationService, times(1)).getUserTokens(anyString(), anyString());
+        verify(authenticationService, times(1)).getUserTokens(anyString());
         verifyNoMoreInteractions(authenticationService);
     }
 
     @Test
-    @DisplayName("Test of the method login - should return 401 when password is incorrect")
-    void testLogin_negative_incorrectPassword() throws Exception {
+    @DisplayName("Test of the method getTokens - should return 401 when password is incorrect")
+    void testGetTokens_negative_incorrectPassword() throws Exception {
         // given
         doThrow(new AuthenticationException("Incorrect password for username John.Doe"))
-                .when(authenticationService).getUserTokens(anyString(), anyString());
+                .when(authenticationService).getUserTokens(anyString());
 
         // when & then
-        mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"John.Doe\",\"password\":\"wrongPassword\"}"))
+        mockMvc.perform(get("/api/auth/tokens")
+                        .with(user("John.Doe").password("wrongPassword")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
                 .andExpect(content().json("{\"detail\":\"Incorrect password for username John.Doe\"}"));
 
-        verify(authenticationService, times(1)).getUserTokens(anyString(), anyString());
+        verify(authenticationService, times(1)).getUserTokens(anyString());
         verifyNoMoreInteractions(authenticationService);
     }
 
@@ -226,7 +224,8 @@ class AuthenticationControllerTest {
         doNothing().when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/change-password")
+                        .with(user("John.Doe").password("password123"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isOk())
@@ -245,7 +244,8 @@ class AuthenticationControllerTest {
                 .when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/change-password")
+                        .with(user("John.Doe").password("wrongPassword"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"wrongOldPass\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isUnauthorized())
@@ -264,7 +264,8 @@ class AuthenticationControllerTest {
                 .when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
         // when & then
-        mockMvc.perform(put("/api/auth/{username}/change-password", "NonExistent.User")
+        mockMvc.perform(put("/api/auth/change-password")
+                        .with(user("Unknown.User").password("wrongPassword"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isNotFound())
@@ -289,7 +290,8 @@ class AuthenticationControllerTest {
         // when & then
         doThrow(new IllegalArgumentException(expectedErrorMessage)).when(authenticationService).changePassword(anyString(), anyString(), anyString());
 
-        mockMvc.perform(put("/api/auth/{username}/change-password", "John.Doe")
+        mockMvc.perform(put("/api/auth/change-password")
+                        .with(user("John.Doe").password("password123"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"%s\",\"newPassword\":\"%s\"}".formatted(oldPassword, newPassword)))
                 .andExpect(status().isBadRequest())
@@ -299,4 +301,6 @@ class AuthenticationControllerTest {
         verify(authenticationService, times(1)).changePassword(anyString(), anyString(), anyString());
         verifyNoMoreInteractions(authenticationService);
     }
+
+    // ==================== LOGOUT ENDPOINT TESTS ====================
 }

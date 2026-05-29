@@ -3,12 +3,14 @@ package com.epam.laboratory.app.service;
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TrainerDao;
 import com.epam.laboratory.app.service.security.AuthenticationService;
 import com.epam.laboratory.app.util.InputDataValidator;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,21 +24,28 @@ import static org.slf4j.event.Level.INFO;
 public class TrainerServiceImpl extends AbstractUserService<Trainer> implements TrainerService {
 
     private final TraineeService traineeService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
     public TrainerServiceImpl(TrainerDao trainerDao,
                               AuthenticationService authenticationService,
-                              TraineeService traineeService) {
+                              TraineeService traineeService,
+                              PasswordEncoder passwordEncoder) {
         super(trainerDao, authenticationService);
         this.traineeService = traineeService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Logging(Level.INFO)
     @Override
-    public Trainer registerNew(Trainer trainer) {
+    public UserCredentials registerNew(Trainer trainer) {
         InputDataValidator.validateNotNull(trainer, "Trainer");
         prepareUser(trainer);
-        return ((TrainerDao) dao).save(trainer);
+        var password = trainer.getPassword();
+        var encodedPassword = passwordEncoder.encode(trainer.getPassword());
+        trainer.setPassword(encodedPassword);
+        ((TrainerDao) dao).save(trainer);
+        return new  UserCredentials(trainer.getUsername(), password);
     }
 
     @Logging(Level.INFO)

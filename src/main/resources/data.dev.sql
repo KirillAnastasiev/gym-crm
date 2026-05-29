@@ -9,14 +9,14 @@ INSERT INTO training_types VALUES
     (8, 'Resistance');
 
 INSERT INTO users VALUES
-    (1, 'John', 'Doe', 'John.Doe', 'password123', true),
-    (2, 'Jane', 'Smith', 'Jane.Smith', 'password456', true),
-    (3, 'Emily', 'Johnson', 'Emily.Johnson', 'password789', true),
-    (4, 'Michael', 'Brown', 'Michael.Brown', 'password321', true),
-    (5, 'Sarah', 'Davis', 'Sarah.Davis', 'password654', true),
-    (6, 'David', 'Wilson', 'David.Wilson', 'password987', true),
-    (7, 'Laura', 'Miller', 'Laura.Miller', 'password111', true),
-    (8, 'James', 'Taylor', 'James.Taylor', 'password222', true);
+    (1, 'John', 'Doe', 'John.Doe', '$2a$10$9xC39jTnJaiezRhlCMK66OMJGLf4kWqfEBEbyjFslBqKw9sZiPlbC', true),               -- password123
+    (2, 'Jane', 'Smith', 'Jane.Smith', '$2a$10$Vh3T/gkR7ninVal07ZJhMO9Wf0QvJaPnLYh09lGJB30BesYWSj05e', true),           -- password456
+    (3, 'Emily', 'Johnson', 'Emily.Johnson', '$2a$10$4/yooYQcQgPMvGODniXeoO2OWkIn11mn2moy2sljxN8DK.TaOxL5u', true),     -- password789
+    (4, 'Michael', 'Brown', 'Michael.Brown', '$2a$10$ZbJQjyhqHroOe5ireV/k4Od/wpX09z9fJUjBzCOwpTcdpjSkmDsEG', true),     -- password321
+    (5, 'Sarah', 'Davis', 'Sarah.Davis', '$2a$10$DghOi25SCxffM7/OQh0lJeeLrjzUbgIX74dm7POdPviTma7zq4Qbi', true),         -- password654
+    (6, 'David', 'Wilson', 'David.Wilson', '$2a$10$CxNBfgKEHcDVzPuZ5F7SIuNroP80yx2FM/tDIBA9ZYdTUxHokZAbi', true),       -- password987
+    (7, 'Laura', 'Miller', 'Laura.Miller', '$2a$10$UJmztYys/QXHiQzNzDWdKeFKm/jVv8T4/JtuFx6C38E3h2mF0OVRG', true),       -- password111
+    (8, 'James', 'Taylor', 'James.Taylor', '$2a$10$5PO1jnpCFc4iXNMLKNDt5OajLgLM2gslxfkXph5yKBWnPIDu7Y8U6', true);       -- password222
 
 INSERT INTO trainees VALUES
     (1, '1990-01-01', '123 Main St'),

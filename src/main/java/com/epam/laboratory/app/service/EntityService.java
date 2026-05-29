@@ -12,7 +12,6 @@ public interface EntityService<T extends Entity> {
     Collection<T> selectByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition);
     long count();
     long countByCondition(BiFunction<CriteriaBuilder, Root<T>, Predicate> condition);
-    T registerNew(T entity);
     T update(T entity);
 
     @SafeVarargs

@@ -3,7 +3,7 @@ package com.epam.laboratory.app.rest;
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
 import com.epam.laboratory.app.dto.*;
-import com.epam.laboratory.app.dto.mapper.TraineeCredentialsMapper;
+import com.epam.laboratory.app.dto.mapper.CredentialsMapper;
 import com.epam.laboratory.app.dto.mapper.TraineeMapper;
 import com.epam.laboratory.app.dto.mapper.TrainerWithoutTraineesMapper;
 import com.epam.laboratory.app.service.TraineeService;
@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
@@ -31,7 +32,7 @@ public class TraineeController {
 
     private final TraineeService traineeService;
     private final TraineeMapper traineeMapper;
-    private final TraineeCredentialsMapper credentialsMapper;
+    private final CredentialsMapper credentialsMapper;
     private final TrainerWithoutTraineesMapper trainerMapper;
 
 
@@ -44,6 +45,7 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get trainee profile by username",
             parameters = @Parameter(
@@ -92,7 +94,17 @@ public class TraineeController {
                     required = true,
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = TraineeDto.class)
+                            schema = @Schema(implementation = TraineeDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                  "firstName": "FirstName",
+                                                  "lastName": "LastName",
+                                                  "dateOfBirth": "2024-12-15",
+                                                  "address": "Test Address"
+                                            }
+                                            """
+                            )
                     )
             ),
             responses = {
@@ -129,6 +141,7 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update trainee profile by username",
             parameters = @Parameter(
@@ -142,7 +155,18 @@ public class TraineeController {
                     required = true,
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = TraineeDto.class)
+                            schema = @Schema(implementation = TraineeDto.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {
+                                                 "firstName": "Joan",
+                                                 "lastName": "Williams",
+                                                 "dateOfBirth": "1993-05-13",
+                                                 "address": "New Address",
+                                                 "active": false
+                                             }
+                                            """
+                            )
                     )
             ),
             responses = {
@@ -184,6 +208,7 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update the list of trainers assigned to a trainee",
             parameters = @Parameter(
@@ -203,7 +228,8 @@ public class TraineeController {
                                             [
                                                 {"username": "Laura.Miller"},
                                                 {"username": "James.Taylor"}
-                                            ]"""
+                                            ]
+                                            """
                             )
                     )
             ),
@@ -240,7 +266,8 @@ public class TraineeController {
                                                             },
                                                             "active" : true
                                                         } 
-                                                    ]"""
+                                                    ]
+                                                    """
                                     )
                             )
                     ),
@@ -283,6 +310,7 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Change trainee's active status by username",
             parameters = @Parameter(
@@ -310,7 +338,8 @@ public class TraineeController {
                                             {   
                                               "message": "Trainee with username John.Doe was blocked"
                                             }
-                                            """)
+                                            """
+                                    )
                             )
                     ),
                     @ApiResponse(
@@ -346,6 +375,7 @@ public class TraineeController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Delete trainee by username",
             parameters = @Parameter(
@@ -365,7 +395,8 @@ public class TraineeController {
                                             {
                                               "message": "Trainee with username John.Doe was deleted"
                                             }
-                                            """)
+                                            """
+                                    )
                             )
                     ),
                     @ApiResponse(

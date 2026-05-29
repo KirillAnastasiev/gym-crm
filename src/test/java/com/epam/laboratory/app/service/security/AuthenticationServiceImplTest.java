@@ -1,5 +1,7 @@
 package com.epam.laboratory.app.service.security;
 
+import com.epam.laboratory.app.domain.Trainee;
+import com.epam.laboratory.app.domain.User;
 import com.epam.laboratory.app.exception.AuthenticationException;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.AuthenticationDao;
@@ -12,9 +14,11 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
@@ -34,6 +38,9 @@ class AuthenticationServiceImplTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private AuthenticationServiceImpl authenticationService;
@@ -93,141 +100,6 @@ class AuthenticationServiceImplTest {
     }
 
 
-    // ==================== CHECK PASSWORD FOR USERNAME TESTS ====================
-
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return true if password is correct for given username")
-    void testCheckPasswordForUsername_positive() {
-        // given
-        var username = "FirstName.LastName";
-        var password = "password";
-
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
-
-        // when
-        var actualResult = authenticationService.checkPasswordForUsername(username, password);
-
-        // then
-        assertThat(actualResult).isTrue();
-
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
-        verifyNoMoreInteractions(authenticationDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method checkPasswordForUsername - should return false if password is incorrect for given username")
-    void testCheckPasswordForUsername_negative_notCorrectPassword() {
-        // given
-        var username = "FirstName.LastName";
-        var password = "password";
-
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(false);
-
-        // when
-        var actualResult = authenticationService.checkPasswordForUsername(username, password);
-
-        // then
-        assertThat(actualResult).isFalse();
-
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
-        verifyNoMoreInteractions(authenticationDao);
-    }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "NULL, password, 'Username must not be null'",
-            "username, NULL, 'Password must not be null'",
-            "'   ', password, 'Username must not be blank'",
-            "username, '   ', 'Password must not be blank'"
-    }, nullValues = {"NULL"})
-    @DisplayName("Test of the method checkPasswordForUsername - should throw IllegalArgumentException when username or password is invalid")
-    void testCheckPasswordForUsername_negative_invalidInput(String username, String password, String expectedMessage) {
-        // when & then
-        assertThatThrownBy(() -> authenticationService.checkPasswordForUsername(username, password))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(expectedMessage);
-
-        verifyNoInteractions(authenticationDao);
-    }
-
-
-    // ==================== VALIDATE USER TESTS ====================
-
-    @Test
-    @DisplayName("Test of the method validateUser - should not throw exception when user exists and password is correct")
-    void testValidateUser_positive() {
-        // given
-        var username = "FirstName.LastName";
-        var password = "password";
-
-        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
-
-        // when
-        authenticationService.validateUser(username, password);
-
-        // then
-        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
-        verifyNoMoreInteractions(authenticationDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method validateUser - should throw AuthenticationException when user does not exist")
-    void testValidateUser_negative_userDoesNotExist() {
-        // given
-        var username = "FirstName.LastName";
-        var password = "password";
-
-        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(false);
-
-        // when & then
-        assertThatThrownBy(() -> authenticationService.validateUser(username, password))
-                .isInstanceOf(NoSuchEntityException.class)
-                .hasMessage("User with username %s does not exist".formatted(username));
-
-        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
-        verifyNoMoreInteractions(authenticationDao);
-    }
-
-    @Test
-    @DisplayName("Test of the method validateUser - should throw AuthenticationException when password is incorrect for given user")
-    void testValidateUser_negative_incorrectPassword() {
-        // given
-        var username = "FirstName.LastName";
-        var password = "password";
-
-        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(false);
-
-        // when & then
-        assertThatThrownBy(() -> authenticationService.validateUser(username, password))
-                .isInstanceOf(AuthenticationException.class)
-                .hasMessage("Incorrect password for username %s".formatted(username));
-
-        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
-        verifyNoMoreInteractions(authenticationDao);
-    }
-
-    @ParameterizedTest
-    @CsvSource(value = {
-            "NULL, password, 'Username must not be null'",
-            "username, NULL, 'Password must not be null'",
-            "'   ', password, 'Username must not be blank'",
-            "username, '   ', 'Password must not be blank'"
-    }, nullValues = {"NULL"})
-    @DisplayName("Test of the method validateUser - should throw IllegalArgumentException when username or password is invalid")
-    void testValidateUser_negative_invalidInput(String username, String password, String expectedMessage) {
-        // when & then
-        assertThatThrownBy(() -> authenticationService.validateUser(username, password))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(expectedMessage);
-
-        verifyNoInteractions(authenticationDao);
-    }
-
-
     // ==================== GET USER TOKENS TESTS ====================
 
     @Test
@@ -237,17 +109,16 @@ class AuthenticationServiceImplTest {
         var accessToken = createTestJwtToken();
         var refreshToken = createTestJwtToken();
         refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
+        var user = createTestUser();
 
-        doNothing().when(jwtService).revokeToken(anyString(), any(JwtToken.JwtTokenType.class));
-        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
+        doNothing().when(jwtService).revokeTokens(anyString());
         given(jwtService.createAccessToken(anyString())).willReturn(accessToken);
         given(jwtService.createRefreshToken(anyString())).willReturn(refreshToken);
         given(jwtService.serializeToken(accessToken)).willReturn(ACCESS_TOKEN);
         given(jwtService.serializeToken(refreshToken)).willReturn(REFRESH_TOKEN);
 
         // when
-        var actualResult = authenticationService.getUserTokens("FirstName.LastName", "password123");
+        var actualResult = authenticationService.getUserTokens("FirstName.LastName");
 
         // then
         assertThat(actualResult).isNotNull();
@@ -256,9 +127,7 @@ class AuthenticationServiceImplTest {
         assertThat(actualResult).containsEntry("accessToken", ACCESS_TOKEN);
         assertThat(actualResult).containsEntry("refreshToken", REFRESH_TOKEN);
 
-        verify(jwtService, times(2)).revokeToken(anyString(), any(JwtToken.JwtTokenType.class));
-        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
+        verify(jwtService, times(1)).revokeTokens(anyString());
         verify(jwtService, times(1)).createAccessToken(anyString());
         verify(jwtService, times(1)).createRefreshToken(anyString());
         verify(jwtService, times(2)).serializeToken(any(JwtToken.class));
@@ -267,15 +136,13 @@ class AuthenticationServiceImplTest {
 
     @ParameterizedTest
     @CsvSource(value = {
-            "NULL, password123, 'Username must not be null'",
-            "'   ', password123, 'Username must not be blank'",
-            "FirstName.LastName, NULL, 'Password must not be null'",
-            "FirstName.LastName, '   ', 'Password must not be blank'"
+            "NULL, 'Username must not be null'",
+            "'   ', 'Username must not be blank'"
     }, nullValues = {"NULL"})
     @DisplayName("Test of the method getUserTokens - should throw IllegalArgumentException when username is invalid")
-    void testGetUserTokens_negative_invalidInput(String username, String password, String expectedMessage) {
+    void testGetUserTokens_negative_invalidInput(String username, String expectedMessage) {
         // when & then
-        assertThatThrownBy(() -> authenticationService.getUserTokens(username, password))
+        assertThatThrownBy(() -> authenticationService.getUserTokens(username))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage(expectedMessage);
 
@@ -295,8 +162,8 @@ class AuthenticationServiceImplTest {
         refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
 
         given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
-        doNothing().when(jwtService).validateToken(any(JwtToken.class));
-        doNothing().when(jwtService).revokeToken(any(JwtToken.class));
+        doNothing().when(jwtService).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
+        doNothing().when(jwtService).revokeTokens(anyString());
         given(jwtService.getUsernameFromToken(any(JwtToken.class))).willReturn(username);
         given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
         given(jwtService.createAccessToken(anyString())).willReturn(accessToken);
@@ -315,8 +182,8 @@ class AuthenticationServiceImplTest {
         assertThat(actualResult).containsEntry("refreshToken", REFRESH_TOKEN);
 
         verify(jwtService, times(1)).deserializeToken(anyString());
-        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
-        verify(jwtService, times(1)).revokeToken(any(JwtToken.class));
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
+        verify(jwtService, times(1)).revokeTokens(anyString());
         verify(jwtService, times(1)).getUsernameFromToken(any(JwtToken.class));
         verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
         verify(jwtService, times(1)).createAccessToken(anyString());
@@ -347,7 +214,7 @@ class AuthenticationServiceImplTest {
         var refreshToken = createTestJwtToken();
 
         given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
-        doThrow(new AuthenticationException("Invalid JWT token")).when(jwtService).validateToken(any(JwtToken.class));
+        doThrow(new AuthenticationException("Invalid JWT token")).when(jwtService).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
 
         // when & then
         assertThatThrownBy(() -> authenticationService.refreshAccessToken(REFRESH_TOKEN))
@@ -355,7 +222,7 @@ class AuthenticationServiceImplTest {
                 .hasMessage("Invalid JWT token");
 
         verify(jwtService, times(1)).deserializeToken(anyString());
-        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
         verifyNoMoreInteractions(jwtService);
     }
 
@@ -367,8 +234,7 @@ class AuthenticationServiceImplTest {
         refreshToken.getPayload().jtt(JwtToken.JwtTokenType.REFRESH);
 
         given(jwtService.deserializeToken(anyString())).willReturn(refreshToken);
-        doNothing().when(jwtService).validateToken(any(JwtToken.class));
-        doNothing().when(jwtService).revokeToken(any(JwtToken.class));
+        doNothing().when(jwtService).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
         given(jwtService.getUsernameFromToken(any(JwtToken.class))).willThrow(new IllegalArgumentException("Invalid JWT token"));
 
         // when & then
@@ -377,8 +243,7 @@ class AuthenticationServiceImplTest {
                 .hasMessage("Invalid JWT token");
 
         verify(jwtService, times(1)).deserializeToken(anyString());
-        verify(jwtService, times(1)).validateToken(any(JwtToken.class));
-        verify(jwtService, times(1)).revokeToken(any(JwtToken.class));
+        verify(jwtService, times(1)).validateToken(any(JwtToken.class), any(JwtToken.JwtTokenType.class));
         verify(jwtService, times(1)).getUsernameFromToken(any(JwtToken.class));
         verifyNoMoreInteractions(jwtService);
     }
@@ -393,9 +258,13 @@ class AuthenticationServiceImplTest {
         var username = "FirstName.LastName";
         var oldPassword = "oldPassword";
         var newPassword = "newPassword";
+        var encodedPassword = "encodedPassword";
+        var user = createTestUser();
 
         given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
-        given(authenticationDao.checkPasswordForUsername(anyString(), anyString())).willReturn(true);
+        given(authenticationDao.findUserByUsername(anyString())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
+        given(passwordEncoder.encode(anyString())).willReturn(encodedPassword);
         doNothing().when(authenticationDao).changePasswordForUsername(anyString(), anyString());
 
         // when
@@ -403,9 +272,48 @@ class AuthenticationServiceImplTest {
 
         // then
         verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
-        verify(authenticationDao, times(1)).checkPasswordForUsername(anyString(), anyString());
+        verify(authenticationDao, times(1)).findUserByUsername(anyString());
+        verify(passwordEncoder, times(1)).matches(anyString(), anyString());
+        verify(passwordEncoder, times(1)).encode(anyString());
         verify(authenticationDao, times(1)).changePasswordForUsername(anyString(), anyString());
+        verifyNoMoreInteractions(authenticationDao, passwordEncoder);
+    }
+
+    @Test
+    @DisplayName("Test of the method changePassword - should throw IllegalArgumentException when user does not exist")
+    void testChangePassword_negative_notExistedUser() {
+        // given
+        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(false);
+
+        // when && then
+        assertThatThrownBy(() -> authenticationService.changePassword("FirstName.LastName", "oldPassword", "newPassword"))
+                .isInstanceOf(NoSuchEntityException.class)
+                .hasMessage("User with username FirstName.LastName does not exist");
+
+        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
         verifyNoMoreInteractions(authenticationDao);
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    @Test
+    @DisplayName("Test of the method changePassword - should throw AuthenticationException when old password is not correct")
+    void testChangePassword_negative_notMatchedPassword() {
+        // given
+        var user = createTestUser();
+
+        given(authenticationDao.checkExistsByUsername(anyString())).willReturn(true);
+        given(authenticationDao.findUserByUsername(anyString())).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
+
+        // when && then
+        assertThatThrownBy(() -> authenticationService.changePassword("FirstName.LastName", "wrong)Password", "newPassword"))
+                .isInstanceOf(AuthenticationException.class)
+                .hasMessage("Incorrect password for username FirstName.LastName");
+
+        verify(authenticationDao, times(1)).checkExistsByUsername(anyString());
+        verify(authenticationDao, times(1)).findUserByUsername(anyString());
+        verify(passwordEncoder, times(1)).matches(anyString(), anyString());
+        verifyNoMoreInteractions(authenticationDao, passwordEncoder);
     }
 
     @ParameterizedTest
@@ -441,6 +349,16 @@ class AuthenticationServiceImplTest {
                         .exp(Instant.now().plusSeconds(3600))
                         .jti(UUID.randomUUID()))
                 .secretKey("mySecretKeyForJWTTokenGenerationAndValidationPurpose123456");
+    }
+
+    private static User createTestUser() {
+        var user = new Trainee();
+        user.setFirstName("FirstName");
+        user.setLastName("LastName");
+        user.setUsername("FirstName.LastName");
+        user.setPassword("encodedOldPassword");
+        user.setActive(true);
+        return user;
     }
 
 }

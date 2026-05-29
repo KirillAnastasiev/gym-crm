@@ -1,6 +1,7 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.domain.User;
+import com.epam.laboratory.app.domain.UserCredentials;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -8,6 +9,7 @@ import jakarta.persistence.criteria.Root;
 import java.util.function.BiFunction;
 
 public interface UserService<T extends User> extends EntityService<T> {
+    UserCredentials registerNew(T entity);
     T selectByUsername(String username);
     void changeStatus(String username, boolean isActive);
     void deleteByUsername(String username);

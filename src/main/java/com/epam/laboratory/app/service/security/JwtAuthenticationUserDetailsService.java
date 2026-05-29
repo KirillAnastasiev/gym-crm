@@ -26,7 +26,6 @@ public class JwtAuthenticationUserDetailsService implements AuthenticationUserDe
             var isTokenExpired = jwtService.isTokenExpired(jwtToken);
             var isTokenRevoked = jwtService.isTokenRevoked(jwtToken);
             return JwtTokenPrincipal.builder()
-                    .name(authenticationToken.getName())
                     .username(username)
                     .authorities(List.of(new SimpleGrantedAuthority(jwtToken.getPayload().getJtt().name())))
                     .password("N/A")

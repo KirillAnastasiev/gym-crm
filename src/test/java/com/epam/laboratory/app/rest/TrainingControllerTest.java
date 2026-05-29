@@ -1,6 +1,5 @@
 package com.epam.laboratory.app.rest;
 
-import com.epam.laboratory.app.config.SecurityConfig;
 import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.*;
 import com.epam.laboratory.app.dto.TrainingDto;
@@ -8,20 +7,15 @@ import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
 import com.epam.laboratory.app.security.JwtAuthenticationConverter;
-import com.epam.laboratory.app.security.filter.JwtAuthenticationFilter;
 import com.epam.laboratory.app.service.TrainingService;
 import com.epam.laboratory.app.service.security.JwtService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
