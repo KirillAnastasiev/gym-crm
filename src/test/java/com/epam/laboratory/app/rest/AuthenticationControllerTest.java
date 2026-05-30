@@ -139,6 +139,39 @@ class AuthenticationControllerTest {
     }
 
 
+    // ==================== LOGOUT ENDPOINT TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method logout - should return success message when logout is successful")
+    void testLogout_positive() throws Exception {
+        // given
+        mockMvc.perform(post("/api/auth/logout")
+                        .with(user("John.Doe").password("password123")))
+                        .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json("{\"message\":\"Logout successful, access and refresh tokens invalidated\"}"));
+
+        verify(authenticationService, times(1)).logout(anyString());
+        verifyNoMoreInteractions(authenticationService);
+    }
+
+    @Test
+    @DisplayName("Test of the method logout - should return 401 when logout fails due to authentication error")
+    void testLogout_negative_exceptionInService() throws Exception {
+        // given
+        doThrow(new AuthenticationException("Incorrect password for username John.Doe")).when(authenticationService).logout(anyString());
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .with(user("John.Doe").password("password123")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(content().json("{\"detail\":\"Incorrect password for username John.Doe\"}"));
+
+        verify(authenticationService, times(1)).logout(anyString());
+        verifyNoMoreInteractions(authenticationService);
+    }
+
+
     // ==================== REFRESH TOKEN ENDPOINT TESTS ====================
 
     @Test

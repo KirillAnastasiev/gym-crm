@@ -22,16 +22,20 @@ public class JwtAuthenticationUserDetailsService implements AuthenticationUserDe
     @Override
     public UserDetails loadUserDetails(PreAuthenticatedAuthenticationToken authenticationToken) throws UsernameNotFoundException {
         if (authenticationToken.getPrincipal() instanceof JwtToken jwtToken) {
-            var username = jwtService.getUsernameFromToken(jwtToken);
-            var isTokenExpired = jwtService.isTokenExpired(jwtToken);
-            var isTokenRevoked = jwtService.isTokenRevoked(jwtToken);
-            return JwtTokenPrincipal.builder()
-                    .username(username)
-                    .authorities(List.of(new SimpleGrantedAuthority(jwtToken.getPayload().getJtt().name())))
-                    .password("N/A")
-                    .active(!isTokenRevoked)
-                    .expired(isTokenExpired)
-                    .build();
+            try {
+                var username = jwtService.getUsernameFromToken(jwtToken);
+                var isTokenExpired = jwtService.isTokenExpired(jwtToken);
+                var isTokenRevoked = jwtService.isTokenRevoked(jwtToken);
+                return JwtTokenPrincipal.builder()
+                        .username(username)
+                        .authorities(List.of(new SimpleGrantedAuthority(jwtToken.getPayload().getJtt().name())))
+                        .password("N/A")
+                        .active(!isTokenRevoked)
+                        .expired(isTokenExpired)
+                        .build();
+            } catch (Exception e) {
+                throw new UsernameNotFoundException(e.getMessage(), e);
+            }
         }
         throw new UsernameNotFoundException("Invalid authentication token");
     }

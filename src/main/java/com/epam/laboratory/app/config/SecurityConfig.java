@@ -6,6 +6,7 @@ import com.epam.laboratory.app.service.security.JwtAuthenticationUserDetailsServ
 import com.epam.laboratory.app.service.security.UsernamePasswordAuthenticationUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -24,6 +25,9 @@ import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RegexRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
@@ -49,6 +53,7 @@ public class SecurityConfig {
                                          ObjectMapper objectMapper) {
         return http
                 .csrf(csrf -> csrf.disable())
+                .cors(Customizer.withDefaults())
                 .sessionManagement(session ->
                         session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -70,6 +75,20 @@ public class SecurityConfig {
                                 .defaultAuthenticationEntryPointFor(new CustomAuthenticationEntryPoint(objectMapper, "Basic realm=\"Access to the protected resource\", charset=\"UTF-8\""), GET_TOKENS_MATCHER)
                                 .defaultAuthenticationEntryPointFor(new CustomAuthenticationEntryPoint(objectMapper, "Bearer realm=\"Access to the protected resource\", charset=\"UTF-8\""), new NegatedRequestMatcher(ALLOWED_MATCHERS)))
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of(HttpHeaders.ACCEPT, HttpHeaders.CONTENT_TYPE, HttpHeaders.AUTHORIZATION));
+        config.setAllowCredentials(true);
+        config.setMaxAge(3600L);
+
+        var source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean

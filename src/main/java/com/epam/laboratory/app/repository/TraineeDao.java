@@ -26,7 +26,12 @@ public interface TraineeDao extends UserDao<Trainee>, JpaRepository<Trainee, Lon
 
     @Logging(Level.INFO)
     default Trainee updateByUsername(String username, Trainee trainee) {
-        doUpdateByUsername(username, trainee.getFirstName(), trainee.getLastName(), trainee.getDateOfBirth(), trainee.getAddress(), trainee.getActive());
+        doUpdateByUsername(username,
+                           trainee.getFirstName(),
+                           trainee.getLastName(),
+                           trainee.getDateOfBirth(),
+                           trainee.getAddress(),
+                           trainee.getActive());
         return findByUsername(username).get();
     }
 
