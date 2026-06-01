@@ -29,7 +29,7 @@ class DtoValidatorTest {
     void testValidate_negative_dtoIsNull() {
         // when & then
         assertThatThrownBy(() -> DtoValidator.validate(null))
-                .isInstanceOf(DtoValidationException.class)
+                .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("DTO must not be null");
     }
 

@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.dto.TraineeDto;
 import com.epam.laboratory.app.dto.TrainerDto;
@@ -10,13 +12,16 @@ import com.epam.laboratory.app.dto.UserDto;
 import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
+import com.epam.laboratory.app.security.JwtAuthenticationConverter;
 import com.epam.laboratory.app.service.TraineeService;
+import com.epam.laboratory.app.service.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -33,14 +38,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest
-@ContextConfiguration(classes = {
-        TraineeController.class,
+@WebMvcTest(TraineeController.class)
+@Import({
+        TestSecurityConfig.class,
         TraineeMapperImpl.class,
-        TraineeCredentialsMapperImpl.class,
+        CredentialsMapperImpl.class,
         TrainerWithoutTraineesMapperImpl.class,
         TrainingTypeMapperImpl.class,
-        RestExceptionHandler.class,
+        RestExceptionHandler.class
 })
 @DisplayName("TraineeController test suite")
 class TraineeControllerTest {
@@ -52,7 +57,7 @@ class TraineeControllerTest {
     private TraineeMapper traineeMapper;
 
     @Autowired
-    private TraineeCredentialsMapper credentialsMapper;
+    private CredentialsMapper credentialsMapper;
 
     @Autowired
     private TrainerWithoutTraineesMapper trainerWithoutTraineesMapper;
@@ -62,6 +67,15 @@ class TraineeControllerTest {
 
     @MockitoBean
     private TraineeService traineeService;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JwtAuthenticationConverter converter;
+
+    @MockitoBean
+    private AuthenticationManager authenticationManager;
 
 
     // ==================== GET PROFILE ENDPOINT TESTS ====================
@@ -120,9 +134,10 @@ class TraineeControllerTest {
         // given
         var trainee = getTestTrainee();
         var requestBody = objectMapper.writeValueAsString(traineeMapper.toDto(trainee));
-        var expectedResponse = credentialsMapper.toDto(trainee);
+        var credentials = getTestCredentials();
+        var expectedResponse = credentialsMapper.toDto(credentials);
 
-        given(traineeService.registerNew(any(Trainee.class))).willReturn(trainee);
+        given(traineeService.registerNew(any(Trainee.class))).willReturn(credentials);
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainees")
@@ -143,8 +158,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== UPDATE TRAINEE ENDPOINT TESTS ====================
 
+    // ==================== UPDATE TRAINEE ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method updateTrainee - should update trainee and return updated trainee when request body is valid and trainee with given username exists")
     void testUpdateTrainee_positive() throws Exception {
@@ -179,8 +194,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== DELETE TRAINEE ENDPOINT TESTS ====================
 
+    // ==================== DELETE TRAINEE ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method deleteTrainee - should delete trainee and return confirmation message when trainee with given username exists")
     void testDeleteTrainee_positive() throws Exception {
@@ -192,7 +207,7 @@ class TraineeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username John.Doe was deleted"));
+                .andExpect(content().json("{\"message\":\"Trainee with username John.Doe was deleted\"}"));
 
         verify(traineeService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(traineeService);
@@ -217,8 +232,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== CHANGE TRAINEE STATUS ENDPOINT TESTS ====================
 
+    // ==================== CHANGE TRAINEE STATUS ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method changeTraineeStatus - should change trainee status and return confirmation message when trainee with given username exists")
     void testChangeTraineeStatus_positive() throws Exception {
@@ -231,7 +246,7 @@ class TraineeControllerTest {
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainee with username John.Doe was blocked"));
+                .andExpect(content().json("{\"message\":\"Trainee with username John.Doe was blocked\"}"));
 
         verify(traineeService, times(1)).changeStatus(anyString(), eq(false));
         verifyNoMoreInteractions(traineeService);
@@ -257,8 +272,8 @@ class TraineeControllerTest {
     }
 
 
-    // ==================== UPDATE TRAINEE TRAINERS ENDPOINT TESTS ====================
 
+    // ==================== UPDATE TRAINEE TRAINERS ENDPOINT TESTS ====================
     @Test
     @DisplayName("Test of the method updateTraineeTrainers - should update trainee trainers and return updated trainers when request body is valid and trainee with given username exists")
     void testUpdateTraineeTrainers_positive() throws Exception {
@@ -360,4 +375,12 @@ class TraineeControllerTest {
         trainer.setActive(true);
         return trainer;
     }
+
+    private static UserCredentials getTestCredentials() {
+        var credentials = new UserCredentials();
+        credentials.setUsername("Jane.Smith");
+        credentials.setPassword("password456");
+        return credentials;
+    }
+
 }

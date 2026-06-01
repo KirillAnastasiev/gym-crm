@@ -9,14 +9,14 @@ INSERT INTO training_types VALUES
     (8, 'Resistance');
 
 INSERT INTO users VALUES
-    (1, 'John', 'Doe', 'John.Doe', 'password123', true),
-    (2, 'Jane', 'Smith', 'Jane.Smith', 'password456', true),
-    (3, 'Emily', 'Johnson', 'Emily.Johnson', 'password789', true),
-    (4, 'Michael', 'Brown', 'Michael.Brown', 'password321', true),
-    (5, 'Sarah', 'Davis', 'Sarah.Davis', 'password654', true),
-    (6, 'David', 'Wilson', 'David.Wilson', 'password987', true),
-    (7, 'Laura', 'Miller', 'Laura.Miller', 'password111', true),
-    (8, 'James', 'Taylor', 'James.Taylor', 'password222', true);
+    (1, 'John', 'Doe', 'John.Doe', '$2a$10$9xC39jTnJaiezRhlCMK66OMJGLf4kWqfEBEbyjFslBqKw9sZiPlbC', true),               -- password123
+    (2, 'Jane', 'Smith', 'Jane.Smith', '$2a$10$Vh3T/gkR7ninVal07ZJhMO9Wf0QvJaPnLYh09lGJB30BesYWSj05e', true),           -- password456
+    (3, 'Emily', 'Johnson', 'Emily.Johnson', '$2a$10$4/yooYQcQgPMvGODniXeoO2OWkIn11mn2moy2sljxN8DK.TaOxL5u', true),     -- password789
+    (4, 'Michael', 'Brown', 'Michael.Brown', '$2a$10$ZbJQjyhqHroOe5ireV/k4Od/wpX09z9fJUjBzCOwpTcdpjSkmDsEG', true),     -- password321
+    (5, 'Sarah', 'Davis', 'Sarah.Davis', '$2a$10$DghOi25SCxffM7/OQh0lJeeLrjzUbgIX74dm7POdPviTma7zq4Qbi', true),         -- password654
+    (6, 'David', 'Wilson', 'David.Wilson', '$2a$10$CxNBfgKEHcDVzPuZ5F7SIuNroP80yx2FM/tDIBA9ZYdTUxHokZAbi', true),       -- password987
+    (7, 'Laura', 'Miller', 'Laura.Miller', '$2a$10$UJmztYys/QXHiQzNzDWdKeFKm/jVv8T4/JtuFx6C38E3h2mF0OVRG', true),       -- password111
+    (8, 'James', 'Taylor', 'James.Taylor', '$2a$10$5PO1jnpCFc4iXNMLKNDt5OajLgLM2gslxfkXph5yKBWnPIDu7Y8U6', true);       -- password222
 
 INSERT INTO trainees VALUES
     (1, '1990-01-01', '123 Main St'),
@@ -45,6 +45,16 @@ INSERT INTO trainees_to_trainers VALUES
     (2, 2, 6),
     (3, 3, 7),
     (4, 4, 8);
+
+INSERT INTO jwt_tokens VALUES
+    ('11111111-1111-1111-1111-111111111111', 'ACCESS', '2024-07-01 12:00', 'John.Doe', false),
+    ('22222222-2222-2222-2222-222222222222', 'REFRESH', '2024-07-15 12:00', 'John.Doe', false),
+    ('33333333-3333-3333-3333-333333333333', 'ACCESS', '2024-07-01 12:00', 'Jane.Smith', false),
+    ('44444444-4444-4444-4444-444444444444', 'REFRESH', '2024-07-15 12:00', 'Jane.Smith', false),
+    ('55555555-5555-5555-5555-555555555555', 'ACCESS', '2024-07-01 12:00', 'Emily.Johnson', false),
+    ('66666666-6666-6666-6666-666666666666', 'REFRESH', '2024-07-15 12:00', 'Emily.Johnson', false),
+    ('77777777-7777-7777-7777-777777777777', 'ACCESS', '2024-07-01 12:00', 'Michael.Brown', false),
+    ('88888888-8888-8888-8888-888888888888', 'REFRESH', '2024-07-15 12:00', 'Michael.Brown', false);
 
 SELECT SETVAL('training_types_id_seq', 8, true);
 SELECT SETVAL('users_id_seq', 8, true);

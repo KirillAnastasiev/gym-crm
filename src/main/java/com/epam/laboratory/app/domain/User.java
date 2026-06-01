@@ -38,4 +38,7 @@ public abstract class User implements Entity {
     @Column(name = "is_active", nullable = false)
     protected Boolean active;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL,  orphanRemoval = true, fetch = FetchType.LAZY)
+    protected UserSecurity security;
+
 }

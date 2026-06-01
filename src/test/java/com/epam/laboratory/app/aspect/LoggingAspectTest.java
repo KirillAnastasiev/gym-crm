@@ -50,6 +50,7 @@ class LoggingAspectTest {
         returnStandardSystemOut();
     }
 
+
     // ==================== LOG METHOD ENTRY WITH ARGUMENTS TESTS ====================
 
     @Test

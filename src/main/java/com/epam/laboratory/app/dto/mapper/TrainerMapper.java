@@ -12,7 +12,7 @@ public interface TrainerMapper {
     @Mapping(source = "firstName", target = "firstName")
     @Mapping(source = "lastName", target = "lastName")
     @Mapping(source = "username", target = "username")
-    @Mapping(source = "password", target = "password")
+    @Mapping(source = "password", target = "password", ignore = true)
     @Mapping(source = "specialization", target = "specialization")
     @Mapping(source = "active", target = "active")
     @Mapping(source = "trainees", target = "trainees", defaultExpression = "java(new java.util.ArrayList<>())")

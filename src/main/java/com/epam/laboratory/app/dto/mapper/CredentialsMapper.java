@@ -1,17 +1,18 @@
 package com.epam.laboratory.app.dto.mapper;
 
-import com.epam.laboratory.app.domain.Trainee;
+import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
-public interface TraineeCredentialsMapper {
+public interface CredentialsMapper {
     @Mapping(source = "username", target = "username")
     @Mapping(source = "password", target = "password")
-    CredentialsDto toDto(Trainee trainee);
+    CredentialsDto toDto(UserCredentials credentials);
 
     @Mapping(source = "username", target = "username")
     @Mapping(source = "password", target = "password")
-    Trainee toEntity(CredentialsDto credentialsDto);
+    UserCredentials toEntity(CredentialsDto credentialsDto);
 }

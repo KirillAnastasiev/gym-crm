@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.function.BiFunction;
 
 public interface TrainingService extends EntityService<Training> {
+    Training registerNew(Training training);
     Collection<Training> selectForTrainee(String traineeUsername, TrainingFilter filter);
     Collection<Training> selectForTrainer(String trainerUsername, TrainingFilter filter);
 

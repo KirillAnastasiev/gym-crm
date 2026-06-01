@@ -1,4 +1,4 @@
-package com.epam.laboratory.app.service;
+package com.epam.laboratory.app.service.health;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.util.health.AuthenticationHealthIndicator;

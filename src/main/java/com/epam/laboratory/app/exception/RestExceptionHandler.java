@@ -23,7 +23,9 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @RestCallLogging
     protected ResponseEntity<Object> handleAuthenticationException(AuthenticationException e, WebRequest request) {
         var problemDetails = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
-        return createResponseEntity(problemDetails, null, HttpStatus.UNAUTHORIZED, request);
+        var httpHeaders = new HttpHeaders();
+        httpHeaders.set(HttpHeaders.WWW_AUTHENTICATE, "Bearer realm=\"Access to the protected resource\", charset=\"UTF-8\"");
+        return createResponseEntity(problemDetails, httpHeaders, HttpStatus.UNAUTHORIZED, request);
     }
 
     @ExceptionHandler(exception = IllegalArgumentException.class, produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)

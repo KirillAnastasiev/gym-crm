@@ -14,9 +14,10 @@ public class DtoValidator {
 
     public static void validate(Object dto) {
         try {
-            if (dto == null) {
-                throw new DtoValidationException("DTO must not be null");
-            }
+            InputDataValidator.validateNotNull(dto, "DTO");
+//            if (dto == null) {
+//                throw new DtoValidationException("DTO must not be null");
+//            }
             for (var field : dto.getClass().getRecordComponents()) {
                 if (field.isAnnotationPresent(Required.class)) {
                     var value = field.getAccessor().invoke(dto);

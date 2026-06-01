@@ -2,6 +2,7 @@ package com.epam.laboratory.app.rest;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
+import com.epam.laboratory.app.dto.MessageResponseDto;
 import com.epam.laboratory.app.dto.TrainingDto;
 import com.epam.laboratory.app.dto.TrainingFilterDto;
 import com.epam.laboratory.app.dto.mapper.TrainingFilterMapper;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
@@ -45,6 +47,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainee. Optionally, you can provide a filter to narrow down the results.",
             parameters = @Parameter(
@@ -63,7 +66,8 @@ public class TrainingController {
                                             {
                                                 "dateFrom": "2024-07-01T00:00:00",
                                                 "dateTo": "2024-07-31T23:59:59"
-                                            }"""
+                                            }
+                                            """
                             )
                     )
             ),
@@ -88,7 +92,8 @@ public class TrainingController {
                                                                  },
                                                                  "trainingDate": "2024-07-05T12:30:00",
                                                                  "trainingDuration": "PT1H30M"
-                                                            }"""
+                                                            }
+                                                            """
                                             )
                                     )
                             )
@@ -109,8 +114,8 @@ public class TrainingController {
                     )
             }
     )
-    public Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
-                                                       @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
+    Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
+                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
         var trainings = trainingService.selectForTrainee(username, trainingFilter);
         return trainings.stream()
@@ -126,6 +131,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainer. Optionally, you can provide a filter to narrow down the results.",
             parameters = @Parameter(
@@ -143,7 +149,8 @@ public class TrainingController {
                                     value = """
                                             {
                                                 "trainingTypeName":"Fitness"
-                                            }"""
+                                            }
+                                            """
                             )
                     )
             ),
@@ -168,7 +175,8 @@ public class TrainingController {
                                                                 },
                                                                 "trainingDate": "2024-07-01T08:00:00",
                                                                 "trainingDuration": "PT1H"
-                                                            }"""
+                                                            }
+                                                            """
                                             )
                                     )
                             )
@@ -189,8 +197,8 @@ public class TrainingController {
                     )
             }
     )
-    public Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
-                                                       @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
+    Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
+                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
         var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
         var trainings = trainingService.selectForTrainer(username, trainingFilter);
         return trainings.stream()
@@ -208,6 +216,7 @@ public class TrainingController {
     @ResponseStatus(HttpStatus.CREATED)
     @ValidateArguments
     @RestCallLogging(Level.INFO)
+    @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Register a new training session. The request body should contain all necessary details about the training.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -219,16 +228,17 @@ public class TrainingController {
                             examples = @ExampleObject(
                                     value = """
                                             {
-                                                "traineeUsername": "John.Doe",
-                                                "trainerUsername": "Sarah.Davis",
-                                                "trainingName": "Evening Yoga",
-                                                "trainingType": {
-                                                    "id": 2,
-                                                    "trainingTypeName": "Yoga"
-                                                },
-                                                "trainingDate": "2024-07-10T18:00:00",
-                                                "trainingDuration": "PT1H"
-                                            }"""
+                                                 "traineeUsername": "John.Doe",
+                                                 "trainerUsername": "Sarah.Davis",
+                                                 "trainingType": {
+                                                     "id": 2,
+                                                     "trainingTypeName": "Yoga"
+                                                 },
+                                                 "trainingName": "Soft yoga",
+                                                 "trainingDate": "2025-12-15T12:45:00",
+                                                 "trainingDuration": "PT30M"
+                                            }
+                                            """
                             )
                     )
             ),
@@ -237,7 +247,15 @@ public class TrainingController {
                             responseCode = "201",
                             description = "Training successfully registered",
                             content = @Content(
-                                    mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE
+                                    mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                                    schema = @Schema(implementation = MessageResponseDto.class),
+                                    examples = @ExampleObject(
+                                            value = """
+                                                    {
+                                                        "message": "Training was registered"
+                                                    }
+                                                    """
+                                    )
                             )
                     ),
                     @ApiResponse(
@@ -256,10 +274,10 @@ public class TrainingController {
                     )
             }
     )
-    public String registerTraining(@RequestBody TrainingDto trainingDto) {
+    MessageResponseDto registerTraining(@RequestBody TrainingDto trainingDto) {
         var training = trainingMapper.toEntity(trainingDto);
         trainingService.registerNew(training);
-        return "Training was registered";
+        return new MessageResponseDto("Training was registered");
     }
 
 }

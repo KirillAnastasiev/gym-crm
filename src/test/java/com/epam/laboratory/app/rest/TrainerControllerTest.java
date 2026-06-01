@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.rest;
 
+import com.epam.laboratory.app.config.TestSecurityConfig;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.TrainingType;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.dto.CredentialsDto;
 import com.epam.laboratory.app.dto.TraineeDto;
 import com.epam.laboratory.app.dto.TrainerDto;
@@ -10,13 +12,17 @@ import com.epam.laboratory.app.dto.UserDto;
 import com.epam.laboratory.app.dto.mapper.*;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.exception.RestExceptionHandler;
+import com.epam.laboratory.app.security.JwtAuthenticationConverter;
 import com.epam.laboratory.app.service.TrainerService;
+import com.epam.laboratory.app.service.security.JwtService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import tools.jackson.databind.json.JsonMapper;
@@ -34,14 +40,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TrainerController.class)
-@ContextConfiguration(classes = {
+@Import({
+        TestSecurityConfig.class,
         TrainerController.class,
         TrainerMapperImpl.class,
         TrainingTypeMapperImpl.class,
-        TrainerCredentialsMapperImpl.class,
+        CredentialsMapperImpl.class,
         TraineeWithoutTrainersMapperImpl.class,
         RestExceptionHandler.class
 })
+
 @DisplayName("TrainerController test suite")
 class TrainerControllerTest {
 
@@ -52,7 +60,7 @@ class TrainerControllerTest {
     private TrainerMapper trainerMapper;
 
     @Autowired
-    private TrainerCredentialsMapper credentialsMapper;
+    private CredentialsMapper credentialsMapper;
 
     @Autowired
     private TraineeWithoutTrainersMapper traineeWithoutTrainersMapper;
@@ -63,10 +71,20 @@ class TrainerControllerTest {
     @MockitoBean
     private TrainerService trainerService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private JwtAuthenticationConverter converter;
+
+    @MockitoBean
+    private AuthenticationManager authenticationManager;
+
 
     // ==================== GET PROFILE ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method getProfile - should return trainer profile when trainer with given username exists")
     void testGetProfile_positive() throws Exception {
         // given
@@ -95,6 +113,7 @@ class TrainerControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method getProfile - should return error message when trainer with given username does not exist")
     void testGetProfile_negative_trainerNotFound() throws Exception {
         // given
@@ -115,14 +134,16 @@ class TrainerControllerTest {
     // ==================== REGISTER TRAINER ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method registerTrainer - should return credentials of registered trainer when request body is valid")
     void testRegisterTrainer_positive() throws Exception {
         // given
         var trainer = getTestTrainer();
+        var credentials = getTestCredentials();
         var requestBody = objectMapper.writeValueAsString(trainerMapper.toDto(trainer));
-        var expectedResponse = credentialsMapper.toDto(trainer);
+        var expectedResponse = credentialsMapper.toDto(credentials);
 
-        given(trainerService.registerNew(any(Trainer.class))).willReturn(trainer);
+        given(trainerService.registerNew(any(Trainer.class))).willReturn(credentials);
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainers")
@@ -146,6 +167,7 @@ class TrainerControllerTest {
     // ==================== UPDATE TRAINER ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method updateTrainer - should return updated trainer profile when request body is valid and trainer with given username exists")
     void testUpdateTrainer_positive() throws Exception {
         // given
@@ -181,6 +203,7 @@ class TrainerControllerTest {
     // ==================== DELETE TRAINER ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method deleteTrainer - should return success message when trainer with given username was successfully deleted")
     void testDeleteTrainer_positive() throws Exception {
         // given
@@ -191,13 +214,14 @@ class TrainerControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username Jane.Smith was deleted"));
+                .andExpect(content().json("{\"message\":\"Trainer with username Jane.Smith was deleted\"}"));
 
         verify(trainerService, times(1)).deleteByUsername(anyString());
         verifyNoMoreInteractions(trainerService);
     }
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method deleteTrainer - should return error message when trainer with given username does not exist")
     void testDeleteTrainer_negative_trainerNotFound() throws Exception {
         // given
@@ -206,6 +230,7 @@ class TrainerControllerTest {
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "NonExistentTrainer")
+                        .header("Authorization", "Bearer valid.jwt.token")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
@@ -219,6 +244,7 @@ class TrainerControllerTest {
     // ==================== CHANGE TRAINER STATUS ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method changeTrainerStatus - should return success message when trainer with given username was successfully blocked")
     void testChangeTrainerStatus_positive() throws Exception {
         // given
@@ -230,13 +256,14 @@ class TrainerControllerTest {
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string("Trainer with username Jane.Smith was blocked"));
+                .andExpect(content().json("{\"message\":\"Trainer with username Jane.Smith was blocked\"}"));
 
         verify(trainerService, times(1)).changeStatus(anyString(), anyBoolean());
         verifyNoMoreInteractions(trainerService);
     }
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method changeTrainerStatus - should return error message when trainer with given username does not exist")
     void testChangeTrainerStatus_negative_trainerNotFound() throws Exception {
         // given
@@ -259,6 +286,7 @@ class TrainerControllerTest {
     // ==================== UPDATE TRAINER TRAINEES ENDPOINT TESTS ====================
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method updateTrainerTrainees - should return updated list of trainer's trainees when request body is valid and trainer with given username exists")
     void testUpdateTrainerTrainees_positive() throws Exception {
         // given
@@ -290,6 +318,7 @@ class TrainerControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method updateTrainerTrainees - should return error message when trainer with given username does not exist")
     void testUpdateTrainerTrainees_negative_trainerNotFound() throws Exception {
         // given
@@ -312,6 +341,7 @@ class TrainerControllerTest {
     }
 
     @Test
+    @WithMockUser
     @DisplayName("Test of the method updateTrainerTrainees - should return error message when trainee with given username does not exist")
     void testUpdateTrainerTrainees_negative_traineeNotFound() throws Exception {
         // given
@@ -358,6 +388,13 @@ class TrainerControllerTest {
         trainee.setAddress("123 Main St");
         trainee.setActive(true);
         return trainee;
+    }
+
+    private static UserCredentials getTestCredentials() {
+        var userCredentials = new UserCredentials();
+        userCredentials.setUsername("John.Doe");
+        userCredentials.setPassword("password123");
+        return userCredentials;
     }
 
 }

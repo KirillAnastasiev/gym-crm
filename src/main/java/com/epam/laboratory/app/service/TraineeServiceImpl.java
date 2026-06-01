@@ -3,11 +3,16 @@ package com.epam.laboratory.app.service;
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
+import com.epam.laboratory.app.domain.UserCredentials;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
 import com.epam.laboratory.app.repository.TraineeDao;
+import com.epam.laboratory.app.repository.UserDao;
+import com.epam.laboratory.app.service.security.AuthenticationService;
+import com.epam.laboratory.app.util.InputDataValidator;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,46 +26,42 @@ import static org.slf4j.event.Level.INFO;
 public class TraineeServiceImpl extends AbstractUserService<Trainee> implements TraineeService {
 
     private final TrainerService trainerService;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public TraineeServiceImpl(TraineeDao traineeDao,
+    public TraineeServiceImpl(UserDao<Trainee> userDao,
                               AuthenticationService authenticationService,
-                              @Lazy TrainerService trainerService) {
-        super(traineeDao, authenticationService);
+                              @Lazy TrainerService trainerService,
+                              PasswordEncoder passwordEncoder) {
+        super(userDao, authenticationService);
         this.trainerService = trainerService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Logging(Level.INFO)
     @Override
-    public Trainee registerNew(Trainee trainee) {
-        if (trainee == null) {
-            throw new IllegalArgumentException("Trainee must not be null");
-        }
+    public UserCredentials registerNew(Trainee trainee) {
+        InputDataValidator.validateNotNull(trainee, "Trainee");
         prepareUser(trainee);
-        return ((TraineeDao) dao).save(trainee);
+        var password = trainee.getPassword();
+        var encodedPassword = passwordEncoder.encode(trainee.getPassword());
+        trainee.setPassword(encodedPassword);
+        ((TraineeDao) dao).save(trainee);
+        return new  UserCredentials(trainee.getUsername(), password);
     }
 
     @Logging(Level.INFO)
     @Override
     public Trainee update(Trainee trainee) {
-        if (trainee == null) {
-            throw new IllegalArgumentException("Trainee must not be null");
-        }
+        InputDataValidator.validateNotNull(trainee, "Trainee");
         return ((TraineeDao) dao).save(trainee);
     }
 
     @Logging(INFO)
     @Override
     public Trainee updateByUsername(String username, Trainee entity) {
-        if (username == null) {
-            throw new IllegalArgumentException("Trainee username must not be null");
-        }
-        if (username.isBlank()) {
-            throw new IllegalArgumentException("Trainee username must not be blank");
-        }
-        if (entity == null) {
-            throw new IllegalArgumentException("Trainee must not be null");
-        }
+        InputDataValidator.validateNotBlank(username, "Trainee username");
+        InputDataValidator.validateNotNull(entity, "Trainee");
         var isExists = authenticationService.checkExistsByUsername(username);
         if (!isExists) {
             throw new NoSuchEntityException("Trainee with username %s not found".formatted(username));
@@ -74,12 +75,7 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
     @Transactional(readOnly = true)
     @Override
     public Trainee selectByUsername(String username) {
-        if (username == null) {
-            throw new IllegalArgumentException("Trainee username must not be null");
-        }
-        if (username.isBlank()) {
-            throw new IllegalArgumentException("Trainee username must not be blank");
-        }
+        InputDataValidator.validateNotBlank(username, "Trainee username");
         var optionalTrainee = ((TraineeDao) dao).findByUsername(username);
         var trainee = optionalTrainee.orElseThrow(() ->
                 new NoSuchEntityException("Trainee with username %s not found".formatted(username)));
@@ -90,12 +86,7 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
     @Logging(INFO)
     @Override
     public void deleteByUsername(String username) {
-        if (username == null) {
-            throw new IllegalArgumentException("Trainee username must not be null");
-        }
-        if (username.isBlank()) {
-            throw new IllegalArgumentException("Trainee username must not be blank");
-        }
+        InputDataValidator.validateNotBlank(username, "Trainee username");
         var isExists = authenticationService.checkExistsByUsername(username);
         if (!isExists) {
             throw new NoSuchEntityException("Trainee with username %s not found".formatted(username));
