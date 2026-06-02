@@ -1,0 +1,11 @@
+kind: Application
+
+spring:
+################### Application properties ####################
+  application:
+    name: statistics-app
+
+####################### Server settings #######################
+server:
+  port: 8081
+
