@@ -5,14 +5,13 @@
 
     <parent>
         <groupId>com.epam.laboratory</groupId>
-        <artifactId>GymCRM-multymodule-app</artifactId>
+        <artifactId>gymcrm-multymodule-app</artifactId>
         <version>1.0.0</version>
-<!--        <relativePath/>-->
     </parent>
 
-    <groupId>com.epam.laboratory</groupId>
     <artifactId>main-app</artifactId>
-    <version>1.0.0</version>
+
+    <description>GymCRM Main Service</description>
 
     <properties>
         <java.version>21</java.version>
@@ -20,6 +19,18 @@
         <mapstruct.version>1.6.3</mapstruct.version>
         <jjwt.version>0.13.0</jjwt.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>2025.1.1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -62,6 +73,11 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
         <!--    Spring Boot Devtools    -->

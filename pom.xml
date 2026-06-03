@@ -14,13 +14,14 @@
     <description>GymCRM Spring Boot Application</description>
 
     <groupId>com.epam.laboratory</groupId>
-    <artifactId>GymCRM-multymodule-app</artifactId>
+    <artifactId>gymcrm-multymodule-app</artifactId>
     <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <modules>
         <module>main-app</module>
         <module>statistics-app</module>
+        <module>registry-server</module>
     </modules>
 
 </project>

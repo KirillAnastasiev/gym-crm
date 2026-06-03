@@ -2,10 +2,14 @@ package com.epam.laboratory.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
 
 @SpringBootApplication
-public class GymCrmApplication {
+@EnableEurekaServer
+public class RegistryServerApplication {
+
     public static void main(String[] args) {
-        SpringApplication.run(GymCrmApplication.class, args);
+        SpringApplication.run(RegistryServerApplication.class, args);
     }
+
 }
