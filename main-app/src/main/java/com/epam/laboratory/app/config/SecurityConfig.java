@@ -65,7 +65,7 @@ public class SecurityConfig {
                             .requestMatchers(REGISTER_TRAINEE_MATCHER).permitAll()
                             .requestMatchers(REGISTER_TRAINER_MATCHER).permitAll()
                             .requestMatchers("/api/**").authenticated()
-                            .anyRequest().denyAll())
+                            .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .formLogin(form -> form.disable())
                 .logout(logout -> logout.disable())

@@ -22,6 +22,7 @@
         <module>main-app</module>
         <module>statistics-app</module>
         <module>registry-server</module>
+        <module>api-gateway</module>
     </modules>
 
 </project>

@@ -9,9 +9,7 @@ spring:
 
 ####################### Server settings #######################
 server:
-  port: 8080
-  servlet:
-    context-path: /GymCRM
+  port: 8081
 
 management:
 ###################### Actuator settings ######################
