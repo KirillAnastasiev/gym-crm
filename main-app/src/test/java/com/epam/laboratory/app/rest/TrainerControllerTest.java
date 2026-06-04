@@ -52,6 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @DisplayName("TrainerController test suite")
 class TrainerControllerTest {
+    private static final String REQUEST_ID_HEADER = "X-Request-ID";
 
     @Autowired
     private JsonMapper objectMapper;
@@ -92,11 +93,13 @@ class TrainerControllerTest {
         var trainee = getTestTrainee();
         trainer.addTrainee(trainee);
         var expectedResponse = trainerMapper.toDto(trainer);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         given(trainerService.selectByUsername(anyString())).willReturn(trainer);
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainers/{username}", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -117,10 +120,13 @@ class TrainerControllerTest {
     @DisplayName("Test of the method getProfile - should return error message when trainer with given username does not exist")
     void testGetProfile_negative_trainerNotFound() throws Exception {
         // given
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
+
         given(trainerService.selectByUsername(anyString())).willThrow(new NoSuchEntityException("Trainer with username NonExistentTrainer not found"));
 
         // when & then
         mockMvc.perform(get("/api/trainers/{username}", "NonExistentTrainer")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
@@ -142,11 +148,13 @@ class TrainerControllerTest {
         var credentials = getTestCredentials();
         var requestBody = objectMapper.writeValueAsString(trainerMapper.toDto(trainer));
         var expectedResponse = credentialsMapper.toDto(credentials);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         given(trainerService.registerNew(any(Trainer.class))).willReturn(credentials);
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/trainers")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -178,11 +186,13 @@ class TrainerControllerTest {
         trainer.setFirstName("UpdatedFirstName");
         var requestBody = objectMapper.writeValueAsString(trainerMapper.toDto(trainer));
         var expectedResponse = trainerMapper.toDto(trainer);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         given(trainerService.updateByUsername(anyString(), any(Trainer.class))).willReturn(trainer);
 
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -207,10 +217,13 @@ class TrainerControllerTest {
     @DisplayName("Test of the method deleteTrainer - should return success message when trainer with given username was successfully deleted")
     void testDeleteTrainer_positive() throws Exception {
         // given
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
+
         doNothing().when(trainerService).deleteByUsername(anyString());
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -225,11 +238,14 @@ class TrainerControllerTest {
     @DisplayName("Test of the method deleteTrainer - should return error message when trainer with given username does not exist")
     void testDeleteTrainer_negative_trainerNotFound() throws Exception {
         // given
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
+
         doThrow(new NoSuchEntityException("Trainer with username NonExistentTrainer not found"))
                 .when(trainerService).deleteByUsername(anyString());
 
         // when & then
         mockMvc.perform(delete("/api/trainers/{username}", "NonExistentTrainer")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .header("Authorization", "Bearer valid.jwt.token")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
@@ -248,10 +264,13 @@ class TrainerControllerTest {
     @DisplayName("Test of the method changeTrainerStatus - should return success message when trainer with given username was successfully blocked")
     void testChangeTrainerStatus_positive() throws Exception {
         // given
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
+
         doNothing().when(trainerService).changeStatus(anyString(), anyBoolean());
 
         // when & then
         mockMvc.perform(patch("/api/trainers/{username}", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\": false}"))
                 .andExpect(status().isOk())
@@ -267,11 +286,14 @@ class TrainerControllerTest {
     @DisplayName("Test of the method changeTrainerStatus - should return error message when trainer with given username does not exist")
     void testChangeTrainerStatus_negative_trainerNotFound() throws Exception {
         // given
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
+
         doThrow(new NoSuchEntityException("Trainer with username NonExistentTrainer not found"))
                 .when(trainerService).changeStatus(anyString(), anyBoolean());
 
         // when & then
         mockMvc.perform(patch("/api/trainers/{username}", "NonExistentTrainer")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"active\": false}"))
                 .andExpect(status().isNotFound())
@@ -293,11 +315,13 @@ class TrainerControllerTest {
         var traineeDto = new UserDto("John.Doe");
         var trainee = getTestTrainee();
         var requestBody = objectMapper.writeValueAsString(Collections.singletonList(traineeDto));
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         given(trainerService.updateTrainees(anyString(), anyCollection())).willReturn(Collections.singletonList(trainee));
 
         // when & then
         var actualResult = mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -324,12 +348,14 @@ class TrainerControllerTest {
         // given
         var traineeDto = new UserDto("John.Doe");
         var requestBody = objectMapper.writeValueAsString(Collections.singletonList(traineeDto));
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         doThrow(new NoSuchEntityException("Trainer with username NonExistentTrainer not found"))
                 .when(trainerService).updateTrainees(anyString(), anyCollection());
 
         // when & then
         mockMvc.perform(put("/api/trainers/{username}/trainees", "NonExistentTrainer")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
@@ -347,12 +373,14 @@ class TrainerControllerTest {
         // given
         var traineeDto = new UserDto("NonExistentTrainee");
         var requestBody = objectMapper.writeValueAsString(Collections.singletonList(traineeDto));
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         doThrow(new NoSuchEntityException("Trainee with username NonExistentTrainee not found"))
                 .when(trainerService).updateTrainees(anyString(), anyCollection());
 
         // when & then
         mockMvc.perform(put("/api/trainers/{username}/trainees", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())

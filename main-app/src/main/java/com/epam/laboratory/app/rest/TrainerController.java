@@ -3,8 +3,8 @@ package com.epam.laboratory.app.rest;
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.aspect.annotation.ValidateArguments;
 import com.epam.laboratory.app.dto.*;
-import com.epam.laboratory.app.dto.mapper.TraineeWithoutTrainersMapper;
 import com.epam.laboratory.app.dto.mapper.CredentialsMapper;
+import com.epam.laboratory.app.dto.mapper.TraineeWithoutTrainersMapper;
 import com.epam.laboratory.app.dto.mapper.TrainerMapper;
 import com.epam.laboratory.app.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,15 +20,17 @@ import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trainers")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Tag(name = "Trainers Management", description = "Endpoints for managing trainers profiles")
-public class TrainerController {
+public class TrainerController implements Controller {
 
     private final TrainerService trainerService;
     private final TrainerMapper trainerMapper;
@@ -42,9 +44,8 @@ public class TrainerController {
             path = "/{username}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get trainer profile by username",
@@ -72,9 +73,12 @@ public class TrainerController {
                     )
             }
     )
-    TrainerDto getProfile(@PathVariable String username) {
-        var trainer = trainerService.selectByUsername(username);
-        return trainerMapper.toDto(trainer);
+    ResponseEntity<TrainerDto> getProfile(@PathVariable String username,
+                                          @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainer = trainerService.selectByUsername(username);
+            return trainerMapper.toDto(trainer);
+        }, HttpStatus.OK);
     }
 
 
@@ -84,9 +88,8 @@ public class TrainerController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.CREATED)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @Operation(
             description = "Register a new trainer",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -127,9 +130,12 @@ public class TrainerController {
                     )
             }
     )
-    CredentialsDto registerTrainer(@RequestBody TrainerDto trainerDto) {
-        var userCredentials = trainerService.registerNew(trainerMapper.toEntity(trainerDto));
-        return credentialsMapper.toDto(userCredentials);
+    ResponseEntity<CredentialsDto> registerTrainer(@RequestBody TrainerDto trainerDto,
+                                                   @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var userCredentials = trainerService.registerNew(trainerMapper.toEntity(trainerDto));
+            return credentialsMapper.toDto(userCredentials);
+        }, HttpStatus.CREATED);
     }
 
 
@@ -140,9 +146,8 @@ public class TrainerController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update trainer profile by username",
@@ -198,10 +203,13 @@ public class TrainerController {
                     )
             }
     )
-    TrainerDto updateTrainer(@PathVariable String username,
-                             @RequestBody TrainerDto trainerDto) {
-        var trainer = trainerService.updateByUsername(username, trainerMapper.toEntity(trainerDto));
-        return trainerMapper.toDto(trainer);
+    ResponseEntity<TrainerDto> updateTrainer(@PathVariable String username,
+                                             @RequestBody TrainerDto trainerDto,
+                                             @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainer = trainerService.updateByUsername(username, trainerMapper.toEntity(trainerDto));
+            return trainerMapper.toDto(trainer);
+        }, HttpStatus.OK);
     }
 
     @PutMapping(
@@ -209,9 +217,8 @@ public class TrainerController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Update the list of trainees assigned to a trainer",
@@ -287,16 +294,18 @@ public class TrainerController {
                     )
             }
     )
-    Collection<TraineeDto> updateTrainerTrainees(@PathVariable String username,
-                                                 @RequestBody Collection<UserDto> traineeDtoCollection) {
-        var trainees = traineeDtoCollection.stream()
-                .map(traineeMapper::toEntity)
-                .toList();
-
-        return trainerService.updateTrainees(username, trainees)
-                .stream()
-                .map(traineeMapper::toDto)
-                .toList();
+    ResponseEntity<List<TraineeDto>> updateTrainerTrainees(@PathVariable String username,
+                                                           @RequestBody Collection<UserDto> traineeDtoCollection,
+                                                           @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainees = traineeDtoCollection.stream()
+                    .map(traineeMapper::toEntity)
+                    .toList();
+            return trainerService.updateTrainees(username, trainees)
+                    .stream()
+                    .map(traineeMapper::toDto)
+                    .toList();
+        }, HttpStatus.OK);
     }
 
     // ==================== PATCH MAPPINGS ====================
@@ -307,9 +316,8 @@ public class TrainerController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Change trainer's active status by username",
@@ -358,11 +366,14 @@ public class TrainerController {
                     )
             }
     )
-    MessageResponseDto changeTrainerStatus(@PathVariable String username,
-                               @RequestBody ChangeStatusRequestDto requestDto) {
-        boolean isActive = requestDto.active();
-        trainerService.changeStatus(username, isActive);
-        return new MessageResponseDto("Trainer with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked"));
+    ResponseEntity<MessageResponseDto> changeTrainerStatus(@PathVariable String username,
+                                                           @RequestBody ChangeStatusRequestDto requestDto,
+                                                           @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            boolean isActive = requestDto.active();
+            trainerService.changeStatus(username, isActive);
+            return new MessageResponseDto("Trainer with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked"));
+        }, HttpStatus.OK);
     }
 
 
@@ -372,9 +383,8 @@ public class TrainerController {
             path = "/{username}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Delete trainer by username",
@@ -408,9 +418,12 @@ public class TrainerController {
                     )
             }
     )
-    MessageResponseDto deleteTrainer(@PathVariable String username) {
-        trainerService.deleteByUsername(username);
-        return new MessageResponseDto("Trainer with username %s was deleted".formatted(username));
+    ResponseEntity<MessageResponseDto> deleteTrainer(@PathVariable String username,
+                                                     @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            trainerService.deleteByUsername(username);
+            return new MessageResponseDto("Trainer with username %s was deleted".formatted(username));
+        }, HttpStatus.OK);
     }
 
 }

@@ -22,6 +22,7 @@ import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
@@ -30,7 +31,7 @@ import java.util.Collection;
 @RequestMapping("/api/trainings")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Tag(name = "Trainings Management", description = "Endpoints for managing training sessions")
-public class TrainingController {
+public class TrainingController implements Controller {
 
     private final TrainingService trainingService;
     private final TrainingMapper trainingMapper;
@@ -44,9 +45,8 @@ public class TrainingController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainee. Optionally, you can provide a filter to narrow down the results.",
@@ -114,13 +114,16 @@ public class TrainingController {
                     )
             }
     )
-    Collection<TrainingDto> getTraineeTrainings(@PathVariable String username,
-                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
-        var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
-        var trainings = trainingService.selectForTrainee(username, trainingFilter);
-        return trainings.stream()
-                .map(trainingMapper::toDto)
-                .toList();
+    ResponseEntity<Collection<TrainingDto>> getTraineeTrainings(@PathVariable String username,
+                                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto,
+                                                                @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
+            var trainings = trainingService.selectForTrainee(username, trainingFilter);
+            return trainings.stream()
+                            .map(trainingMapper::toDto)
+                            .toList();
+        }, HttpStatus.OK);
     }
 
     @GetMapping(
@@ -128,9 +131,8 @@ public class TrainingController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Get all trainings for a trainer. Optionally, you can provide a filter to narrow down the results.",
@@ -197,13 +199,16 @@ public class TrainingController {
                     )
             }
     )
-    Collection<TrainingDto> getTrainerTrainings(@PathVariable String username,
-                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto) {
-        var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
-        var trainings = trainingService.selectForTrainer(username, trainingFilter);
-        return trainings.stream()
-                .map(trainingMapper::toDto)
-                .toList();
+    ResponseEntity<Collection<TrainingDto>> getTrainerTrainings(@PathVariable String username,
+                                                                @RequestBody(required = false) TrainingFilterDto trainingFilterDto,
+                                                                @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainingFilter = trainingFilterMapper.toEntity(trainingFilterDto);
+            var trainings = trainingService.selectForTrainer(username, trainingFilter);
+            return trainings.stream()
+                            .map(trainingMapper::toDto)
+                            .toList();
+        }, HttpStatus.OK);
     }
 
 
@@ -213,9 +218,8 @@ public class TrainingController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.CREATED)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Register a new training session. The request body should contain all necessary details about the training.",
@@ -274,10 +278,13 @@ public class TrainingController {
                     )
             }
     )
-    MessageResponseDto registerTraining(@RequestBody TrainingDto trainingDto) {
-        var training = trainingMapper.toEntity(trainingDto);
-        trainingService.registerNew(training);
-        return new MessageResponseDto("Training was registered");
+    ResponseEntity<MessageResponseDto> registerTraining(@RequestBody TrainingDto trainingDto,
+                                                        @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var training = trainingMapper.toEntity(trainingDto);
+            trainingService.registerNew(training);
+            return new MessageResponseDto("Training was registered");
+        }, HttpStatus.CREATED);
     }
 
 }

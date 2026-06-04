@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import static com.epam.laboratory.app.config.SecurityConfig.ALLOWED_MATCHERS;
 
 @Component
+@ConditionalOnProperty(name = "app.security.jwt.enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final RequestMatcher REQUEST_MATCHER = new NegatedRequestMatcher(ALLOWED_MATCHERS);
@@ -32,10 +34,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
-            chain.doFilter(request, response);
-            return;
-        }
         if (jwtService.isEnabled() && REQUEST_MATCHER.matches(request)) {
             var converter = new JwtAuthenticationConverter(jwtService);
             var preAuthToken = converter.convert(request);

@@ -6,17 +6,17 @@ import com.epam.laboratory.app.dto.TrainingRequestDto;
 import com.epam.laboratory.app.dto.mapper.TrainingRequestMapper;
 import com.epam.laboratory.app.exception.ApplicationException;
 import com.epam.laboratory.app.service.TrainingService;
+import com.epam.laboratory.app.util.RequestIdHolder;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
@@ -24,26 +24,20 @@ import java.util.stream.Collectors;
 @RequestMapping("/training")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Slf4j
-public class TrainingController {
+public class TrainingController implements Controller {
 
     private final TrainingRequestMapper trainingRequestMapper;
     private final TrainingService trainingService;
 
     @PostMapping
     public ResponseEntity<Void> newTrainingRequest(@RequestBody @Valid TrainingRequestDto trainingRequestDto,
-                                                   BindingResult bindingResult) {
-        if (bindingResult.hasErrors()) {
-            var errors = bindingResult.getFieldErrors().stream()
-                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                    .collect(Collectors.joining(", "));
-            throw new ValidationException("Validation failed for training request: %s".formatted(errors));
-        }
-
-        log.debug("Received training request {}", trainingRequestDto);
-        var training = trainingRequestMapper.toEntity(trainingRequestDto);
-        var requestType = trainingRequestDto.actionType();
-        doRequestHandling(training, requestType);
-        return ResponseEntity.ok(null);
+                                                   @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, new Object[] {trainingRequestDto}, () -> {
+            var training = trainingRequestMapper.toEntity(trainingRequestDto);
+            var requestType = trainingRequestDto.actionType();
+            doRequestHandling(training, requestType);
+            return null;
+        }, HttpStatus.CREATED, log);
     }
 
     private void doRequestHandling(Training training, String requestType) {

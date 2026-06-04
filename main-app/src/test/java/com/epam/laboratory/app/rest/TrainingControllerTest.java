@@ -46,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @DisplayName("TrainingController test suite")
 class TrainingControllerTest {
+    private static final String REQUEST_ID_HEADER = "X-Request-ID";
 
     @Autowired
     private JsonMapper jsonMapper;
@@ -83,6 +84,7 @@ class TrainingControllerTest {
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
         var trainingFilter = getTestTrainingFilter();
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         var requestBody = jsonMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
         var expectedResponse = jsonMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
@@ -91,6 +93,7 @@ class TrainingControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainee/{username}", "John.Doe")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -123,6 +126,7 @@ class TrainingControllerTest {
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
         var trainingFilter = getTestTrainingFilter();
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         var requestBody = jsonMapper.writeValueAsString(traineeFilterMapper.toDto(trainingFilter));
         var expectedResponse = jsonMapper.writeValueAsString(Collections.singletonList(trainingMapper.toDto(training)));
@@ -131,6 +135,7 @@ class TrainingControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/trainings/trainer/{username}", "Jane.Smith")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -162,6 +167,7 @@ class TrainingControllerTest {
         var trainee = getTestTrainee();
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
@@ -169,6 +175,7 @@ class TrainingControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/trainings")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isCreated())
@@ -187,6 +194,7 @@ class TrainingControllerTest {
         var trainee = getTestTrainee();
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
@@ -194,6 +202,7 @@ class TrainingControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/trainings")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())
@@ -212,6 +221,7 @@ class TrainingControllerTest {
         var trainee = getTestTrainee();
         var trainer = getTestTrainer(trainingType);
         var training = getTestTraining(trainee, trainer, trainingType);
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         var requestBody = jsonMapper.writeValueAsString(trainingMapper.toDto(training));
 
@@ -219,6 +229,7 @@ class TrainingControllerTest {
 
         // when & then
         mockMvc.perform(post("/api/trainings")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isNotFound())

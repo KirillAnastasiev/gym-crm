@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @DisplayName("TrainingTypeController test suite")
 class TrainingTypeControllerTest {
+    private static final String REQUEST_ID_HEADER = "X-Request-ID";
 
     @Autowired
     JsonMapper objectMapper;
@@ -70,11 +71,13 @@ class TrainingTypeControllerTest {
         var trainingType = getTestTrainingType();
         var trainingTypeDto = trainingTypeMapper.toDto(trainingType);
         var expectedResponseBody = objectMapper.writeValueAsString(Collections.singletonList(trainingTypeDto));
+        var requestId = "30f0e50b-7b04-4842-b0e5-0b7b046842f8";
 
         given(trainingTypeService.selectAll()).willReturn(Collections.singletonList(trainingType));
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/training-types")
+                        .header(REQUEST_ID_HEADER, requestId)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))

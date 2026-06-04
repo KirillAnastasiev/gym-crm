@@ -15,10 +15,8 @@ import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 
@@ -26,7 +24,7 @@ import java.util.Collection;
 @RequestMapping("/api/training-types")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Tag(name = "Training Type Management", description = "Endpoints for managing training types")
-public class TrainingTypeController {
+public class TrainingTypeController implements Controller {
 
     private final TrainingTypeService trainingTypeService;
     private final TrainingTypeMapper trainingTypeMapper;
@@ -35,8 +33,7 @@ public class TrainingTypeController {
     // ==================== GET MAPPINGS ====================
 
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseStatus(HttpStatus.OK)
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Retrieve a list of all training types",
@@ -53,11 +50,13 @@ public class TrainingTypeController {
                     )
             }
     )
-    Collection<TrainingTypeDto> getAllTrainingTypes() {
-        var trainingTypes = trainingTypeService.selectAll();
-        return trainingTypes.stream()
-                .map(trainingTypeMapper::toDto)
-                .toList();
+    ResponseEntity<Collection<TrainingTypeDto>> getAllTrainingTypes(@RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var trainingTypes = trainingTypeService.selectAll();
+            return trainingTypes.stream()
+                                .map(trainingTypeMapper::toDto)
+                                .toList();
+        }, HttpStatus.OK);
     }
 
 }

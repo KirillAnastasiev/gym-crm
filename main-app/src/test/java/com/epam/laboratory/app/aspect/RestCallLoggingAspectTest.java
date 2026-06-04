@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.json.JsonMapper;
@@ -83,13 +84,15 @@ class RestCallLoggingAspectTest {
         ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
         ArgumentCaptor<RestCallLogging> annotationCaptor = ArgumentCaptor.forClass(RestCallLogging.class);
 
+        var requestId = "797ce185-c462-4b4f-bce1-85c462eb4f06";
+
         // when
-        mockMvc.perform(get("/test/get"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/test/get").header("X-Request-ID", requestId));
 
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("REST Call - Endpoint: /test/get, HTTP Method: GET");
+        assertThat(output).contains("REST Call 797ce185-c462-4b4f-bce1-85c462eb4f06 - Endpoint: /test/get, HTTP Method: GET");
 
         verify(loggingAspect, times(1)).logRestCallRequest(joinPointCaptor.capture(), annotationCaptor.capture());
 
@@ -109,16 +112,17 @@ class RestCallLoggingAspectTest {
 
         var requestDto = new TestRequestDto("testUser", "testPassword");
         var requestBody = objectMapper.writeValueAsString(requestDto);
-
+        var requestId = "797ce185-c462-4b4f-bce1-85c462eb4f06";
         // when
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/test/post")
+        mockMvc.perform(MockMvcRequestBuilders.post("/test/post")
+                .header("X-Request-ID", requestId)
                 .contentType("application/json")
                 .content(requestBody));
 
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("REST Call - Endpoint: /test/post, HTTP Method: POST, Request Body: {\"username\":\"testUser\",\"password\":\"************\"}");
+        assertThat(output).contains("REST Call 797ce185-c462-4b4f-bce1-85c462eb4f06 - Endpoint: /test/post, HTTP Method: POST, Request Body: {\"username\":\"testUser\",\"password\":\"************\"}");
 
         verify(loggingAspect, times(1)).logRestCallRequest(joinPointCaptor.capture(), annotationCaptor.capture());
 
@@ -140,12 +144,12 @@ class RestCallLoggingAspectTest {
         ArgumentCaptor<RestCallLogging> annotationCaptor = ArgumentCaptor.forClass(RestCallLogging.class);
 
         // when
-        mockMvc.perform(get("/test/get"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/test/get"));
 
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("REST Call Response - Status Code: 200, Response Body: \"GET method - Success\"");
+        assertThat(output).contains("REST Call N/A Response - Status Code: 200, Response Body: \"GET method - Success\"");
 
         verify(loggingAspect, times(1)).logRestCallResponse(joinPointCaptor.capture(), annotationCaptor.capture(), any());
 
@@ -162,19 +166,21 @@ class RestCallLoggingAspectTest {
         // given
         ArgumentCaptor<JoinPoint> joinPointCaptor = ArgumentCaptor.forClass(JoinPoint.class);
         ArgumentCaptor<RestCallLogging> annotationCaptor = ArgumentCaptor.forClass(RestCallLogging.class);
+        var requestId = "797ce185-c462-4b4f-bce1-85c462eb4f06";
 
         var requestDto = new TestRequestDto("testUser", "testPassword");
         var requestBody = objectMapper.writeValueAsString(requestDto);
 
         // when
-        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/test/post")
+        mockMvc.perform(MockMvcRequestBuilders.post("/test/post")
+                .header("X-Request-ID", requestId)
                 .contentType("application/json")
                 .content(requestBody));
 
         // then
         String output = outContent.toString();
 
-        assertThat(output).contains("REST Call Response - Status Code: 200, Response Body: \"POST method - Success\"");
+        assertThat(output).contains("REST Call N/A Response - Status Code: 200, Response Body: \"POST method - Success\"");
 
         verify(loggingAspect, times(1)).logRestCallResponse(joinPointCaptor.capture(), annotationCaptor.capture(), any());
 

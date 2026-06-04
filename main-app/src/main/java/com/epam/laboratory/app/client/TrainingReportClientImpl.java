@@ -4,6 +4,7 @@ import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingReport;
 import com.epam.laboratory.app.dto.mapper.TrainingReportMapper;
+import com.epam.laboratory.app.util.RequestIdHolder;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class TrainingReportClientImpl implements TrainingReportClient {
+    private static final String REQUEST_ID_HEADER = "X-Request-ID";
 
     private final RestTemplate restTemplate;
     private final TrainingReportMapper reportMapper;
@@ -37,10 +39,15 @@ public class TrainingReportClientImpl implements TrainingReportClient {
     }
 
     private void sendTrainingReport(TrainingReport report) {
+        var requestId = RequestIdHolder.getRequestId() !=  null ? RequestIdHolder.getRequestId() : "N/A";
+        restTemplate.getInterceptors().add((request, body, execution) -> {
+            request.getHeaders().add(REQUEST_ID_HEADER, requestId);
+            return execution.execute(request, body);
+        });
         var uri = UriComponentsBuilder.fromUriString(statisticsServiceUrl)
-                .path("/training")
-                .build()
-                .toUri();
+                                      .path("/training")
+                                      .build()
+                                      .toUri();
         restTemplate.postForEntity(uri, reportMapper.toDto(report), Void.class);
     }
 

@@ -2,6 +2,7 @@ package com.epam.laboratory.app.aspect;
 
 import com.epam.laboratory.app.aspect.annotation.RestCallLogging;
 import com.epam.laboratory.app.exception.ApplicationException;
+import com.epam.laboratory.app.util.RequestIdHolder;
 import com.epam.laboratory.app.util.SensitiveDataMasker;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class RestCallLoggingAspect {
+    private static final String REQUEST_ID_HEADER = "X-Request-ID";
 
     private final JsonMapper objectMapper;
     protected final SensitiveDataMasker sensitiveDataMasker;
@@ -67,8 +69,9 @@ public class RestCallLoggingAspect {
         var endpoint = request.getRequestURI();
         var httpMethod = request.getMethod();
         var args = getRequestArgs(joinPoint);
+        var requestId = request.getHeader(REQUEST_ID_HEADER) != null ? request.getHeader(REQUEST_ID_HEADER) : "N/A";
 
-        var requestInfo = new StringBuilder("REST Call - Endpoint: %s, HTTP Method: %s".formatted(endpoint, httpMethod));
+        var requestInfo = new StringBuilder("REST Call %s - Endpoint: %s, HTTP Method: %s".formatted(requestId, endpoint, httpMethod));
         if (args != null && args.length > 0) {
             try {
                 var argsToLog = args.length == 1 ? args[0] : args;
@@ -88,13 +91,14 @@ public class RestCallLoggingAspect {
         var responseBody = result instanceof  ResponseEntity<?> responseEntity
                 ? sensitiveDataMasker.maskSensitiveData(responseEntity.getBody())
                 : sensitiveDataMasker.maskSensitiveData(result);
-
+        var requestId = RequestIdHolder.getRequestId() != null ? RequestIdHolder.getRequestId() : "N/A";
+        RequestIdHolder.clearRequestId();
         try {
             var responseBodyStr = responseBody != null ? objectMapper.writeValueAsString(responseBody) : "null";
-            var logMessage = "REST Call Response - Status Code: %d, Response Body: %s".formatted(statusCode, responseBodyStr);
+            var logMessage = "REST Call %s Response - Status Code: %d, Response Body: %s".formatted(requestId, statusCode, responseBodyStr);
             logByLevel(logger, level, logMessage);
         } catch (Exception e) {
-            var logMessage = "REST Call Response - Status Code: %d, Response Body: [Unable to serialize] - %s".formatted(statusCode, e.getMessage());
+            var logMessage = "REST Call %s Response - Status Code: %d, Response Body: [Unable to serialize] - %s".formatted(requestId, statusCode, e.getMessage());
             logByLevel(logger, level, logMessage);
         }
     }

@@ -21,15 +21,16 @@ import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Tag(name = "Authentication Management", description = "Endpoints for user authentication and token management")
-public class AuthenticationController {
+public class AuthenticationController implements Controller {
 
     private final AuthenticationService authenticationService;
     private final TokenResponseDtoMapper tokenResponseDtoMapper;
@@ -41,9 +42,8 @@ public class AuthenticationController {
             path = "/tokens",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "basicAuth")
     @Operation(
             description = "Authenticate user and return access and refresh tokens",
@@ -65,10 +65,13 @@ public class AuthenticationController {
                     )
             }
     )
-    TokensResponseDto getTokens(@AuthenticationPrincipal UserDetails principal) {
-        var username = principal.getUsername();
-        var userTokens = authenticationService.getUserTokens(username);
-        return tokenResponseDtoMapper.toDto(userTokens);
+    ResponseEntity<TokensResponseDto> getTokens(@RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            var username = authentication.getName();
+            var userTokens = authenticationService.getUserTokens(username);
+            return tokenResponseDtoMapper.toDto(userTokens);
+        }, HttpStatus.OK);
     }
 
 
@@ -78,9 +81,8 @@ public class AuthenticationController {
             path = "/logout",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Logout user by invalidating the provided refresh token",
@@ -107,10 +109,13 @@ public class AuthenticationController {
                     )
             }
     )
-    MessageResponseDto logout(@AuthenticationPrincipal UserDetails principal) {
-        var username = principal.getUsername();
-        authenticationService.logout(username);
-        return new MessageResponseDto("Logout successful, access and refresh tokens invalidated");
+    ResponseEntity<MessageResponseDto> logout(@RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            var username = authentication.getName();
+            authenticationService.logout(username);
+            return new MessageResponseDto("Logout successful, access and refresh tokens invalidated");
+        }, HttpStatus.OK);
     }
 
     @PostMapping(
@@ -118,9 +123,8 @@ public class AuthenticationController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @Operation(
             description = "Refresh access token using a valid refresh token",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
@@ -149,9 +153,12 @@ public class AuthenticationController {
                     )
             }
     )
-    TokensResponseDto refreshAccessToken(@RequestBody RefreshTokenRequestDto refreshTokenDto) {
-        var newTokens = authenticationService.refreshAccessToken(refreshTokenDto.refreshToken());
-        return tokenResponseDtoMapper.toDto(newTokens);
+    ResponseEntity<TokensResponseDto> refreshAccessToken(@RequestBody RefreshTokenRequestDto refreshTokenDto,
+                                                         @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var newTokens = authenticationService.refreshAccessToken(refreshTokenDto.refreshToken());
+            return tokenResponseDtoMapper.toDto(newTokens);
+        }, HttpStatus.OK);
     }
 
 
@@ -162,9 +169,8 @@ public class AuthenticationController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    @ResponseStatus(HttpStatus.OK)
     @ValidateArguments
-    @RestCallLogging(Level.INFO)
+    @RestCallLogging(Level.TRACE)
     @SecurityRequirement(name = "bearerAuth")
     @Operation(
             description = "Change password for a user",
@@ -205,13 +211,16 @@ public class AuthenticationController {
                     ),
             }
     )
-    MessageResponseDto changePassword(@RequestBody ChangePasswordRequestDto requestDto,
-                                      @AuthenticationPrincipal UserDetails principal) {
-        var username = principal.getUsername();
-        var oldPassword = requestDto.oldPassword();
-        var newPassword = requestDto.newPassword();
-        authenticationService.changePassword(username, oldPassword, newPassword);
-        return new MessageResponseDto("Password changed successfully");
+    ResponseEntity<MessageResponseDto> changePassword(@RequestBody ChangePasswordRequestDto requestDto,
+                                                      @RequestHeader(REQUEST_ID_HEADER) String requestId) {
+        return performRequest(requestId, () -> {
+            var authentication = SecurityContextHolder.getContext().getAuthentication();
+            var username = authentication.getName();
+            var oldPassword = requestDto.oldPassword();
+            var newPassword = requestDto.newPassword();
+            authenticationService.changePassword(username, oldPassword, newPassword);
+            return new MessageResponseDto("Password changed successfully");
+        }, HttpStatus.OK);
     }
 
 }

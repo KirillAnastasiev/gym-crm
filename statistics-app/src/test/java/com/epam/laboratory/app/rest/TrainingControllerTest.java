@@ -37,10 +37,14 @@ class TrainingControllerTest {
     // ==================== NEW TRAINING REQUEST ENDPOINT TESTS ====================
 
     @Test
-    @DisplayName("Test of the method newTrainingRequest - should return 200 OK when valid request is sent")
+    @DisplayName("Test of the method newTrainingRequest - should return 201 Created when valid request is sent")
     void testNewTrainingRequest_positive_addRequest() throws Exception {
+        // given
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
+
         // when & then
         mockMvc.perform(post("/training")
+                            .header("X-Request-ID", requestId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -53,17 +57,21 @@ class TrainingControllerTest {
                                         "actionType": "ADD"
                                     }
                                     """))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         verify(trainingService, times(1)).addTraining(ArgumentMatchers.any(Training.class));
         verifyNoMoreInteractions(trainingService);
     }
 
     @Test
-    @DisplayName("Test of the method newTrainingRequest - should return 200 OK when valid delete request is sent")
+    @DisplayName("Test of the method newTrainingRequest - should return 201 Created when valid delete request is sent")
     void testNewTrainingRequest_positive_deleteRequest() throws Exception {
+        // given
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
+
         // when & then
         mockMvc.perform(post("/training")
+                            .header("X-Request-ID", requestId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -76,7 +84,7 @@ class TrainingControllerTest {
                                         "actionType": "DELETE"
                                     }
                                     """))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         verify(trainingService, times(1)).deleteTraining(ArgumentMatchers.any(Training.class));
         verifyNoMoreInteractions(trainingService);
@@ -85,8 +93,12 @@ class TrainingControllerTest {
     @Test
     @DisplayName("Test of the method newTrainingRequest - should return 400 Bad Request when request with validation error is sent")
     void testNewTrainingRequest_negative_validationError() throws Exception {
+        // given
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
+
         // when & then
         mockMvc.perform(post("/training")
+                            .header("X-Request-ID", requestId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {
@@ -101,14 +113,18 @@ class TrainingControllerTest {
                                     """))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE))
-                .andExpect(content().json("{\"detail\":\"Validation failed for training request: trainerUsername: Trainer username must not be null or blank\"}"));
+                .andExpect(content().json("{\"detail\":\"Invalid request content.\"}"));
     }
 
     @Test
     @DisplayName("Test of the method newTrainingRequest - should return 400 Bad Request when request with unknown action type is sent")
     void testNewTrainingRequest_negative_unknownActionType() throws Exception {
+        // given
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
+
         // when & then
         mockMvc.perform(post("/training")
+                        .header("X-Request-ID", requestId)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("""
                                     {

@@ -50,11 +50,13 @@ class TrainingStatisticsControllerTest {
     void testGetTrainingStatistics_positive_withoutPeriod() throws Exception {
         // given
         var statistics = getTestTrainingStatistics();
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
 
         given(trainingStatisticsService.getStatisticsForTrainer(anyString())).willReturn(statistics);
 
         // when & then
-        mockMvc.perform(get("/statistics/{username}", "Sarah.Davis"))
+        mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
+                        .header("X-Request-ID", requestId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
@@ -76,6 +78,7 @@ class TrainingStatisticsControllerTest {
     @DisplayName("Test of the method getTrainingStatistics - should return 200 OK with correct statistics when valid request is sent with period parameters")
     void testGetTrainingStatistics_positive_withPeriod() throws Exception {
         var statistics = getTestTrainingStatistics();
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
 
         given(trainingStatisticsService.getStatisticsForTrainerInPeriod(anyString(), any(LocalDate.class), any(LocalDate.class)))
                 .willReturn(statistics);
@@ -83,7 +86,8 @@ class TrainingStatisticsControllerTest {
         // when & then
         mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
                         .param("fromDate", "2025-12-01")
-                        .param("toDate", "2025-12-31"))
+                        .param("toDate", "2025-12-31")
+                        .header("X-Request-ID", requestId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json("""
@@ -105,11 +109,14 @@ class TrainingStatisticsControllerTest {
     @DisplayName("Test of the method getTrainingStatistics - should return 204 No Content when no statistics found for trainer")
     void testGetTrainingStatistics_negative_exceptionInService() throws Exception {
         // given
+        var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
+
         doThrow(new NoContentException("No training statistics found for trainer %s".formatted("Sarah.Davis")))
                 .when(trainingStatisticsService).getStatisticsForTrainer(anyString());
 
         // when & then
-        mockMvc.perform(get("/statistics/{username}", "Sarah.Davis"))
+        mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
+                        .header("X-Request-ID", requestId))
                 .andExpect(status().isNoContent())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
 

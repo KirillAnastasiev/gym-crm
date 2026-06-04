@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 import static java.time.Duration.ofHours;
 import static org.mockito.ArgumentMatchers.any;
@@ -57,6 +58,7 @@ class TrainingReportClientImplTest {
         // given
         var training = createTestTraining();
 
+        given(restTemplate.getInterceptors()).willReturn(new ArrayList<>());
         given(restTemplate.postForEntity(any(URI.class), any(TrainingReportRequestDto.class), eq(Void.class)))
                 .willReturn(ResponseEntity.ok(null));
 
@@ -64,6 +66,7 @@ class TrainingReportClientImplTest {
         trainingReportClient.sendTrainingReportAdd(training);
 
         // then
+        verify(restTemplate, times(1)).getInterceptors();
         verify(restTemplate, times(1)).postForEntity(any(URI.class), any(TrainingReportRequestDto.class), eq(Void.class));
         verifyNoMoreInteractions(restTemplate);
     }
@@ -77,6 +80,7 @@ class TrainingReportClientImplTest {
         // given
         var training = createTestTraining();
 
+        given(restTemplate.getInterceptors()).willReturn(new ArrayList<>());
         given(restTemplate.postForEntity(any(URI.class), any(TrainingReportRequestDto.class), eq(Void.class)))
                 .willReturn(ResponseEntity.ok(null));
 
@@ -84,6 +88,7 @@ class TrainingReportClientImplTest {
         trainingReportClient.sendTrainingReportDelete(training);
 
         // then
+        verify(restTemplate, times(1)).getInterceptors();
         verify(restTemplate, times(1)).postForEntity(any(URI.class), any(TrainingReportRequestDto.class), eq(Void.class));
         verifyNoMoreInteractions(restTemplate);
     }

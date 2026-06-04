@@ -46,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthenticationControllerTest {
     private static final String ACCESS_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNTAwMCwiZXhwIjoxNzc4NDM4NjAwfQ.newAccessTokenSignature";
     private static final String REFRESH_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJKb2huLkRvZSIsImlhdCI6MTc3ODQzNDQzMywiZXhwIjoxNzc5NzMwNDMzfQ.CATJEnKWL0Oze6-lcRiU2Ba-Gxl3jDQ80qFSbiOwmWYTgPTU9G8Foa31iKlJgqMX";
+    private static final String REQUEST_ID = "797ce185-c462-4b4f-bce1-85c462eb4f06";
 
     @Autowired
     private JsonMapper objectMapper;
@@ -84,6 +85,7 @@ class AuthenticationControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(get("/api/auth/tokens")
+                        .header("X-Request-ID", REQUEST_ID)
                         .with(user("John.Doe").password("password123")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -111,6 +113,7 @@ class AuthenticationControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/auth/tokens")
+                        .header("X-Request-ID", REQUEST_ID)
                         .with(user("John.Doe").password("password123")))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
@@ -129,6 +132,7 @@ class AuthenticationControllerTest {
 
         // when & then
         mockMvc.perform(get("/api/auth/tokens")
+                        .header("X-Request-ID", REQUEST_ID)
                         .with(user("John.Doe").password("wrongPassword")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
@@ -146,6 +150,7 @@ class AuthenticationControllerTest {
     void testLogout_positive() throws Exception {
         // given
         mockMvc.perform(post("/api/auth/logout")
+                        .header("X-Request-ID", REQUEST_ID)
                         .with(user("John.Doe").password("password123")))
                         .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -162,6 +167,7 @@ class AuthenticationControllerTest {
         doThrow(new AuthenticationException("Incorrect password for username John.Doe")).when(authenticationService).logout(anyString());
 
         mockMvc.perform(post("/api/auth/logout")
+                        .header("X-Request-ID", REQUEST_ID)
                         .with(user("John.Doe").password("password123")))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
@@ -188,6 +194,7 @@ class AuthenticationControllerTest {
 
         // when & then
         var actualResult = mockMvc.perform(post("/api/auth/refresh-token")
+                        .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isOk())
@@ -216,6 +223,7 @@ class AuthenticationControllerTest {
 
         // when & then
        mockMvc.perform(post("/api/auth/refresh-token")
+                       .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -237,6 +245,7 @@ class AuthenticationControllerTest {
 
         // when & then
        mockMvc.perform(post("/api/auth/refresh-token")
+                        .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
@@ -260,6 +269,7 @@ class AuthenticationControllerTest {
         mockMvc.perform(put("/api/auth/change-password")
                         .with(user("John.Doe").password("password123"))
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Request-ID", REQUEST_ID)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -279,6 +289,7 @@ class AuthenticationControllerTest {
         // when & then
         mockMvc.perform(put("/api/auth/change-password")
                         .with(user("John.Doe").password("wrongPassword"))
+                        .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"wrongOldPass\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isUnauthorized())
@@ -299,6 +310,7 @@ class AuthenticationControllerTest {
         // when & then
         mockMvc.perform(put("/api/auth/change-password")
                         .with(user("Unknown.User").password("wrongPassword"))
+                        .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"oldPass123\",\"newPassword\":\"newPass456\"}"))
                 .andExpect(status().isNotFound())
@@ -325,6 +337,7 @@ class AuthenticationControllerTest {
 
         mockMvc.perform(put("/api/auth/change-password")
                         .with(user("John.Doe").password("password123"))
+                        .header("X-Request-ID", REQUEST_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"oldPassword\":\"%s\",\"newPassword\":\"%s\"}".formatted(oldPassword, newPassword)))
                 .andExpect(status().isBadRequest())
