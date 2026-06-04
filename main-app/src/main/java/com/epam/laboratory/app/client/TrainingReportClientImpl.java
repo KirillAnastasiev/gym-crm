@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-@Service
+@Component
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class TrainingReportClientImpl implements TrainingReportClient {
     private static final String REQUEST_ID_HEADER = "X-Request-ID";
@@ -27,28 +27,31 @@ public class TrainingReportClientImpl implements TrainingReportClient {
     @Logging(Level.INFO)
     @Override
     public void sendTrainingReportAdd(Training training) {
-        var report = createTrainingReport(training, TrainingReport.ActionType.ADD);
-        sendTrainingReport(report);
+        sendRequest(training, TrainingReport.ActionType.ADD);
     }
 
     @Logging(Level.INFO)
     @Override
     public void sendTrainingReportDelete(Training training) {
-        var report = createTrainingReport(training, TrainingReport.ActionType.DELETE);
-        sendTrainingReport(report);
+        sendRequest(training, TrainingReport.ActionType.DELETE);
     }
 
-    private void sendTrainingReport(TrainingReport report) {
+    private void sendRequest(Training training, TrainingReport.ActionType action) {
+        var report = createTrainingReport(training, action);
+        setRequestIdHeader();
+        var uri = UriComponentsBuilder.fromUriString(statisticsServiceUrl)
+                .path("/training")
+                .build()
+                .toUri();
+        restTemplate.postForEntity(uri, reportMapper.toDto(report), Void.class);
+    }
+
+    private void setRequestIdHeader() {
         var requestId = RequestIdHolder.getRequestId() !=  null ? RequestIdHolder.getRequestId() : "N/A";
         restTemplate.getInterceptors().add((request, body, execution) -> {
             request.getHeaders().add(REQUEST_ID_HEADER, requestId);
             return execution.execute(request, body);
         });
-        var uri = UriComponentsBuilder.fromUriString(statisticsServiceUrl)
-                                      .path("/training")
-                                      .build()
-                                      .toUri();
-        restTemplate.postForEntity(uri, reportMapper.toDto(report), Void.class);
     }
 
     private static TrainingReport createTrainingReport(Training training, TrainingReport.ActionType actionType) {

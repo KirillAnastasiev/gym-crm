@@ -80,3 +80,29 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
   instance:
     prefer-ip-address: true
+
+########## Resilence4j Circuit Breaker settings ##############
+resilience4j:
+  circuitbreaker:
+    instances:
+      trainingStatisticsService:
+        registerHealthIndicator: true
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 100
+        slowCallDurationThreshold: 2s
+        waitDurationInOpenState: 5s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        recordExceptions:
+          - java.lang.Exception
+          - java.lang.IllegalStateException
+        ignoreExceptions: []
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+#################### Logger settings ########################
+logging:
+  level:
+    io.github.resilience4j: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    com.epam.laboratory.app.service.TrainingStatisticsServiceImpl: DEBUG

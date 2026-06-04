@@ -7,7 +7,6 @@ import com.epam.laboratory.app.dto.mapper.CredentialsMapper;
 import com.epam.laboratory.app.dto.mapper.TraineeMapper;
 import com.epam.laboratory.app.dto.mapper.TrainerWithoutTraineesMapper;
 import com.epam.laboratory.app.service.TraineeService;
-import com.epam.laboratory.app.util.RequestIdHolder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -19,7 +18,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +29,7 @@ import java.util.Collection;
 @RequestMapping("/api/trainees")
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Tag(name = "Trainees Management", description = "Endpoints for managing trainees profiles")
-public class TraineeController {
-    private static final String REQUEST_ID_HEADER = "X-Request-ID";
+public class TraineeController implements Controller {
 
     private final TraineeService traineeService;
     private final TraineeMapper traineeMapper;
@@ -77,13 +74,10 @@ public class TraineeController {
     )
     ResponseEntity<TraineeDto> getProfile(@PathVariable String username,
                                           @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        var trainee = traineeService.selectByUsername(username);
-        var responseBody = traineeMapper.toDto(trainee);
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+        return performRequest(requestId, () -> {
+            var trainee = traineeService.selectByUsername(username);
+            return traineeMapper.toDto(trainee);
+        }, HttpStatus.OK);
     }
 
 
@@ -135,13 +129,10 @@ public class TraineeController {
     )
     ResponseEntity<CredentialsDto> registerTrainee(@RequestBody TraineeDto traineeDto,
                                                    @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        var trainee = traineeService.registerNew(traineeMapper.toEntity(traineeDto));
-        var responseBody = credentialsMapper.toDto(trainee);
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseBody, headers, HttpStatus.CREATED);
+        return performRequest(requestId, () -> {
+            var trainee = traineeService.registerNew(traineeMapper.toEntity(traineeDto));
+            return credentialsMapper.toDto(trainee);
+        }, HttpStatus.CREATED);
     }
 
 
@@ -210,13 +201,11 @@ public class TraineeController {
     ResponseEntity<TraineeDto> updateTrainee(@PathVariable String username,
                                              @RequestBody TraineeDto traineeDto,
                                              @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        var trainee = traineeService.updateByUsername(username, traineeMapper.toEntity(traineeDto));
-        var responseBody = traineeMapper.toDto(trainee);
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+
+        return performRequest(requestId, () -> {
+            var trainee = traineeService.updateByUsername(username, traineeMapper.toEntity(traineeDto));
+            return traineeMapper.toDto(trainee);
+        }, HttpStatus.OK);
     }
 
     @PutMapping(
@@ -308,19 +297,15 @@ public class TraineeController {
     ResponseEntity<Collection<TrainerDto>> updateTraineeTrainers(@PathVariable String username,
                                                                  @RequestBody Collection<UserDto> trainerUsernames,
                                                                  @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        var trainers = trainerUsernames.stream()
-                .map(trainerMapper::toEntity)
-                .toList();
-
-        var responseBody = traineeService.updateTrainers(username, trainers)
-                .stream()
-                .map(trainerMapper::toDto)
-                .toList();
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseBody, headers, HttpStatus.OK);
+        return performRequest(requestId, () -> {
+            var trainers = trainerUsernames.stream()
+                    .map(trainerMapper::toEntity)
+                    .toList();
+            return traineeService.updateTrainers(username, trainers)
+                    .stream()
+                    .map(trainerMapper::toDto)
+                    .toList();
+        }, HttpStatus.OK);
     }
 
 
@@ -384,14 +369,11 @@ public class TraineeController {
     ResponseEntity<MessageResponseDto> changeTraineeStatus(@PathVariable String username,
                                            @RequestBody ChangeStatusRequestDto requestDto,
                                            @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        boolean isActive = requestDto.active();
-        traineeService.changeStatus(username, isActive);
-        var responseMessage = new MessageResponseDto("Trainee with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked"));
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseMessage, headers, HttpStatus.OK);
+        return performRequest(requestId, () -> {
+            boolean isActive = requestDto.active();
+            traineeService.changeStatus(username, isActive);
+            return new MessageResponseDto("Trainee with username %s was %s".formatted(username, isActive ? "unblocked" : "blocked"));
+        }, HttpStatus.OK);
     }
 
 
@@ -445,13 +427,10 @@ public class TraineeController {
     )
     ResponseEntity<MessageResponseDto> deleteTrainee(@PathVariable String username,
                                                      @RequestHeader(REQUEST_ID_HEADER) String requestId) {
-        RequestIdHolder.setRequestId(requestId);
-        traineeService.deleteByUsername(username);
-        var responseMessage = new MessageResponseDto("Trainee with username %s was deleted".formatted(username));
-        var headers = new HttpHeaders();
-        headers.add(REQUEST_ID_HEADER, requestId);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseMessage, headers, HttpStatus.OK);
+        return performRequest(requestId, () -> {
+            traineeService.deleteByUsername(username);
+            return new MessageResponseDto("Trainee with username %s was deleted".formatted(username));
+        }, HttpStatus.OK);
     }
 
 }
