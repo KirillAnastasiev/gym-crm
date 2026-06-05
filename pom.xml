@@ -23,6 +23,7 @@
         <module>statistics-app</module>
         <module>registry-server</module>
         <module>api-gateway</module>
+        <module>logging</module>
     </modules>
 
 </project>
