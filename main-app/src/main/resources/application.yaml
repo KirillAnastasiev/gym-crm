@@ -1,0 +1,108 @@
+kind: Application
+
+spring:
+################### Application properties ####################
+  application:
+    name: main-app
+  profiles:
+    active: dev
+
+####################### Server settings #######################
+server:
+  port: 8081
+
+management:
+###################### Actuator settings ######################
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, prometheus, env, threaddump, loggers
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+
+###################### Health indicators #####################
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    defaults:
+      enabled: true
+    diskspace:
+      enabled: true
+    db:
+      enabled: true
+
+##################### Metrics settings #####################
+    metrics:
+      enable:
+        all: false
+        jvm: true
+        process: true
+        system: true
+        logback: true
+      distribution:
+        percentiles-histogram:
+          http.server.requests: true
+          jvm.memory.used: true
+          jvm.gc.pause: true
+
+################### Prometheus settings #####################
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+#################### OpenAPI settings #######################
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+    version: openapi_3_1
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  enable-hateoas: true
+  enable-default-api-docs: true
+  writer-with-default-pretty-printer: true
+
+#################### Services settings #######################
+services:
+  statistics:
+    url: lb://statistics-app
+
+############ Eureka Discovery Client settings ################
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+########## Resilence4j Circuit Breaker settings ##############
+resilience4j:
+  circuitbreaker:
+    instances:
+      trainingStatisticsService:
+        registerHealthIndicator: true
+        permittedNumberOfCallsInHalfOpenState: 2
+        failureRateThreshold: 50
+        slowCallRateThreshold: 100
+        slowCallDurationThreshold: 2s
+        waitDurationInOpenState: 5s
+        enableExponentialBackoff: true
+        exponentialBackoffMultiplier: 2
+        recordExceptions:
+          - java.lang.Exception
+          - java.lang.IllegalStateException
+        ignoreExceptions: []
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+#################### Logger settings ########################
+logging:
+  level:
+    io.github.resilience4j: DEBUG
+    org.springframework.cloud.loadbalancer: DEBUG
+    com.epam.laboratory.app.service.TrainingStatisticsServiceImpl: DEBUG

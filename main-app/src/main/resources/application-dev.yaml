@@ -1,0 +1,45 @@
+spring:
+##################### Datasource settings #######################
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/gym-db
+    username: postgres
+    password: postgres
+    hikari:
+      schema: public
+      maximum-pool-size: 10
+
+##################### Persistence settings #######################
+  jpa:
+    database: postgresql
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+        hbm2ddl:
+          auto: none
+        ejb:
+          persistenceUnitName: gym-persistence-unit
+
+###################### DB initialization ########################
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.dev.sql
+      data-locations: classpath:data.dev.sql
+
+######################### JWT settings ##########################
+app:
+  security:
+    jwt:
+      enabled: true
+      encryption-algorithm: HS256
+      secret: mySecretKeyForJWTTokenGenerationAndValidationPurpose123456
+      access-ttl-seconds: 3600       # 1 hour
+      refresh-ttl-seconds: 1296000   # 15 days
+      issuer: gym-api
+      audience: gym-app
+
+###################### OpenAPI settings #########################
+springdoc:
+  show-actuator: false

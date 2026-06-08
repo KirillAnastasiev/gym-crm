@@ -1,0 +1,45 @@
+spring:
+################### Application properties ####################
+  application:
+    name: api-gateway
+
+##################### Gateway properties ######################
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: statistics-app
+              uri: lb://statistics-app
+              predicates:
+                - Path=/GymCRM/statistics/**
+              filters:
+                - RewritePath=/GymCRM/(?<segment>.*), /${segment}
+
+            - id: main-app
+              uri: lb://main-app
+              predicates:
+                - Path=/GymCRM/api/**
+              filters:
+                - RewritePath=/GymCRM/(?<segment>.*), /${segment}
+
+
+
+
+####################### Server settings #######################
+server:
+  port: 8080
+  forward-headers-strategy: framework
+  servlet:
+    context-path: /GymCRM
+
+############ Eureka Discovery Client settings ################
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+  instance:
+    prefer-ip-address: true
