@@ -14,6 +14,11 @@ spring:
     exchange:
       name: gym.exchange
     routing-key: gym.trainings.queue
+    dlqueue:
+      name: gym.trainings.dlqueue
+    dlexchange:
+      name: gym.dlexchange
+    dlrouting-key: gym.trainings.dlqueue
 
 ####################### Server settings #######################
 server:

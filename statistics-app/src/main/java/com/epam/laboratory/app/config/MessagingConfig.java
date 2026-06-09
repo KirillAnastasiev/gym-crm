@@ -1,9 +1,6 @@
 package com.epam.laboratory.app.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -27,21 +24,50 @@ public class MessagingConfig {
     @Value("${spring.rabbitmq.routing-key}")
     private String routingKey;
 
+    @Value("${spring.rabbitmq.dlqueue.name}")
+    private String deadLetterQueueName;
+
+    @Value("${spring.rabbitmq.dlexchange.name}")
+    private String deadLetterExchangeName;
+
+    @Value("${spring.rabbitmq.dlrouting-key}")
+    private String deadLetterRoutingKey;
+
     @Bean
-    public Queue routingQueue() {
-        return new Queue(queueName, true);
+    public Queue mainQueue() {
+        return QueueBuilder.durable(queueName)
+                .withArgument("x-dead-letter-exchange", deadLetterExchangeName)
+                .withArgument("x-dead-letter-routing-key", deadLetterRoutingKey)
+                .build();
     }
 
     @Bean
-    public TopicExchange exchange() {
+    public Queue deadLetterQueue() {
+        return QueueBuilder.durable(deadLetterQueueName).build();
+    }
+
+    @Bean
+    public TopicExchange mainExchange() {
         return new TopicExchange(exchangeName);
     }
 
     @Bean
-    public Binding binding() {
-        return BindingBuilder.bind(routingQueue())
-                             .to(exchange())
+    public TopicExchange deadLetterExchange() {
+        return new TopicExchange(deadLetterExchangeName);
+    }
+
+    @Bean
+    public Binding mainBinding() {
+        return BindingBuilder.bind(mainQueue())
+                             .to(mainExchange())
                              .with(routingKey);
+    }
+
+    @Bean
+    public Binding deadLetterBinding() {
+        return BindingBuilder.bind(deadLetterQueue())
+                             .to(deadLetterExchange())
+                             .with(deadLetterRoutingKey);
     }
 
     @Bean
