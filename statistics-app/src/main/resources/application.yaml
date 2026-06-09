@@ -3,6 +3,18 @@ spring:
   application:
     name: statistics-app
 
+################# RabbitMQ Messaging settings ###################
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    queue:
+      name: gym.trainings.queue
+    exchange:
+      name: gym.exchange
+    routing-key: gym.trainings.queue
+
 ####################### Server settings #######################
 server:
   port: 8082

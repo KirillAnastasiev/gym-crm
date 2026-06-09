@@ -35,9 +35,5 @@ public record TrainingReportRequestDto(
 
         @NotNull(message = "Training duration must not be null")
         @JsonProperty("trainingDuration")
-        Duration trainingDuration,
-
-        @NotNull(message = "Action type must not be null")
-        @JsonProperty("actionType")
-        String actionType
+        Duration trainingDuration
 ) {}

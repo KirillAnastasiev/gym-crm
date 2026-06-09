@@ -8,8 +8,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 
 public interface TrainingService {
-    void addTraining(@NotNull Training training);
-    void deleteTraining(@NotNull Training training);
     Collection<Training> getTrainingsByTrainerUsername(@NotBlank String trainerUsername);
     Collection<Training> getTrainingsByTrainerUsernameBetweenDates(@NotBlank String trainerUsername, @NotNull LocalDate fromDate, @NotNull LocalDate toDate);
 }

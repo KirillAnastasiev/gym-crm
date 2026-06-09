@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.client.TrainingReportClient;
+import com.epam.laboratory.app.client.TrainingReportMessagingClient;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.exception.NoSuchEntityException;
@@ -48,7 +48,7 @@ class TraineeServiceImplTest {
     private TrainingService trainingService;
 
     @Mock
-    private TrainingReportClient trainingReportClient;
+    private TrainingReportMessagingClient trainingReportMessagingClient;
 
     @InjectMocks
     private TraineeServiceImpl traineeService;

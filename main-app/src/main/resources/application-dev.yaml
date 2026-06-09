@@ -28,6 +28,18 @@ spring:
       schema-locations: classpath:schema.dev.sql
       data-locations: classpath:data.dev.sql
 
+################# RabbitMQ Messaging settings ###################
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    queue:
+      name: gym.trainings.queue
+    exchange:
+      name: gym.exchange
+    routing-key: gym.trainings.queue
+
 ######################### JWT settings ##########################
 app:
   security:

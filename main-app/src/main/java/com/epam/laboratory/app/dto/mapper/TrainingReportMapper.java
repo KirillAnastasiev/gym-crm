@@ -14,11 +14,5 @@ public interface TrainingReportMapper {
     @Mapping(source = "isActive", target = "isActive")
     @Mapping(source = "trainingDate", target = "trainingDate")
     @Mapping(source = "trainingDuration", target = "trainingDuration")
-    @Mapping(source = "actionType", target = "actionType", qualifiedByName = "mapActionType")
     TrainingReportRequestDto toDto(TrainingReport entity);
-
-    @Named("mapActionType")
-    static String mapActionType(TrainingReport.ActionType actionType) {
-        return actionType.name();
-    }
 }
