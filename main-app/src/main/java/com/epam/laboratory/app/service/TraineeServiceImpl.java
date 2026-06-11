@@ -1,7 +1,7 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
-import com.epam.laboratory.app.client.TrainingReportClient;
+import com.epam.laboratory.app.client.TrainingReportMessagingClient;
 import com.epam.laboratory.app.domain.Trainee;
 import com.epam.laboratory.app.domain.Trainer;
 import com.epam.laboratory.app.domain.UserCredentials;
@@ -29,7 +29,7 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
     private final TrainerService trainerService;
     private final PasswordEncoder passwordEncoder;
     private final TrainingService trainingService;
-    private final TrainingReportClient trainingReportClient;
+    private final TrainingReportMessagingClient trainingReportMessagingClient;
 
     @Autowired
     public TraineeServiceImpl(UserDao<Trainee> userDao,
@@ -37,12 +37,12 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
                               @Lazy TrainerService trainerService,
                               PasswordEncoder passwordEncoder,
                               TrainingService trainingService,
-                              TrainingReportClient trainingReportClient) {
+                              TrainingReportMessagingClient trainingReportMessagingClient) {
         super(userDao, authenticationService);
         this.trainerService = trainerService;
         this.passwordEncoder = passwordEncoder;
         this.trainingService = trainingService;
-        this.trainingReportClient = trainingReportClient;
+        this.trainingReportMessagingClient = trainingReportMessagingClient;
     }
 
     @Logging(Level.INFO)
@@ -100,7 +100,7 @@ public class TraineeServiceImpl extends AbstractUserService<Trainee> implements 
         }
         ((TraineeDao) dao).deleteByUsername(username);
         var trainingsForTrainee = trainingService.selectForTrainee(username, null);
-        trainingsForTrainee.forEach(trainingReportClient::sendTrainingReportDelete);
+        trainingsForTrainee.forEach(trainingReportMessagingClient::sendTrainingReportDelete);
     }
 
     @Logging(INFO)

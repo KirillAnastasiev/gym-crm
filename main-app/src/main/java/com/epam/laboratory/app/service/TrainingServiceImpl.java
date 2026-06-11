@@ -1,7 +1,7 @@
 package com.epam.laboratory.app.service;
 
 import com.epam.laboratory.app.aspect.annotation.Logging;
-import com.epam.laboratory.app.client.TrainingReportClient;
+import com.epam.laboratory.app.client.TrainingReportMessagingClient;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingFilter;
 import com.epam.laboratory.app.repository.TrainingDao;
@@ -31,17 +31,17 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
 
     private final TraineeService traineeService;
     private final TrainerService trainerService;
-    private final TrainingReportClient trainingReportClient;
+    private final TrainingReportMessagingClient trainingReportMessagingClient;
 
     @Autowired
     public TrainingServiceImpl(TrainingDao trainingDao,
                                @Lazy TraineeService traineeService,
                                @Lazy TrainerService trainerService,
-                               TrainingReportClient trainingReportClient) {
+                               TrainingReportMessagingClient trainingReportMessagingClient) {
         super(trainingDao);
         this.traineeService = traineeService;
         this.trainerService = trainerService;
-        this.trainingReportClient = trainingReportClient;
+        this.trainingReportMessagingClient = trainingReportMessagingClient;
     }
 
     @Logging(INFO)
@@ -55,7 +55,7 @@ public class TrainingServiceImpl extends AbstractEntityService<Training> impleme
         training.setTrainee(trainee);
         training.setTrainer(trainer);
         var registeredTraining = ((TrainingDao) dao).save(training);
-        trainingReportClient.sendTrainingReportAdd(registeredTraining);
+        trainingReportMessagingClient.sendTrainingReportAdd(registeredTraining);
         return registeredTraining;
     }
 

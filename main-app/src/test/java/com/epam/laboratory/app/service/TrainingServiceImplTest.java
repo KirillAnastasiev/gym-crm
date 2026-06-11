@@ -1,6 +1,6 @@
 package com.epam.laboratory.app.service;
 
-import com.epam.laboratory.app.client.TrainingReportClient;
+import com.epam.laboratory.app.client.TrainingReportMessagingClient;
 import com.epam.laboratory.app.domain.*;
 import com.epam.laboratory.app.repository.TrainingDao;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +40,7 @@ class TrainingServiceImplTest {
     private TrainingTypeService trainingTypeService;
 
     @Mock
-    private TrainingReportClient reportClient;
+    private TrainingReportMessagingClient reportClient;
 
     @InjectMocks
     private TrainingServiceImpl trainingServiceImpl;

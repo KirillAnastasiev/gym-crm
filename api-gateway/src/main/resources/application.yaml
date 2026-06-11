@@ -23,9 +23,6 @@ spring:
               filters:
                 - RewritePath=/GymCRM/(?<segment>.*), /${segment}
 
-
-
-
 ####################### Server settings #######################
 server:
   port: 8080

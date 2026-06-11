@@ -25,8 +25,6 @@ public class TrainingReport {
 
     private Duration trainingDuration;
 
-    private ActionType actionType;
-
     public enum ActionType {
         ADD, DELETE
     }
