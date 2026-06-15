@@ -1,28 +1,6 @@
 spring:
-##################### Datasource settings #######################
-  datasource:
-    driver-class-name: org.h2.Driver
-    url: jdbc:h2:mem:gym-crm-report
-    username: sa
-    password:
-    hikari:
-      maximum-pool-size: 10
-
-##################### Persistence settings #######################
-  jpa:
-    database: h2
-    properties:
-      hibernate:
-        show_sql: true
-        format_sql: true
-        hbm2ddl:
-          auto: update
-        ejb:
-          persistenceUnitName: gym-crm-report-persistence-unit
-
-###################### DB initialization ########################
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.test.sql
-      data-locations: classpath:data.test.sql
+  ##################### Datasource settings #######################
+  mongodb:
+    host: localhost
+    port: 27017
+    database: test

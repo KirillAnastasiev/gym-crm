@@ -5,7 +5,7 @@ import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.dto.TrainingRequestDto;
 import com.epam.laboratory.app.dto.mapper.TrainingRequestMapper;
 import com.epam.laboratory.app.dto.mapper.TrainingRequestMapperImpl;
-import com.epam.laboratory.app.repository.TrainingDao;
+import com.epam.laboratory.app.service.TrainingStatisticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,6 @@ import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -29,7 +28,7 @@ import static org.mockito.Mockito.*;
 class TrainingMessageListenerImplTest {
 
     @Mock
-    private TrainingDao trainingDao;
+    private TrainingStatisticsService trainingStatisticsService;
 
     private TrainingRequestMapper trainingRequestMapper = new TrainingRequestMapperImpl();
 
@@ -37,7 +36,7 @@ class TrainingMessageListenerImplTest {
 
     @BeforeEach
     void setUp() {
-        trainingMessageListenerImpl = new TrainingMessageListenerImpl(trainingRequestMapper, trainingDao);
+        trainingMessageListenerImpl = new TrainingMessageListenerImpl(trainingRequestMapper, trainingStatisticsService);
     }
 
 
@@ -55,14 +54,14 @@ class TrainingMessageListenerImplTest {
         ));
         var message = new GenericMessage<>(trainingRequestDto, headers);
 
-        given(trainingDao.save(any(Training.class))).willReturn(training);
+        doNothing().when(trainingStatisticsService).saveTrainingStatisticsForTraining(any(Training.class));
 
         // when
         trainingMessageListenerImpl.receiveTraining(message);
 
         // then
-        verify(trainingDao, times(1)).save(any(Training.class));
-        verifyNoMoreInteractions(trainingDao);
+        verify(trainingStatisticsService, times(1)).saveTrainingStatisticsForTraining(any(Training.class));
+        verifyNoMoreInteractions(trainingStatisticsService);
     }
 
     @Test
@@ -76,14 +75,14 @@ class TrainingMessageListenerImplTest {
         ));
         var message = new GenericMessage<>(trainingRequestDto, headers);
 
-        doNothing().when(trainingDao).delete(any(Training.class));
+        doNothing().when(trainingStatisticsService).deleteTrainingStatisticsForTraining(any(Training.class));
 
         // when
         trainingMessageListenerImpl.receiveTraining(message);
 
         // then
-        verify(trainingDao, times(1)).delete(any(Training.class));
-        verifyNoMoreInteractions(trainingDao);
+        verify(trainingStatisticsService, times(1)).deleteTrainingStatisticsForTraining(any(Training.class));
+        verifyNoMoreInteractions(trainingStatisticsService);
     }
 
     @Test
@@ -101,9 +100,9 @@ class TrainingMessageListenerImplTest {
         assertThatThrownBy(() -> trainingMessageListenerImpl.receiveTraining(message))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unknown action type: UNKNOWN");
-        verifyNoInteractions(trainingDao);
+        verifyNoInteractions(trainingStatisticsService);
 
-        verifyNoInteractions(trainingDao);
+        verifyNoInteractions(trainingStatisticsService);
     }
 
     private static TrainingRequestDto createTestTrainingRequestDto() {
@@ -119,7 +118,6 @@ class TrainingMessageListenerImplTest {
 
     private static Training createTestTraining() {
         var training = new Training();
-        training.setId(1L);
         training.setTrainerFirstName("Sarah");
         training.setTrainerLastName("Davis");
         training.setTrainerUsername("Sarah.Davis");

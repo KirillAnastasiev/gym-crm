@@ -1,8 +1,10 @@
 package com.epam.laboratory.app.service;
 
+
 import com.epam.laboratory.app.domain.TrainerStatus;
 import com.epam.laboratory.app.domain.Training;
-import com.epam.laboratory.app.exception.NoContentException;
+import com.epam.laboratory.app.domain.TrainingStatistics;
+import com.epam.laboratory.app.repository.TrainingStatisticsDao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,201 +12,151 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.Year;
+import java.util.HashSet;
+import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("TrainingStatisticsServiceImpl test suite")
 class TrainingStatisticsServiceImplTest {
 
     @Mock
-    private TrainingService trainingService;
+    private TrainingStatisticsDao trainingStatisticsDao;
 
     @InjectMocks
-    private TrainingStatisticsServiceImpl trainingStatisticsService;
+    private TrainingStatisticsServiceImpl trainingStatisticsServiceImpl;
 
 
-    // ==================== GET STATISTICS FOR TRAINER TESTS ====================
+    // ==================== SAVE TRAINING STATISTICS FOR TRAINING TESTS ====================
 
     @Test
-    @DisplayName("Test of the method getStatisticsForTrainer - should return correct training statistics for trainer")
-    void testGetStatisticsForTrainer_positive() {
+    @DisplayName("Test of the method saveTrainingStatisticsForTraining - should save training statistics when trainer username does not exist")
+    void testSaveTrainingStatisticsForTraining_positive() {
         // given
-        var trainings = getTestTrainings();
-        var trainerUsername = "FirstName.LastName";
+        var username = "Sarah.Davis";
+        var training = createTestTraining();
+        var statistics = createTestTrainingStatistics();
 
-        given(trainingService.getTrainingsByTrainerUsername(anyString())).willReturn(trainings);
+        given(trainingStatisticsDao.findByTrainerUsername(anyString())).willReturn(Optional.empty());
+        given(trainingStatisticsDao.save(any(TrainingStatistics.class))).willReturn(statistics);
+
+        // when & then
+        assertThatNoException().isThrownBy(() ->
+                trainingStatisticsServiceImpl.saveTrainingStatisticsForTraining(training));
+
+        verify(trainingStatisticsDao, times(1)).findByTrainerUsername(username);
+        verify(trainingStatisticsDao, times(1)).save(any(TrainingStatistics.class));
+        verifyNoMoreInteractions(trainingStatisticsDao);
+    }
+
+
+    // ==================== DELETE TRAINING STATISTICS FOR TRAINING TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method deleteTrainingStatisticsForTraining - should delete training statistics when trainer username exists")
+    void testDeleteTrainingStatisticsForTraining_positive() {
+        // given
+        var training = createTestTraining();
+        var statistics = createTestTrainingStatistics();
+
+        given(trainingStatisticsDao.findByTrainerUsername(anyString())).willReturn(Optional.of(statistics));
+        given(trainingStatisticsDao.save(any(TrainingStatistics.class))).willReturn(statistics);
+
+        // when & then
+        assertThatNoException().isThrownBy(() ->
+                trainingStatisticsServiceImpl.deleteTrainingStatisticsForTraining(training));
+
+        verify(trainingStatisticsDao, times(1)).findByTrainerUsername(anyString());
+        verify(trainingStatisticsDao, times(1)).save(any(TrainingStatistics.class));
+        verifyNoMoreInteractions(trainingStatisticsDao);
+    }
+
+
+    // ==================== GET STATISTICS BY TRAINER USERNAME TESTS ====================
+
+    @Test
+    @DisplayName("Test of the method getStatisticsByTrainerUsername - should return statistics when trainer username exists")
+    void testGetStatisticsByTrainerUsername_positive() {
+        // given
+        var username = "Sarah.Davis";
+        var statistics = createTestTrainingStatistics();
+
+        given(trainingStatisticsDao.findByTrainerUsername(anyString())).willReturn(Optional.of(statistics));
 
         // when
-        var actualResult = trainingStatisticsService.getStatisticsForTrainer(trainerUsername);
+        var actualResult = trainingStatisticsServiceImpl.getStatisticsByTrainerUsername(username);
 
         // then
         assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getTrainerUsername()).isEqualTo(trainerUsername);
-        assertThat(actualResult.getTrainingSummary()).isNotNull();
-        assertThat(actualResult.getTrainingSummary()).containsKey(Year.of(2024));
-        assertThat(actualResult.getTrainingSummary().get(Year.of(2024))).isNotNull();
-        assertThat(actualResult.getTrainingSummary().get(Year.of(2024))).containsEntry(Month.JULY, Duration.ofMinutes(135));
+        assertThat(actualResult).isPresent();
+        assertThat(actualResult.map(TrainingStatistics::getId)).isNotEmpty();
+        assertThat(actualResult.map(TrainingStatistics::getTrainerUsername)).hasValue(username);
 
-        verify(trainingService).getTrainingsByTrainerUsername(anyString());
-        verifyNoMoreInteractions(trainingService);
+        verify(trainingStatisticsDao, times(1)).findByTrainerUsername(anyString());
+        verifyNoMoreInteractions(trainingStatisticsDao);
     }
 
     @Test
-    @DisplayName("Test of the method getStatisticsForTrainer - should return empty training statistics for trainer with unknown username")
-    void testGetStatisticsForTrainer_negative_unknownUsername() {
-        // given
-        var trainerUsername = "Unknown.Username";
-
-        given(trainingService.getTrainingsByTrainerUsername(anyString())).willReturn(Collections.emptyList());
-
-        // when & then
-        assertThatThrownBy(() -> trainingStatisticsService.getStatisticsForTrainer(trainerUsername))
-                .isInstanceOf(NoContentException.class)
-                .hasMessageContaining("No trainings found for trainer Unknown.Username");
-
-        verify(trainingService).getTrainingsByTrainerUsername(anyString());
-        verifyNoMoreInteractions(trainingService);
-    }
-
-    @Test
-    @DisplayName("Test of the method getStatisticsForTrainer - should throw exception when downstream service throws exception")
-    void testGetStatisticsForTrainer_negative_exceptionThrown() {
-        // given
-        var trainerUsername = "FirstName.LastName";
-
-        given(trainingService.getTrainingsByTrainerUsername(anyString())).willThrow(new RuntimeException("Service error"));
-
-        // when & then
-        assertThatThrownBy(() -> trainingStatisticsService.getStatisticsForTrainer(trainerUsername))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Service error");
-
-        verify(trainingService).getTrainingsByTrainerUsername(anyString());
-        verifyNoMoreInteractions(trainingService);
-    }
-
-
-    // ==================== GET STATISTICS FOR TRAINER IN PERIOD TESTS ====================
-
-    @Test
-    @DisplayName("Test of the method getStatisticsForTrainerInPeriod - should return correct training statistics for trainer in specified period")
-    void testGetStatisticsForTrainerInPeriod_positive() {
-        // given
-        var trainings = getTestTrainings();
-        var trainerUsername = "FirstName.LastName";
-        var startDate = LocalDate.of(2024, 7, 1);
-        var endDate = LocalDate.of(2024, 7, 3);
-
-        given(trainingService.getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class))).willReturn(trainings);
-
-        // when
-        var actualResult = trainingStatisticsService.getStatisticsForTrainerInPeriod(trainerUsername, startDate, endDate);
-
-        // then
-        assertThat(actualResult).isNotNull();
-        assertThat(actualResult.getTrainerUsername()).isEqualTo(trainerUsername);
-        assertThat(actualResult.getTrainingSummary()).isNotNull();
-        assertThat(actualResult.getTrainingSummary()).containsKey(Year.of(2024));
-        assertThat(actualResult.getTrainingSummary().get(Year.of(2024))).isNotNull();
-        assertThat(actualResult.getTrainingSummary().get(Year.of(2024))).containsEntry(Month.JULY, Duration.ofMinutes(135));
-
-        verify(trainingService).getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class));
-        verifyNoMoreInteractions(trainingService);
-    }
-
-    @Test
-    @DisplayName("Test of the method getStatisticsForTrainerInPeriod - should return empty training statistics for trainer with unknown username in specified period")
-    void testGetStatisticsForTrainerInPeriod_negative_unknownUsername() {
+    @DisplayName("Test of the method getStatisticsByTrainerUsername - should return empty when trainer username does not exist")
+    void testGetStatisticsByTrainerUsername_negative_unexistedUser() {
         // given
         var username = "Unknown.Username";
-        var startDate = LocalDate.of(2024, 7, 1);
-        var endDate = LocalDate.of(2024, 7, 3);
 
-        given(trainingService.getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class))).willReturn(Collections.emptyList());
+        given(trainingStatisticsDao.findByTrainerUsername(anyString())).willReturn(Optional.empty());
 
-        // when & then
-        assertThatThrownBy(() -> trainingStatisticsService.getStatisticsForTrainerInPeriod(username, startDate, endDate))
-                .isInstanceOf(NoContentException.class)
-                .hasMessageContaining("No trainings found for trainer Unknown.Username");
+        // when
+        var actualResult = trainingStatisticsServiceImpl.getStatisticsByTrainerUsername(username);
 
-        verify(trainingService).getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class));
-        verifyNoMoreInteractions(trainingService);
+        // then
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult).isEmpty();
+
+        verify(trainingStatisticsDao, times(1)).findByTrainerUsername(anyString());
+        verifyNoMoreInteractions(trainingStatisticsDao);
     }
 
-    @Test
-    @DisplayName("Test of the method getStatisticsForTrainerInPeriod - should return empty training statistics for trainer when there are no trainings in specified period")
-    void testGetStatisticsForTrainerInPeriod_negative_unsatisfiedDates() {
-        // given
-        var trainerUsername = "FirstName.LastName";
-        var startDate = LocalDate.of(2026, 7, 1);
-        var endDate = LocalDate.of(2026, 7, 3);
 
-        given(trainingService.getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class))).willReturn(Collections.emptyList());
-
-        // when & then
-        assertThatThrownBy(() -> trainingStatisticsService.getStatisticsForTrainerInPeriod(trainerUsername, startDate, endDate))
-                .isInstanceOf(NoContentException.class)
-                .hasMessageContaining("No trainings found for trainer FirstName.LastName");
-
-        verify(trainingService).getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class));
-        verifyNoMoreInteractions(trainingService);
+    private Training createTestTraining() {
+        var training = new Training();
+        training.setTrainerFirstName("Sarah");
+        training.setTrainerLastName("Davis");
+        training.setTrainerUsername("Sarah.Davis");
+        training.setTrainerStatus(TrainerStatus.ACTIVE);
+        training.setTrainingDate(LocalDateTime.of(2024, 7, 15, 12, 45));
+        training.setTrainingDuration(Duration.ofMillis(3600000));
+        return training;
     }
 
-    @Test
-    @DisplayName("Test of the method getStatisticsForTrainerInPeriod - should throw exception when downstream service throws exception")
-    void testGetStatisticsForTrainerInPeriod_negative_exceptionThrown() {
-        // given
-        var trainerUsername = "FirstName.LastName";
-        var startDate = LocalDate.of(2026, 7, 1);
-        var endDate = LocalDate.of(2026, 7, 3);
+    private static TrainingStatistics createTestTrainingStatistics() {
+        var statistics = new TrainingStatistics();
+        statistics.setId("6a2ec294f8264c3b4fb4041f1");
+        statistics.setTrainerUsername("Sarah.Davis");
+        statistics.setTrainerFirstName("Sarah");
+        statistics.setTrainerLastName("Davis");
+        statistics.setTrainerStatus(true);
 
-        given(trainingService.getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class))).willThrow(new RuntimeException("Service error"));
+        var yearStatistics = new TrainingStatistics.YearStatistics();
+        yearStatistics.setYear(Year.of(2024));
 
-        // when & then
-        assertThatThrownBy(() -> trainingStatisticsService.getStatisticsForTrainerInPeriod(trainerUsername, startDate, endDate))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Service error");
-
-        verify(trainingService).getTrainingsByTrainerUsernameBetweenDates(anyString(), any(LocalDate.class), any(LocalDate.class));
-        verifyNoMoreInteractions(trainingService);
+        var monthStatistics = new TrainingStatistics.MonthStatistics();
+        monthStatistics.setMonth(Month.JULY);
+        monthStatistics.setTotalDuration(Duration.ofMillis(32400000));
+        var monthStatisticsSet = new HashSet<TrainingStatistics.MonthStatistics>();
+        monthStatisticsSet.add(monthStatistics);
+        yearStatistics.setMonthStatistics(monthStatisticsSet);
+        var yearStatisticSet = new HashSet<TrainingStatistics.YearStatistics>();
+        yearStatisticSet.add(yearStatistics);
+        statistics.setYearStatisticsSet(yearStatisticSet);
+        return statistics;
     }
 
-    private static Collection<Training> getTestTrainings() {
-        var trainings = new ArrayList<Training>();
-        trainings.add(new Training(1L,
-                "FirstName.LastName",
-                "FirstName",
-                "LastName",
-                TrainerStatus.ACTIVE,
-                LocalDateTime.of(2024, 7, 1, 10, 0),
-                Duration.ofMinutes(60)));
-
-        trainings.add(new Training(2L,
-                "FirstName.LastName",
-                "FirstName",
-                "LastName",
-                TrainerStatus.ACTIVE,
-                LocalDateTime.of(2024, 7, 2, 15, 30),
-                Duration.ofMinutes(45)));
-
-        trainings.add(new Training(3L,
-                "FirstName.LastName",
-                "FirstName",
-                "LastName",
-                TrainerStatus.ACTIVE,
-                LocalDateTime.of(2024, 7, 2, 9, 0),
-                Duration.ofMinutes(30)));
-
-        return trainings;
-    }
 }

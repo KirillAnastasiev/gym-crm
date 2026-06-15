@@ -3,7 +3,7 @@ package com.epam.laboratory.app.messaging;
 import com.epam.laboratory.app.aspect.annotation.Logging;
 import com.epam.laboratory.app.dto.TrainingRequestDto;
 import com.epam.laboratory.app.dto.mapper.TrainingRequestMapper;
-import com.epam.laboratory.app.repository.TrainingDao;
+import com.epam.laboratory.app.service.TrainingStatisticsService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.event.Level;
@@ -24,7 +24,7 @@ public class TrainingMessageListenerImpl implements TrainingMessageListener {
     private static final String ACTION_TYPE_HEADER = "X-Action-Type";
 
     private final TrainingRequestMapper trainingRequestMapper;
-    private final TrainingDao trainingDao;
+    private final TrainingStatisticsService trainingStatisticsService;
 
     @RabbitListener(queues = "${spring.rabbitmq.queue.name}")
     @Logging(Level.INFO)
@@ -39,8 +39,8 @@ public class TrainingMessageListenerImpl implements TrainingMessageListener {
     private void doReceiveTraining(@Valid TrainingRequestDto trainingRequestDto, String actionType) {
         var training = trainingRequestMapper.toEntity(trainingRequestDto);
         switch (actionType) {
-            case "ADD" -> trainingDao.save(training);
-            case "DELETE" -> trainingDao.delete(training);
+            case "ADD" -> trainingStatisticsService.saveTrainingStatisticsForTraining(training);
+            case "DELETE" -> trainingStatisticsService.deleteTrainingStatisticsForTraining(training);
             default -> throw new IllegalArgumentException("Unknown action type: " + actionType);
         }
     }

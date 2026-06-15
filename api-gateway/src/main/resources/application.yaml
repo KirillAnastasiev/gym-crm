@@ -14,14 +14,14 @@ spring:
               predicates:
                 - Path=/GymCRM/statistics/**
               filters:
-                - RewritePath=/GymCRM/(?<segment>.*), /${segment}
+                - RewritePath=/GymCRM/(?<segment>.*), /$\{segment}
 
             - id: main-app
               uri: lb://main-app
               predicates:
                 - Path=/GymCRM/api/**
               filters:
-                - RewritePath=/GymCRM/(?<segment>.*), /${segment}
+                - RewritePath=/GymCRM/(?<segment>.*), /$\{segment}
 
 ####################### Server settings #######################
 server:

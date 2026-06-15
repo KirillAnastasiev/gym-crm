@@ -1,78 +1,141 @@
 package com.epam.laboratory.app.service;
 
+import com.epam.laboratory.app.aspect.annotation.Logging;
+import com.epam.laboratory.app.domain.TrainerStatus;
 import com.epam.laboratory.app.domain.Training;
 import com.epam.laboratory.app.domain.TrainingStatistics;
-import com.epam.laboratory.app.exception.NoContentException;
+import com.epam.laboratory.app.repository.TrainingStatisticsDao;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.slf4j.event.Level;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.Month;
 import java.time.Year;
-import java.util.Collection;
-import java.util.Map;
-
-import static java.util.stream.Collectors.*;
+import java.util.HashSet;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Slf4j
-@Validated
 public class TrainingStatisticsServiceImpl implements TrainingStatisticsService {
 
-    private final TrainingService trainingService;
+    private final TrainingStatisticsDao trainingStatisticsDao;
 
+    @Logging(Level.INFO)
     @Override
-    public TrainingStatistics getStatisticsForTrainer(@NotBlank String trainerUsername) {
-        try {
-            log.debug("Getting training report for trainer {}", trainerUsername);
-            var trainings = trainingService.getTrainingsByTrainerUsername(trainerUsername);
-            return getTrainingStatistics(trainerUsername, trainings);
-        } catch (Exception e) {
-            log.warn("Error while getting training report for trainer {}: {}", trainerUsername, e.getMessage(), e);
-            throw e;
-        }
+    public void saveTrainingStatisticsForTraining(@NotNull Training training) {
+        trainingStatisticsDao.findByTrainerUsername(training.getTrainerUsername())
+                .map(stat -> updateCreatedStatistics(training, stat))
+                .ifPresentOrElse(stat -> {
+                            trainingStatisticsDao.save(stat);
+                        },
+                        () -> {
+                            var stat = createNewTrainerStatistics(training);
+                            trainingStatisticsDao.save(stat);
+                        });
     }
 
+    @Logging(Level.INFO)
     @Override
-    public TrainingStatistics getStatisticsForTrainerInPeriod(@NotBlank String trainingUsername,
-                                                              @NotNull LocalDate startDate,
-                                                              @NotNull LocalDate endDate) {
-        try {
-            log.debug("Getting training report for trainer {} between dates {} and {}", trainingUsername, startDate, endDate);
-            var trainings = trainingService.getTrainingsByTrainerUsernameBetweenDates(trainingUsername, startDate, endDate);
-            return getTrainingStatistics(trainingUsername, trainings);
-        } catch (Exception e) {
-            log.warn("Error while getting training report for trainer {} between dates: {}", trainingUsername, e.getMessage(), e);
-            throw e;
-        }
-    }
-
-    private static Map<Year, Map<Month, Duration>> getTrainingsSummary(Collection<? extends Training> trainings) {
-        return trainings.stream()
-                .collect(groupingBy(training -> Year.from(training.getTrainingDate()),
-                        groupingBy(training -> training.getTrainingDate().getMonth(),
-                                reducing(Duration.ZERO, Training::getTrainingDuration, Duration::plus))));
+    public void deleteTrainingStatisticsForTraining(@NotNull Training training) {
+        trainingStatisticsDao.findByTrainerUsername(training.getTrainerUsername())
+                .ifPresent(stat -> stat.getYearStatisticsSet().stream()
+                        .filter(ys -> ys.getYear().getValue() == training.getTrainingDate().getYear())
+                        .findFirst()
+                        .ifPresent(ys -> ys.getMonthStatistics().stream()
+                                .filter(ms -> ms.getMonth() == training.getTrainingDate().getMonth())
+                                .findFirst()
+                                .ifPresent(ms -> {
+                                        ms.setTotalDuration(ms.getTotalDuration().minus(training.getTrainingDuration()));
+                                        trainingStatisticsDao.save(stat);
+                                })
+                        )
+                );
 
     }
 
-    private static TrainingStatistics getTrainingStatistics(String trainerUsername, Collection<Training> trainings) {
-        var summary = getTrainingsSummary(trainings);
-        if (summary.isEmpty()) {
-            throw new NoContentException("No trainings found for trainer %s".formatted(trainerUsername));
-        }
-        var report = new TrainingStatistics();
-        report.setTrainerUsername(trainerUsername);
-        report.setTrainingSummary(summary);
-        log.debug("Training report for trainer {} got", trainerUsername);
-        return report;
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<TrainingStatistics> getStatisticsByTrainerUsername(@NotBlank String trainerUsername) {
+        return trainingStatisticsDao.findByTrainerUsername(trainerUsername);
+    }
+
+    @Logging(Level.INFO)
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<TrainingStatistics> getStatisticsByTrainerUsernameInPeriod(@NotBlank String trainingUsername,
+                                                                               @NotNull LocalDate startDate,
+                                                                               @NotNull LocalDate endDate) {
+        return trainingStatisticsDao.findByTrainerUsernameBetweenDates(trainingUsername,
+                                                                       startDate.getYear(),
+                                                                       startDate.getMonthValue(),
+                                                                       endDate.getYear(),
+                                                                       endDate.getMonthValue());
+    }
+
+    private TrainingStatistics updateCreatedStatistics(Training training, TrainingStatistics stat) {
+        var yearStatistics = getOrCreateYearStatistics(training, stat);
+        var monthStatistics = getOrCreateMonthStatistics(training, yearStatistics);
+        monthStatistics.setTotalDuration(monthStatistics.getTotalDuration().plus(training.getTrainingDuration()));
+        return stat;
+    }
+
+    private TrainingStatistics.MonthStatistics getOrCreateMonthStatistics(Training training, TrainingStatistics.YearStatistics yearStatistics) {
+        return yearStatistics.getMonthStatistics().stream()
+                .filter(ms -> ms.getMonth() == training.getTrainingDate().getMonth())
+                .findFirst()
+                .orElseGet(() -> {
+                    var newMonthStatistics = createNewMonthStatistics(training);
+                    yearStatistics.getMonthStatistics().add(newMonthStatistics);
+                    return newMonthStatistics;
+                });
+    }
+
+    private TrainingStatistics.YearStatistics getOrCreateYearStatistics(Training training, TrainingStatistics stat) {
+        return stat.getYearStatisticsSet().stream()
+                .filter(ys -> ys.getYear().getValue() == training.getTrainingDate().getYear())
+                .findFirst()
+                .orElseGet(() -> {
+                    var newYearStatistics = createNewYearStatistics(training);
+                    stat.getYearStatisticsSet().add(newYearStatistics);
+                    return newYearStatistics;
+                });
+    }
+
+    private TrainingStatistics createNewTrainerStatistics(Training training) {
+        var statistics = new TrainingStatistics();
+        statistics.setTrainerUsername(training.getTrainerUsername());
+        statistics.setTrainerFirstName(training.getTrainerFirstName());
+        statistics.setTrainerLastName(training.getTrainerLastName());
+        statistics.setTrainerStatus(training.getTrainerStatus() == TrainerStatus.ACTIVE);
+
+        var yearStatisticsSet = new HashSet<TrainingStatistics.YearStatistics>();
+        yearStatisticsSet.add(createNewYearStatistics(training));
+        statistics.setYearStatisticsSet(yearStatisticsSet);
+        return statistics;
+    }
+
+    private TrainingStatistics.YearStatistics createNewYearStatistics(Training training) {
+        var yearStatistics = new TrainingStatistics.YearStatistics();
+        yearStatistics.setYear(Year.of(training.getTrainingDate().getYear()));
+
+        var monthStatisticsSet = new HashSet<TrainingStatistics.MonthStatistics>();
+        monthStatisticsSet.add(createNewMonthStatistics(training));
+        yearStatistics.setMonthStatistics(monthStatisticsSet);
+
+        return yearStatistics;
+    }
+
+    private TrainingStatistics.MonthStatistics createNewMonthStatistics(Training training) {
+        var monthStatistics = new TrainingStatistics.MonthStatistics();
+        monthStatistics.setMonth(training.getTrainingDate().getMonth());
+        monthStatistics.setTotalDuration(training.getTrainingDuration());
+        return monthStatistics;
     }
 
 }

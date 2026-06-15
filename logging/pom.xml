@@ -82,14 +82,12 @@
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>1.9.23</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
             <version>1.9.23</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

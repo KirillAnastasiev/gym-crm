@@ -2,8 +2,10 @@ spring:
 ################### Application properties ####################
   application:
     name: statistics-app
+  profiles:
+    active: dev
 
-################# RabbitMQ Messaging settings ###################
+  ################# RabbitMQ Messaging settings ###################
   rabbitmq:
     host: localhost
     port: 5672
