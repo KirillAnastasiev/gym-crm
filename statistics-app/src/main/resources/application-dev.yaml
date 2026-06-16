@@ -4,3 +4,5 @@ spring:
     host: localhost
     port: 27017
     database: gym_db
+    username: admin
+    password: admin
