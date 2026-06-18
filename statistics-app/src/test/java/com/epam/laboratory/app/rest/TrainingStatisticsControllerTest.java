@@ -18,7 +18,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -52,7 +55,7 @@ class TrainingStatisticsControllerTest {
         var statistics = getTestTrainingStatistics();
         var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
 
-        given(trainingStatisticsService.getStatisticsForTrainer(anyString())).willReturn(statistics);
+        given(trainingStatisticsService.getStatisticsByTrainerUsername(anyString())).willReturn(Optional.of(statistics));
 
         // when & then
         mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
@@ -70,7 +73,7 @@ class TrainingStatisticsControllerTest {
                         }
                         """));
 
-        verify(trainingStatisticsService, times(1)).getStatisticsForTrainer("Sarah.Davis");
+        verify(trainingStatisticsService, times(1)).getStatisticsByTrainerUsername("Sarah.Davis");
         verifyNoMoreInteractions(trainingStatisticsService);
     }
 
@@ -80,8 +83,8 @@ class TrainingStatisticsControllerTest {
         var statistics = getTestTrainingStatistics();
         var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
 
-        given(trainingStatisticsService.getStatisticsForTrainerInPeriod(anyString(), any(LocalDate.class), any(LocalDate.class)))
-                .willReturn(statistics);
+        given(trainingStatisticsService.getStatisticsByTrainerUsernameInPeriod(anyString(), any(LocalDate.class), any(LocalDate.class)))
+                .willReturn(Optional.of(statistics));
 
         // when & then
         mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
@@ -101,7 +104,7 @@ class TrainingStatisticsControllerTest {
                         }
                         """));
 
-        verify(trainingStatisticsService, times(1)).getStatisticsForTrainerInPeriod(anyString(), any(LocalDate.class), any(LocalDate.class));
+        verify(trainingStatisticsService, times(1)).getStatisticsByTrainerUsernameInPeriod(anyString(), any(LocalDate.class), any(LocalDate.class));
         verifyNoMoreInteractions(trainingStatisticsService);
     }
 
@@ -112,7 +115,7 @@ class TrainingStatisticsControllerTest {
         var requestId = "53f9405d-eaa2-43cb-b940-5deaa263cb33";
 
         doThrow(new NoContentException("No training statistics found for trainer %s".formatted("Sarah.Davis")))
-                .when(trainingStatisticsService).getStatisticsForTrainer(anyString());
+                .when(trainingStatisticsService).getStatisticsByTrainerUsername(anyString());
 
         // when & then
         mockMvc.perform(get("/statistics/{username}", "Sarah.Davis")
@@ -120,7 +123,7 @@ class TrainingStatisticsControllerTest {
                 .andExpect(status().isNoContent())
                 .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
 
-        verify(trainingStatisticsService, times(1)).getStatisticsForTrainer(anyString());
+        verify(trainingStatisticsService, times(1)).getStatisticsByTrainerUsername(anyString());
         verifyNoMoreInteractions(trainingStatisticsService);
     }
 
@@ -128,11 +131,17 @@ class TrainingStatisticsControllerTest {
     private static TrainingStatistics getTestTrainingStatistics() {
         var statistics = new TrainingStatistics();
         statistics.setTrainerUsername("Sarah.Davis");
-        var trainingsSummary = Map.of(
-                Year.of(2025),
-                Map.of(Month.DECEMBER, Duration.ofMinutes(30))
-        );
-        statistics.setTrainingSummary(trainingsSummary);
+        var monthStatistics = new TrainingStatistics.MonthStatistics();
+        monthStatistics.setMonth(Month.DECEMBER);
+        monthStatistics.setTotalDuration(Duration.ofMinutes(30));
+        var yearStatistics = new TrainingStatistics.YearStatistics();
+        yearStatistics.setYear(Year.of(2025));
+        var monthStatisticsSet = new HashSet<TrainingStatistics.MonthStatistics>();
+        monthStatisticsSet.add(monthStatistics);
+        yearStatistics.setMonthStatistics(monthStatisticsSet);
+        var yearStatisticSet = new HashSet<TrainingStatistics.YearStatistics>();
+        yearStatisticSet.add(yearStatistics);
+        statistics.setYearStatisticsSet(yearStatisticSet);
         return statistics;
     }
 }
