@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: bdd-tests
+
+api:
+  base-url:  http://localhost:8080/GymCRM
+
+test-data:
+  username: John.Doe
+  password: password123
