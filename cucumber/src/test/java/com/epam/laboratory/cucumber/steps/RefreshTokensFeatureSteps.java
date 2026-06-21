@@ -6,8 +6,6 @@ import com.epam.laboratory.cucumber.dto.TokensResponse;
 import com.epam.laboratory.cucumber.util.ContextHolder;
 import com.epam.laboratory.cucumber.util.ContextHolder.Key;
 import com.epam.laboratory.cucumber.util.TestUserAuthenticator;
-import io.cucumber.java.After;
-import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -38,7 +36,7 @@ public class RefreshTokensFeatureSteps {
     private TestUserAuthenticator authenticator;
 
 
-    // ==================== REFRESH TOKENS STEPS SUCCESSFUL ====================
+    // ==================== REFRESH TOKENS TEST STEPS SUCCESSFUL ====================
 
     @Given("The user has a valid refresh token")
     public void the_user_has_a_valid_refresh_token() {
@@ -76,12 +74,18 @@ public class RefreshTokensFeatureSteps {
     }
 
 
-    // ==================== REFRESH TOKENS STEPS FAILURE ====================
+    // ==================== REFRESH TOKENS TEST STEPS FAILURE ====================
 
     @Given("The user has an invalid refresh token")
     public void the_user_has_an_invalid_refresh_token() {
         var invalidRefreshToken = "invalid-refresh-token";
         contextHolder.put(REFRESH_TOKEN_KEY, invalidRefreshToken);
+    }
+
+    @Then("The user receives an error response with a status code {int}")
+    public void the_user_receives_an_error_response_with_a_status_code(int expectedStatus) {
+        var responseStatus = contextHolder.get(STATUS_CODE_KEY);
+        assertThat(responseStatus).isEqualTo(expectedStatus);
     }
 
 }

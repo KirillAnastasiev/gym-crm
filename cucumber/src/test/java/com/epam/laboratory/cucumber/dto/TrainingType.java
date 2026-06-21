@@ -7,11 +7,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import static com.fasterxml.jackson.annotation.JsonInclude.*;
 
 @JsonInclude(Include.NON_EMPTY)
-@JsonPropertyOrder({"accessToken", "refreshToken"})
-public record TokensResponse(
-        @JsonProperty(value = "accessToken", required = true)
-        String accessToken,
+@JsonPropertyOrder({"id", "trainingTypeName"})
+public record TrainingType(
+        @JsonProperty(value = "id", required = true)
+        Long id,
 
-        @JsonProperty(value = "refreshToken", required = true)
-        String refreshToken
+        @JsonProperty(value = "trainingTypeName", required = true)
+        String trainingTypeName
 ) {}

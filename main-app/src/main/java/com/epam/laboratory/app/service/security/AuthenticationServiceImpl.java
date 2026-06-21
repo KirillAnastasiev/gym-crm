@@ -97,7 +97,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         authenticationDao.findUserByUsername(username, false)
                 .ifPresentOrElse(user -> {
                     if (!passwordEncoder.matches(password, user.getPassword())) {
-                        throw new AuthenticationException("Incorrect password for username %s".formatted(username));
+                        throw new IllegalArgumentException("Incorrect password for username %s".formatted(username));
                     }
                 }, () -> {
                     throw new NoSuchEntityException("User with username %s does not exist".formatted(username));

@@ -34,7 +34,7 @@ public class AuthenticationTestFeatureSteps {
     private JsonMapper jsonMapper;
 
 
-    // ==================== AUTHENTICATION STEPS SUCCESSFUL ====================
+    // ==================== AUTHENTICATION TEST STEPS SUCCESSFUL ====================
 
     @Given("The user has valid credentials with username {string} and password {string}")
     public void the_user_has_valid_credentials_with_username_and_password(String username, String password) {
@@ -68,7 +68,7 @@ public class AuthenticationTestFeatureSteps {
     }
 
 
-    // ==================== AUTHENTICATION STEPS FAILURE ====================
+    // ==================== AUTHENTICATION TEST STEPS FAILURE ====================
 
     @Given("The user has invalid credentials with username {string} and password {string}")
     public void the_user_has_invalid_credentials_with_username_and_password(String username, String password) {
