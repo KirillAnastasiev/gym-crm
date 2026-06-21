@@ -16,6 +16,6 @@ public record TrainingStatisticsResponse(
         @JsonProperty(value = "trainerUsername", required = true)
         String trainerUsername,
 
-        @JsonProperty(value = "trainingSummary", required = true)
+        @JsonProperty(value = "trainingSummary")
         Map<Year, Map<Month, Duration>> trainingSummary
 ) {}
