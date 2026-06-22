@@ -4,6 +4,7 @@ import com.epam.laboratory.cucumber.client.ApiClient;
 import com.epam.laboratory.cucumber.dto.ChangeStatusRequest;
 import com.epam.laboratory.cucumber.util.BearerAuthenticationHeaderResolver;
 import com.epam.laboratory.cucumber.util.ContextHolder;
+import com.epam.laboratory.cucumber.util.ContextHolder.Key;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
 import tools.jackson.databind.json.JsonMapper;
@@ -14,9 +15,9 @@ import java.util.Map;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class ChangeTraineeStatusTestFeatureSteps {
-    private static final ContextHolder.Key<String> USERNAME_KEY = ContextHolder.Key.of("username", String.class);
-    private static final ContextHolder.Key<String> ACCESS_TOKEN_KEY = ContextHolder.Key.of("accessToken", String.class);
-    private static final ContextHolder.Key<Integer> STATUS_CODE_KEY = ContextHolder.Key.of("statusCode", Integer.class);
+    private static final Key<String> USERNAME_KEY = Key.of("username", String.class);
+    private static final Key<String> ACCESS_TOKEN_KEY = Key.of("accessToken", String.class);
+    private static final Key<Integer> STATUS_CODE_KEY = Key.of("statusCode", Integer.class);
 
     @Autowired
     private ContextHolder contextHolder;

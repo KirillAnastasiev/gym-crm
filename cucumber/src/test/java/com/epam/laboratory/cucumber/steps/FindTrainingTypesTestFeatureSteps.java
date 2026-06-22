@@ -4,6 +4,7 @@ import com.epam.laboratory.cucumber.client.ApiClient;
 import com.epam.laboratory.cucumber.dto.TrainingType;
 import com.epam.laboratory.cucumber.util.BearerAuthenticationHeaderResolver;
 import com.epam.laboratory.cucumber.util.ContextHolder;
+import com.epam.laboratory.cucumber.util.ContextHolder.Key;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +17,9 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 
 public class FindTrainingTypesTestFeatureSteps {
-    private static final ContextHolder.Key<String> ACCES_TOKEN_KEY = ContextHolder.Key.of("accessToken", String.class);
-    private static final ContextHolder.Key<Integer> STATUS_CODE_KEY = ContextHolder.Key.of("statusCode", Integer.class);
-    private static final ContextHolder.Key<String> RESPONSE_BODY_KEY = ContextHolder.Key.of("responseBody", String.class);
+    private static final Key<String> ACCES_TOKEN_KEY = Key.of("accessToken", String.class);
+    private static final Key<Integer> STATUS_CODE_KEY = Key.of("statusCode", Integer.class);
+    private static final Key<String> RESPONSE_BODY_KEY = Key.of("responseBody", String.class);
 
     @Autowired
     private ContextHolder contextHolder;
