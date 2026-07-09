@@ -2,7 +2,7 @@ spring:
 ##################### Datasource settings #######################
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/gym-db
+    url: jdbc:postgresql://postgres_db:5432/gym-db
     username: admin
     password: admin
     hikari:
@@ -21,16 +21,9 @@ spring:
         ejb:
           persistenceUnitName: gym-persistence-unit
 
-###################### DB initialization ########################
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.dev.sql
-      data-locations: classpath:data.dev.sql
-
 ################# RabbitMQ Messaging settings ###################
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
     username: admin
     password: admin
@@ -44,6 +37,14 @@ spring:
     dlexchange:
       name: gym.dlexchange
     dlrouting-key: gym.trainings.dlqueue
+
+
+#################### Logger settings ########################
+logging:
+  level:
+    io.github.resilience4j: INFO
+    org.springframework.cloud.loadbalancer: INFO
+    com.epam.laboratory.app.service.TrainingStatisticsServiceImpl: INFO
 
 ######################### JWT settings ##########################
 app:
@@ -65,6 +66,7 @@ springdoc:
 eureka:
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://registry-server:8761/eureka/
   instance:
     prefer-ip-address: true
+    hostname: main-app

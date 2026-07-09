@@ -4,9 +4,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.epam.laboratory</groupId>
-        <artifactId>gymcrm-multymodule-app</artifactId>
-        <version>1.0.0</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.6</version>
+        <relativePath/>
     </parent>
 
     <artifactId>statistics-app</artifactId>
@@ -71,6 +72,16 @@
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+
+        <!--    Spring Boot Actuator    -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator-autoconfigure</artifactId>
         </dependency>
 
         <!--    Lombok    -->

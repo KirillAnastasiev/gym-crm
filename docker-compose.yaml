@@ -1,8 +1,11 @@
-version: '3.8'
+version: '3.9'
 
 services:
+  # Infrastructure Services
   rabbitmq:
     image: rabbitmq:management-alpine
+    container_name: rabbitmq
+    restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -11,19 +14,166 @@ services:
       RABBITMQ_DEFAULT_PASS: admin
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: gym-db
+    volumes:
+      - db_postgres:/var/lib/postgresql
+      - postgres_init:/docker-entrypoint-initdb.d
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo:
     image: mongo
     container_name: mongo_db
-    restart: always
+    restart: unless-stopped
     ports:
-      - 27017:27017
+      - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin
+      MONGO_INITDB_DATABASE: gym_db
     volumes:
       - db_mongo:/data/db
+      - mongo_init:/docker-entrypoint-initdb.d
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Microservices
+  registry-server:
+    build:
+      context: .
+      dockerfile: registry-server/Dockerfile
+    container_name: registry-server
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: curl -f http://registry-server:8761/actuator/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  main-app:
+    build:
+      context: .
+      dockerfile: main-app/Dockerfile
+    container_name: main-app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: curl -f http://main-app:8081/actuator/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      registry-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  statistics-app:
+    build:
+      context: .
+      dockerfile: statistics-app/Dockerfile
+    container_name: statistics-app
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: curl -f http://statistics-app:8082
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      registry-server:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    networks:
+      - gymcrm-network
+    healthcheck:
+      test: curl -f http://api-gateway:8080/actuator/health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      registry-server:
+        condition: service_healthy
+      main-app:
+        condition: service_healthy
 
 volumes:
   rabbitmq_data:
+  db_postgres:
   db_mongo:
+  postgres_init:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./postgres_init
+      o: bind
+  mongo_init:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./mongo_init
+      o: bind
+
+networks:
+  gymcrm-network:
+    driver: bridge

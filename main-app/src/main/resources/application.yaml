@@ -73,14 +73,6 @@ services:
   statistics:
     url: lb://statistics-app
 
-############ Eureka Discovery Client settings ################
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
-
 ########## Resilence4j Circuit Breaker settings ##############
 resilience4j:
   circuitbreaker:

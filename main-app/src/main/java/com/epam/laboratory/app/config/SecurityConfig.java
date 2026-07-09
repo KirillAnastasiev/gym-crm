@@ -35,17 +35,19 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
     public static final RequestMatcher SWAGGER_UI_MATCHER = new RegexRequestMatcher("^/(v3/api-docs(?:/.*)?|swagger-ui(?:/.*)?)$", null);
+    public static final RequestMatcher ACTUATOR_MATCHER = new RegexRequestMatcher("^/actuator(?:/.*)?$", null);
     public static final RequestMatcher GET_TOKENS_MATCHER = new RegexRequestMatcher(".*/api/auth/tokens", HttpMethod.GET.name());
     public static final RequestMatcher REFRESH_TOKENS_MATCHER = new RegexRequestMatcher(".*/api/auth/refresh-token", HttpMethod.POST.name());
     public static final RequestMatcher REGISTER_TRAINEE_MATCHER = new RegexRequestMatcher(".*/api/trainees", HttpMethod.POST.name());
     public static final RequestMatcher REGISTER_TRAINER_MATCHER = new RegexRequestMatcher(".*/api/trainers", HttpMethod.POST.name());
     public static final RequestMatcher ALLOWED_MATCHERS = new OrRequestMatcher(
                                                                     SWAGGER_UI_MATCHER,
+                                                                    ACTUATOR_MATCHER,
                                                                     GET_TOKENS_MATCHER,
                                                                     REFRESH_TOKENS_MATCHER,
                                                                     REGISTER_TRAINEE_MATCHER,
                                                                     REGISTER_TRAINER_MATCHER
-                                                          );
+                                                                  );
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http,
@@ -61,11 +63,11 @@ public class SecurityConfig {
                         auth
                             .requestMatchers(SWAGGER_UI_MATCHER).permitAll()
                             .requestMatchers(GET_TOKENS_MATCHER).authenticated()
+                            .requestMatchers(ACTUATOR_MATCHER).permitAll()
                             .requestMatchers(REFRESH_TOKENS_MATCHER).permitAll()
                             .requestMatchers(REGISTER_TRAINEE_MATCHER).permitAll()
                             .requestMatchers(REGISTER_TRAINER_MATCHER).permitAll()
                             .requestMatchers("/api/**").authenticated()
-                            .requestMatchers("/actuator","/actuator/**").permitAll()
                             .anyRequest().authenticated())
                 .httpBasic(Customizer.withDefaults())
                 .formLogin(form -> form.disable())

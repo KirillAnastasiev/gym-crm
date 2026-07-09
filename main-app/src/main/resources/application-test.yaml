@@ -42,3 +42,11 @@ app:
 ####################### OpenAPI settings ########################
 springdoc:
   show-actuator: true
+
+############ Eureka Discovery Client settings ################
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true

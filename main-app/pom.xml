@@ -4,12 +4,15 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.epam.laboratory</groupId>
-        <artifactId>gymcrm-multymodule-app</artifactId>
-        <version>1.0.0</version>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.6</version>
+        <relativePath/>
     </parent>
 
+    <groupId>com.epam.laboratory</groupId>
     <artifactId>main-app</artifactId>
+    <version>1.0.0</version>
 
     <description>GymCRM Main Service</description>
 

@@ -1,16 +1,17 @@
 spring:
-##################### Datasource settings #######################
-  mongodb:
-    host: localhost
-    port: 27017
-    database: gym_db
-    username: admin
-    password: admin
-    authentication-database: admin
+##################### MongoDB settings ##########################
+  data:
+    mongodb:
+      host: mongo
+      port: 27017
+      database: gym_db
+      username: admin
+      password: admin
+      authentication-database: admin
 
   ################# RabbitMQ Messaging settings ###################
   rabbitmq:
-    host: localhost
+    host: rabbitmq
     port: 5672
     username: admin
     password: admin
@@ -25,13 +26,20 @@ spring:
       name: gym.dlexchange
     dlrouting-key: gym.trainings.dlqueue
 
+####################### Server settings #######################
+server:
+  port: 8082
+
 ############ Eureka Discovery Client settings ################
 eureka:
   client:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://registry-server:8761/eureka/
 
   instance:
     prefer-ip-address: true
+    hostname: statistics-app
+
+
