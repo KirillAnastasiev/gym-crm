@@ -2,7 +2,6 @@ package com.kirill.projects.gymcrm.app.rest;
 
 import com.kirill.projects.gymcrm.app.aspect.annotation.RestCallLogging;
 import com.kirill.projects.gymcrm.app.aspect.annotation.ValidateArguments;
-import com.epam.laboratory.app.dto.*;
 import com.kirill.projects.gymcrm.app.dto.*;
 import com.kirill.projects.gymcrm.app.dto.mapper.CredentialsMapper;
 import com.kirill.projects.gymcrm.app.dto.mapper.TraineeMapper;

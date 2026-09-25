@@ -1,7 +1,6 @@
 package com.kirill.projects.gymcrm.app.service;
 
 import com.kirill.projects.gymcrm.app.client.TrainingReportMessagingClient;
-import com.epam.laboratory.app.domain.*;
 import com.kirill.projects.gymcrm.app.domain.*;
 import com.kirill.projects.gymcrm.app.repository.TrainingDao;
 import org.junit.jupiter.api.DisplayName;

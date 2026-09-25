@@ -11,7 +11,7 @@ import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
 @SpringBootConfiguration
-@ComponentScan(basePackages = "com.epam.laboratory.cucumber")
+@ComponentScan(basePackages = "com.kirill.projects.gymcrm.cucumber")
 @ActiveProfiles(resolver = EnvironmentResolver.class)
 class CucumberTestSuite {
 

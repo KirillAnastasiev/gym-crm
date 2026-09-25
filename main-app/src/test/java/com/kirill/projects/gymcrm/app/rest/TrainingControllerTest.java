@@ -1,10 +1,8 @@
 package com.kirill.projects.gymcrm.app.rest;
 
 import com.kirill.projects.gymcrm.app.config.TestSecurityConfig;
-import com.epam.laboratory.app.domain.*;
 import com.kirill.projects.gymcrm.app.domain.*;
 import com.kirill.projects.gymcrm.app.dto.TrainingDto;
-import com.epam.laboratory.app.dto.mapper.*;
 import com.kirill.projects.gymcrm.app.dto.mapper.*;
 import com.kirill.projects.gymcrm.app.exception.NoSuchEntityException;
 import com.kirill.projects.gymcrm.app.exception.RestExceptionHandler;

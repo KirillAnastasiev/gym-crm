@@ -1,7 +1,7 @@
 package com.kirill.projects.gymcrm.app.rest;
 
 import com.kirill.projects.gymcrm.app.domain.TrainingStatistics;
-import com.epam.laboratory.app.dto.mapper.TrainingStatisticsResponseMapperImpl;
+import com.kirill.projects.gymcrm.app.dto.mapper.TrainingStatisticsResponseMapperImpl;
 import com.kirill.projects.gymcrm.app.exception.NoContentException;
 import com.kirill.projects.gymcrm.app.exception.RestExceptionHandler;
 import com.kirill.projects.gymcrm.app.service.TrainingStatisticsService;

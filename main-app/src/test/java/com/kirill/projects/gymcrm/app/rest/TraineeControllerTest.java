@@ -9,7 +9,6 @@ import com.kirill.projects.gymcrm.app.dto.CredentialsDto;
 import com.kirill.projects.gymcrm.app.dto.TraineeDto;
 import com.kirill.projects.gymcrm.app.dto.TrainerDto;
 import com.kirill.projects.gymcrm.app.dto.UserDto;
-import com.epam.laboratory.app.dto.mapper.*;
 import com.kirill.projects.gymcrm.app.dto.mapper.*;
 import com.kirill.projects.gymcrm.app.exception.NoSuchEntityException;
 import com.kirill.projects.gymcrm.app.exception.RestExceptionHandler;

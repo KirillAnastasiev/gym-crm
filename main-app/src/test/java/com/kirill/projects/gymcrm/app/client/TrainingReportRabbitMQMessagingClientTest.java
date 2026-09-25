@@ -1,6 +1,5 @@
 package com.kirill.projects.gymcrm.app.client;
 
-import com.epam.laboratory.app.domain.*;
 import com.kirill.projects.gymcrm.app.domain.*;
 import com.kirill.projects.gymcrm.app.dto.mapper.TrainingReportMapper;
 import com.kirill.projects.gymcrm.app.dto.mapper.TrainingReportMapperImpl;

@@ -4,7 +4,7 @@ import com.kirill.projects.gymcrm.app.domain.TrainerStatus;
 import com.kirill.projects.gymcrm.app.domain.Training;
 import com.kirill.projects.gymcrm.app.dto.TrainingRequestDto;
 import com.kirill.projects.gymcrm.app.dto.mapper.TrainingRequestMapper;
-import com.epam.laboratory.app.dto.mapper.TrainingRequestMapperImpl;
+import com.kirill.projects.gymcrm.app.dto.mapper.TrainingRequestMapperImpl;
 import com.kirill.projects.gymcrm.app.service.TrainingStatisticsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
