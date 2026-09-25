@@ -97,4 +97,4 @@ logging:
   level:
     io.github.resilience4j: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
-    com.epam.laboratory.app.service.TrainingStatisticsServiceImpl: DEBUG
+    com.epam.laboratory.app.service.com.kirill.projects.gymcrm.app.service.TrainingStatisticsServiceImpl: DEBUG

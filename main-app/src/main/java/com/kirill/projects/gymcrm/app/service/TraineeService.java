@@ -1,0 +1,33 @@
+package com.kirill.projects.gymcrm.app.service;
+
+import com.kirill.projects.gymcrm.app.domain.Trainee;
+import com.kirill.projects.gymcrm.app.domain.Trainer;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+
+import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
+import java.util.function.BiFunction;
+
+public interface TraineeService extends UserService<Trainee> {
+    Collection<Trainer> updateTrainers(String traineeUsername, Collection<Trainer> trainers);
+    Trainee updateByUsername(String username, Trainee trainee);
+
+    static BiFunction<CriteriaBuilder, Root<Trainee>, Predicate> byUsernames(String... username) {
+        return (cb, root) -> cb.and(root.get("username").in(List.of(username)));
+    }
+    static BiFunction<CriteriaBuilder, Root<Trainee>, Predicate> byTrainerUsernames(String... username) {
+        return (cb, root) -> cb.and(root.get("trainers").get("username").in(List.of(username)));
+    }
+
+    static BiFunction<CriteriaBuilder, Root<Trainee>, Predicate> dateOfBirthFrom(LocalDate date) {
+        return (cb, root) -> cb.greaterThanOrEqualTo(root.get("dateOfBirth"), date);
+    }
+
+    static BiFunction<CriteriaBuilder, Root<Trainee>, Predicate> dateOfBirthTo(LocalDate date) {
+        return (cb, root) -> cb.lessThanOrEqualTo(root.get("dateOfBirth"), date);
+    }
+
+}

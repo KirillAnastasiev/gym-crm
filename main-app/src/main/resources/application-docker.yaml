@@ -44,7 +44,7 @@ logging:
   level:
     io.github.resilience4j: INFO
     org.springframework.cloud.loadbalancer: INFO
-    com.epam.laboratory.app.service.TrainingStatisticsServiceImpl: INFO
+    com.epam.laboratory.app.service.com.kirill.projects.gymcrm.app.service.TrainingStatisticsServiceImpl: INFO
 
 ######################### JWT settings ##########################
 app:
